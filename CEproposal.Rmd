@@ -1,0 +1,110 @@
+---
+title: "Continuing Education Proposal"
+author: "Tucker S. McElroy and Dimitris N. Politis"
+date: "9/8/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+ 
+
+
+##  **Time Series: A First Course with Bootstrap Starter**
+
+### Abstract: 
+The proposed 7-hour course, titled  *Time Series: A First Course with Bootstrap Starter,* will be sponsored by the Business and Economics Statistics section. This course will be a reprise of the main topics of the book by the same name, by Tucker McElroy and Dimitris Politis. The intended audience includes statisticians with little or no knowledge  of time series, but a general knowledge of statistics.  Prerequisites include a course on linear models, a course on mathematical statistics (such concepts as bias, variance, and the Gaussian distribution), and a familiarity with linear algebra (the transpose, inverse, and eigen-values of a matrix). The aim is to cover basic concepts of time series analysis at a level suitable for those with a bachelor's or master's degree in statistics, while including a few non-standard concepts such as volatility filtering and time series bootstraps. A second aim is to incorporate coding in R of all concepts, methods, and examples.
+
+## Instructors
+
+### Tucker S. McElroy
+ Research and Methodology Directorate, U.S. Census Bureau  
+ 4600 Silver Hill Road, Washington, D.C. 20233-9100  
+ tucker.s.mcelroy@census.gov   
+ Phone: 240-695-3610, Fax: 301-763-8399  
+ 
+ Tucker S. McElroy is Senior Time Series Mathematical Statistician at the U.S. Census Bureau, where he has contributed to developing time series research and software for the last 17 years. He has published more than 80 papers and is a recipient of the Arthur S. Flemming award (2011).
+ 
+### Dimitris N. Politis
+ Distinguished Professor of Mathematics   
+ Associate Director of Halicioglu Data Science Institute  
+ University of California, San Diego  
+ La Jolla, CA 92093-0112  
+ dpolitis@ucsd.edu  
+ Phone: 858-534-5861, Fax: 858-534-5273  
+ 
+ Dimitris N. Politis is Distinguished Professor of Mathematics at the University of California at San Diego, where he is also serving as Associate Director of the Halicioglu Data Science Institute.  He has co-authored two research monographs and more than 100 journal papers. He is a recipient of the Tjalling C. Koopmans Econometric Theory Prize (2009-2011) and is Co-Editor of the Journal of Time Series Analysis.
+  
+## Outline
+
+The course will emphasize the methodological and computational aspects of the book's material. While the course will not include proofs, some important theoretical results will be discussed. The target audience includes practitioners with little or no knowledge  of time series, but a general knowledge of statistics. The following outline provides the main topics; in *italics* are topics not typically covered in a time series course.
+ 
+1. **Introduction:** time series data, cycles, regression, and autoregression
+2. **Stochastic Processes:** stationarity, autocovariance, moving averages, white noise, and integrated processes
+3. **Filtering:** linear filters, trends, and *seasonality*
+4. **Forecasting:** prediction, normal equations, and iterative forecasting
+5. **ARMA:** ARMA recursion, autocovariance generating functions, and partial autocorrelations
+<!-- 6. **Frequency Domain:** spectral density, *frequency response functions*, *cepstrum* -->
+<!-- 7. **Model Identification:** *inverse autocovariances*, partial autocorrelations, *time series entropy* -->
+8. **Statistical Estimation:** sample mean and sample autocovariance
+<!-- *spectral mean*, Discrete Fourier Transform, periodogram -->
+9. **Model Fitting:** Gaussian likelihood, fitting AR and MA models, model assessment, and AIC
+10. **Nonlinear Time Series:** GARCH processes and *volatility filtering*
+11. **The Bootstrap:** Monte Carlo, *plug-in principle*, *model-based bootstrap*, *sieve bootstraps*, *subsampling*, *block bootstrap,* *stationary bootstrap*, and *model-free bootstrap*
+
+ 
+ 
+### Format
+
+The teaching format is live and virtual. Webinars will be held weekly for two hours, with instruction being offered in real-time. The course will utilize R notebooks associated with the textbook. Each notebook corresponds to a lesson, covering a few examples or one concept, and occupying 10-15 minutes of time. Typically the teacher will review that material in the lesson, explaining the main concepts. Students can execute the code on their own laptop, and then during instruction the instructor may modify the code; students can follow along and modify the code, or rewrite it, and in real-time see the new results. They receive the notebooks as a keepsake of the course. 
+  
+  
+ 
+### List of Lessons
+ 
+1. Time Series Data
+2. Cycles
+3. Regression 
+4. Stochastic Processes
+5. Stationarity 
+6. Autoregression and Moving Average
+7. White Noise
+8. *Linear Filters*
+9. Trends
+10. *Seasonality*
+11. Integrated Processes
+12. Projection and Prediction
+13. Linear Prediction of Time Series
+14. ARMA Processes
+15. Autocovariance Generating Function
+16. Partial Autocorrelation
+17. Sample Mean 
+18. Sample Autocovariance
+19. Model Identification
+20. The Gaussian Likelihood
+21. Model Assessment
+22. *Iterative Forecasting*
+23. GARCH Processes 
+24. *Volatility Filtering*
+25. *The Plug-in Principle and the Bootstrap*
+26. *Model-based Bootstrap*
+27. *Sieve Bootstraps*
+28. *Subsampling*
+29. *Block Bootstrap*
+30. *Stationary Bootstrap*
+
+ 
+## Learning Outcomes
+
+### Performance Objectives 
+ Students will obtain a basic knowledge of time series theory and methodology. They will be able to analyze time series data by exploratory analysis, by model identification and fitting, and by making applications such as forecasting. Students will know how to use R to perform these tasks: not only to apply common time series functions appropriately, but also to write R scripts that capture time series methodology.  In addition to learning basic time series topics, including ARMA modeling, students will learn how to apply time series bootstraps.
+ 
+### Content and Instructional Methods
+ The course will be drawn from the textbook's material, but presentations will be primarily rendered through R Notebooks.  The instructional strategy will be to briefly discuss a new topic, and then demonstrate through R code the computational and empirical facets of the topic. Short exercises can then be given, where the teacher asks the students to modify the R code to generate a different result. Through the technology of the virtual format, the instruction can be paused to address student questions.
+ 
+ 
+ 
+ 
