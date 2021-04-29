@@ -1,0 +1,93 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 6: Autoregression and Moving Average
+
+- Examples of weakly stationary stochastic process.
+
+## Example 2.5.1. AR(1) Process
+
+- Let $Z_t \sim \mbox{i.i.d.} (0,\sigma^2)$ and $\{ X_t \}$ defined via
+\[
+ X_t = \phi \, X_{t-1} + Z_t
+\]
+for $t \geq 1$, where $|\phi| < 1$.
+- This is a recursion, called an *order 1 autoregression*, or AR(1).
+- How to define $X_0$? If $X_0 \sim (0, \sigma^2/(1-\phi^2) )$, then $\{ X_t \}$ is weakly stationary and
+\[
+ \gamma (h) = \sigma^2 \frac{ \phi^{|h|}}{1 - \phi^2}.
+\]
+ Formula only makes sense when $|\phi| < 1$. This is a *stationarity condition*.
+ 
+```{r}
+n <- 100
+set.seed(123)
+z <- rnorm(n)
+x <- rep(0,n)
+phi <- .9
+x0 <- rnorm(1)/sqrt(1-phi^2)
+x[1] <- phi*x0 + z[1]
+for(t in 2:n) { x[t] <- phi*x[t-1] + z[t] }
+plot(ts(x),xlab="Time",ylab="")
+```
+
+## Example 2.5.5. MA(1) Process
+
+- Let $Z_t \sim \mbox{i.i.d.} (0,\sigma^2)$ and $\{ X_t \}$ defined via
+\[
+ X_t =  Z_t + \theta \, Z_{t-1}
+\]
+for $t \geq 1$, where $\theta$ is any real number.
+- This process is called an *order 1 moving average*, or MA(1). 
+- It is weakly stationary, with
+\[
+ \gamma (h) = \begin{cases} (1 + \theta^2) \sigma^2 \quad \mbox{if} \; h = 0 \\
+  \theta \sigma^2 \quad \mbox{if} \; h = \pm 1 \\
+  0 \quad \mbox{if} \; |h| > 1.
+  \end{cases}
+\]
+
+```{r}
+set.seed(777)
+n <- 100
+z <- rnorm(n+1)		# Gaussian input
+theta <- .8
+x <- z[-1] + theta*z[-(n+1)]
+plot(ts(x),xlab="Time",ylab="")
+```
+
+## Example 2.5.6. MA(2) Process
+
+- Let $Z_t \sim \mbox{i.i.d.} (0,\sigma^2)$ and $\{ X_t \}$ defined via
+\[
+ X_t =  Z_t + \theta_1 \, Z_{t-1} + \theta_2 \, Z_{t-2}
+\]
+for $t \geq 2$, where $\theta_1, \theta_2$ are any real numbers.
+- This process is called an *order 2 moving average*, or MA(2). 
+- It is weakly stationary, with
+\[
+ \gamma (h) = \begin{cases} (1 + \theta_1^2 + \theta_2^2) \sigma^2 \quad \mbox{if} \; h = 0 \\
+  (\theta_1 + \theta_1 \theta_2) \sigma^2 \quad \mbox{if} \; h = \pm 1 \\
+  \theta_2 \sigma^2 \quad \mbox{if} \; h = \pm 2\\
+  0 \quad \mbox{if} \; |h| > 2.
+  \end{cases}
+\]
+
+```{r}
+set.seed(555)
+n <- 100
+z <- rnorm(n+2)		# Gaussian input
+theta1 <- .9
+theta2 <- .2
+x <- z[-c(1,2)] + theta1*z[-c(1,n+2)] + theta2*z[-c(n+1,n+2)]
+plot(ts(x),xlab="Time",ylab="")
+```
+

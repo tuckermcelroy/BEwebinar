@@ -1,0 +1,98 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 4: Stochastic Processes
+
+- A collection of random variables indexed by time is called a *stochastic process*, denoted as $\{ X_t \}$. The curly brackets let us know $\{ X_t \}$ is the process, whereas $X_t$ is a single random variable (at time $t$).
+- Usually time is $t \in {\mathbf Z}$, the integers.
+- There are also continuous-time stochastic processes (another subject).
+
+## Realization is Sample Path
+
+- A random variable $X_t$ has realization $x_t$.
+- Example: $X_t \sim \mathcal{N}(0,1)$ has realization `r set.seed(123); rnorm(1)`.
+- Put this together for all $t \in {\mathbf Z}$, and the realization is called the *sample path*.
+
+### Example: Heavy-tailed Sample Path
+
+```{r}
+set.seed(777)
+n <- 100
+z <- rt(n+1,df=4)		# heavy-tailed input
+theta <- .8
+x <- z[-1] + theta*z[-(n+1)]
+plot(ts(x),xlab="Time",ylab="")
+```
+
+- As usual, we connect the dots when graphing the sample path.
+- Here is another realization, or sample path, of the same stochastic process.
+
+```{r}
+set.seed(888)
+n <- 100
+z <- rt(n+1,df=4)		# heavy-tailed input
+theta <- .8
+x <- z[-1] + theta*z[-(n+1)]
+plot(ts(x),xlab="Time",ylab="")
+```
+
+## Common Examples of Stochastic Processes
+
+### Example 2.2.8. Process A: i.i.d.
+
+- An i.i.d. process, where each $X_t$ has the same distribution and is independent of the rest.
+
+```{r}
+set.seed(111)
+n <- 100
+x <- runif(n)
+plot(ts(x),xlab="Time",ylab="")
+```
+
+### Example 2.2.9. Process B: Cosine
+
+- Suppose $X_t = A \cos (\vartheta t + \Phi)$, where $\vartheta$ is given, and $A$ and $\Phi$ are independent random variables.
+
+```{r}
+n <- 100
+set.seed(222)
+A <- rnorm(1)
+set.seed(223)
+phi <- 2*pi*runif(1)
+lambda <- pi/6
+set.seed(224)
+x <- A*cos(seq(1,n)*lambda + phi)
+plot(ts(x),xlab="Time",ylab="")
+```
+
+### Example 2.2.12. Process E: Random Walk
+
+- Suppose $X_t$ is current location on a straight line, and we step forward or backward at time $t+1$. Let the step size be given by random variable $Z_{t+1}$, independent of where we are. Then our new location is
+\[ 
+ X_{t+1} = X_t + Z_{t+1}.
+\]
+ This is called a *random walk*.
+- We can initialize with $X_0 = 0$, for example.
+ 
+```{r}
+set.seed(333)
+n <- 100
+z <- rnorm(n)
+x <- rep(0,n)
+x0 <- 0
+x[1] <- x0 + z[1]
+for(t in 2:n) { x[t] <- x[t-1] + z[t] }
+plot(ts(x),xlab="Time",ylab="")
+```
+
+
+
+

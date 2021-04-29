@@ -1,0 +1,105 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 13: Linear Prediction of Time Series
+
+- Now we focus on linear prediction. This is the same as the conditional expectation when the distribution is Gaussian, or in the case of a linear process (like the AR(1)).
+
+## Paradigm 4.6.1. Linear Prediction and the Yule-Walker Equations
+
+- Let $\{ X_t \}$ be a mean zero weakly stationary time series in ${\mathbb L}_2$. 
+- Say $\mathcal{M}$ is the linear span of the random variables $X_1, \ldots, X_n$.
+- Suppose we wish to predict $Y$ from $X_1, \ldots, X_n$. Then the minimal MSE *linear* predictor $\widehat{Y}$ is obtained by projection onto $\mathcal{M}$.
+- The orthogonality principle says that
+\[
+  0 = \langle Y - \widehat{Y}, X_t \rangle
+\]
+for $t = 1, \ldots, n$. These are the *normal equations*.  They can be rewritten as
+\[
+   \langle \widehat{Y}, X_t \rangle = \langle Y, X_t \rangle.
+\]
+
+### One-step Ahead Forecasting
+
+- Suppose $Y = X_{n+1}$.
+- Because $\widehat{X}_{n+1} \in \mathcal{M}$, there exist constants $\phi_1, \ldots, \phi_n$ such that
+\[
+   \widehat{X}_{n+1} = \phi_1 X_n + \ldots + \phi_n X_1 = 
+   \sum_{j=1}^n \phi_j X_{n+1-j}.
+\]
+- Then the normal equations imply that for any $1 \leq t \leq n$,
+\begin{align*}
+ \langle  \widehat{X}_{n+1}, X_t \rangle & = \langle X_{n+1}, X_t \rangle \\
+ \sum_{j=1}^n \phi_j \langle  {X}_{n+1-j}, X_t \rangle & = \langle X_{n+1}, X_t \rangle \\
+ \sum_{j=1}^n \phi_j \gamma (n+1-j-t) & = \gamma (n+1 - t).
+\end{align*}
+- This is now linear algebra! Let $\underline{\phi}$ and $\underline{\gamma}_n$ be vectors
+\[
+  \underline{\phi} = \left[ \begin{array}{c} \phi_1 \\ \phi_2 \\ \vdots \\ \phi_n 
+   \end{array} \right] \qquad
+    \underline{\gamma}_n = \left[ \begin{array}{c} \gamma (1) \\ \gamma (2) \\ \vdots \\ 
+     \gamma (n)  \end{array} \right]. 
+\]
+And recall that $\Gamma_n$ is the $n$-dimensional Toeplitz matrix of autocovariances.
+- Now our normal equations are
+\[
+   \Gamma_n \, \underline{\phi} = \underline{\gamma}_n.
+\]
+ These are called the *Yule-Walker* equations (i.e., normal equations associated with one-step ahead prediction). 
+ - The solution is
+ \[
+   \underline{\phi} = \Gamma_n^{-1} \, \underline{\gamma}_n.
+  \]
+- The prediction MSE can be derived:
+\[
+  { \| X_{n+1} - \widehat{X}_{n+1} \| }^2 = \gamma (0) - \underline{\gamma}^{\prime}_n \, 
+   \Gamma_n^{-1} \, \underline{\gamma}_n.
+\]
+ 
+## Example 4.6.4. Order One Moving Average
+
+- Consider an MA(1) process $\{ X_t \}$ given by $X_t = Z_t + \theta Z_{t-1}$, for a white noise $\{ Z_t \}$ with variance $\sigma^2$.
+- Suppose we want to forecast one-step ahead with sample size $n=2$.
+- The Yule-Walker equations are
+\[
+  \underline{\phi} = { \left[ \begin{array}{cc} (1 + \theta^2) \sigma^2 & \theta \sigma^2 \\
+    \theta \sigma^2 & (1 + \theta^2) \sigma^2 \end{array} \right] }^{-1} \,
+      \left[ \begin{array}{c} \theta \sigma^2 \\ 0 \end{array} \right]
+      = {(1 + \theta^2 + \theta^4)}^{-1}  \, \left[ \begin{array}{c} (1 + \theta^2) \theta \\
+        - \theta^2 \end{array} \right].
+  \]
+- This means that the forecast is
+\[
+ \widehat{X}_{3} = \frac{(1 + \theta^2) \theta  }{1 + \theta^2 + \theta^4} X_2
+   + \frac{ - \theta^2  }{1 + \theta^2 + \theta^4} X_1.
+\]
+- The prediction MSE is
+\[
+  \sigma^2  \frac{ (1 + \theta^2) ( 1 + \theta^4) }{1 + \theta^2 + \theta^4}.
+\]
+- This formula also applies if we want to predict $X_{n+1}$ only using $X_n$ and $X_{n-1}$.
+
+```{r}
+set.seed(777)
+n <- 100
+z <- rnorm(n+1)		# Gaussian input
+theta <- .8
+x <- z[-1] + theta*z[-(n+1)]
+xhat <- rep(0,n)
+phi1 <- (1+theta^2)*theta/(1+theta^2+theta^4)
+phi2 <- -theta^2/(1+theta^2+theta^4)
+for(t in 3:n)
+{
+  xhat[t] <- phi1*x[t-1] + phi2*x[t-2]
+}
+plot(ts(x),xlab="Time",ylab="",main="")
+lines(ts(xhat),col=2)
+```

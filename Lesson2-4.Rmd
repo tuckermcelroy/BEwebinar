@@ -1,0 +1,94 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 5: Stationarity
+
+- We want to generalize the concept of *identical distribution* to a stochastic process.
+
+## Marginal Distributions
+
+- First marginals are just the $X_t$ random variables' distributions.
+- Second marginals are joint distributions for all pairs $(X_t,X_s)$.
+- Third marginals are joint distributions for all triplets, etc.
+
+### Same First Marginals
+
+- Saying $\{ X_t \}$ has same first marginal is same as saying they are identically distributed.
+- Sometimes called *First Order Stationary*.
+- In particular, all means are the same: ${\mathbf E} [X_t] = {\mathbf E} [X_s]$ for all $t,s$.
+
+### Second Marginals Under Shift
+
+- Suppose all pairs have the same distribution when shifted: 
+\[
+  (X_1, X_2) \sim (X_2, X_3) \sim (X_3, X_4) \ldots
+\]
+- Then second marginal distribution only depends on lag $h$, i.e., distribution of $(X_t, X_{t-h})$ does not depend on $t$.
+- Sometimes called *Second Order Stationary*.
+- Then the product mean (the covariance) depends only on lag:
+\[
+ {\mathbf E} [ X_t \, X_{t-h}] 
+\]
+ does note depend on $t$.  
+ 
+## Strict and Weak Stationarity
+
+- Strict stationarity: all marginals (of all orders) are time shift invariant.
+- Weak stationarity: the time series has finite variance, constant mean $\mu$, and covariance only depends on lag $h$:
+\[
+  \gamma (h) = \mbox{Cov} [X_t, X_{t-h}] = {\mathbf E} [ X_t \, X_{t-h}] - \mu^2.
+\]
+This function is called the **autocovariance**.
+- So the variance is $\gamma (0)$.
+- The **autocorrelation** is
+\[
+ \rho (h) = \frac{ \gamma (h) }{ \gamma (0)}.
+ \]
+- Weak stationarity is sometimes called *covariance stationarity*. 
+ 
+```{r}
+rho <- .8
+gamma <- rho^seq(0,20)/(1-rho^2)
+plot(ts(gamma,start=0),xlab="Lag",ylab="Gamma",type ="h")
+```
+
+## White Noise
+
+- A key example is a *white noise* stochastic process.
+- This is any weakly stationary process $\{ Z_t \}$ with mean zero such that $\gamma (h) = 0$ for $h \neq 0$.
+- Written compactly as $Z_t \sim \mbox{WN} (0, \sigma^2)$, where $\sigma^2 = \gamma (0)$ is the variance, and the mean is $\mu = 0$.
+
+## Covariance Matrix of Sample Vector
+
+- The time series variables corresponding to a sample are $X_1, \ldots, X_n$, which can be put into a random vector $\underline{X}$.
+- The covariance matrix of $\underline{X}$ is denoted by $\Gamma_n$ when the stochastic process is weakly (or strictly) stationary. The entry in row $j$ and column $k$ is
+\[
+  \Gamma_n (j,k) = \mbox{Cov} [ X_j, X_k] = \gamma (k-j).
+\]
+ This only depends on the difference between row and column index! Such a matrix is constant along diagonals, and is called *Toeplitz*.
+ 
+```{r}
+rho <- .8
+gamma <- rho^seq(0,5)/(1-rho^2)
+gamma_mat <- toeplitz(gamma)
+gamma_mat
+```
+
+## Properties of Autocovariance
+
+1. $\gamma (0) \geq 0$
+2. $\gamma (h) = \gamma (-h)$
+3. $|\gamma (h)| \leq \gamma (0)$.
+4. $\gamma (h)$ is a non-negative definite sequence.
+
+This last property means that $\Gamma_n$ is a non-negative definite matrix for all $n$. (Recall from multivariate analysis: covariance matrices are non-negative definite, and are positive definite if all eigenvalues are positive.)
+
+

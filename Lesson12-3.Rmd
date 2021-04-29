@@ -1,0 +1,133 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 25: The Plug-in Principle and the Bootstrap
+
+- In time series (and statistics in general) we want to know the uncertainty in our estimates.
+- We would like to use bootstrap (or resampling techniques) to obtain the distribution of estimators.
+
+## Remark 12.1.4. Improving on the Normal Approximation
+
+- A confidence interval for the mean requires us to know the *long-run variance*,
+\[
+ \sigma^2_{\infty} =  \sum_{h = - \infty}^{\infty}  \gamma (h).
+\]
+- The $95 \%$ confidence interval based on the sample mean and the normal approximation is
+\[
+  \overline{X}_n \pm  1.96 \sqrt{\frac{ \widehat{\sigma_{\infty}^2} }{n} }.
+\]
+- There are some issues with the accuracy of this interval:
+
+1. The accuracy of the normal approximation in finite sample (non-normality of marginal distribution).
+2. Serial correlation in the time series, since
+\[
+   \mbox{Var} [ \sqrt{n} \overline{X}_n ] \rightarrow \sigma^2_{\infty},
+\]
+and the convergence can be slow.
+3. Estimation of $\sigma^2_{\infty}$ by some estimator $\widehat{\sigma^2_{\infty}}$
+(this could be constructed from sample autocovariances).
+
+- So we might consider directly approximating the distribution of $\overline{X}_n$ via *resampling* from $\{ X_t \}$. This is the idea of the *bootstrap*.
+
+# Background: i.i.d. Data
+
+## Fact 12.2.2. Parameters are Functionals of the Distribution
+
+- Any parameter $\theta$ of a distribution can be expressed in terms of that distribution.
+- Let $G$ be the cumulative distribution function (cdf).  Then we write $\theta$ as $\theta (G)$.
+
+## Example 12.2.5. Median Parameter
+
+The median $\theta$ can be written as $G^{-1} (1/2)$, where $G^{-1}$ denotes the quantile inverse.  ($G^{-1}(p) = \inf \{x: G(x) \geq p \}$.)
+
+## Definition 12.3.1.
+
+- If $X_1, \ldots, X_n$ are i.i.d. with common cdf $G$, then their empirical distribution function (edf) is
+\[
+ \widehat{G} (x)  =  \frac{1}{n} \sum_{i=1}^n  1_{ \{ X_i \leq x \} }.
+\]
+
+
+## Paradigm 12.3.5. The Plug-In Principle
+
+- The edf converges uniformly to the cdf, so we can estimate $\theta$ by *plugging in*:
+\[
+ \widehat{\theta} = \theta ( \widehat{G}).
+\]
+- This is called a *plug-in estimator*.  
+- It generalizes method-of-moments.
+
+## Example 12.3.8. Plug-In Estimator of the Median
+
+The plug-in estimator for the median is
+\[
+   \widehat{\theta}  = \widehat{G}^{-1} (1/2),
+\]
+ which is the sample median.
+ 
+## Paradigm 12.3.9.  Classical Bootstrap for the Variance of a Statistic
+
+- Consider a scenario where we want to know the variance of a statistic $\widehat{\theta}_n$ (computed from a sample of size $n$).
+- Let $\eta = \mbox{Var} [ \widehat{\theta}_n]$.  Since $n$ is fixed and the sample is i.i.d., $\eta = \eta (G)$.
+- We could estimate $\eta$ with the plug-in estimator.
+- We would like to compute $\eta (\widehat{G})$, but maybe there is no formula!
+- So we try to approximate it using the *bootstrap*.
+
+1. For large $M$ simulate
+\begin{align*}
+  & X_1^{*(1)}, \ldots, X_n^{*(1)} \sim \mbox{i.i.d.} \widehat{G} \\
+  & X_1^{*(2)}, \ldots, X_n^{*(2)} \sim \mbox{i.i.d.} \widehat{G} \\
+  & \ldots \\
+  & X_1^{*(M)}, \ldots, X_n^{*(M)} \sim \mbox{i.i.d.} \widehat{G}.
+\end{align*}
+2. For $1 \leq j \leq M$ compute $\widehat{\theta}_n^{*(j)}$ from the *pseudo-sample* $X_1^{*(j)}, \ldots, X_n^{*(j)}$.
+3. Our bootstrap estimator of $\eta$ is
+\[
+  \frac{1}{M} \sum_{j=1}^M {\left( \widehat{\theta}_n^{*(j)}
+   -  M^{-1} \sum_{k=1}^M \widehat{\theta}_n^{*(k)} \right)}^2.
+\]
+
+
+
+## Example 12.3.10.  Bootstrap for the Variance of U.S. Population Acceleration
+
+- Consider the time series $\{ Y_t \}$ of U.S. Population. 
+- One possible model is twice differencing, for which the series appears to be white noise.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+pop.diff <- diff(diff(pop))*10^(-3)
+acf(pop.diff)
+```
+
+- Suppose that $X_t = {(1-B)}^2 Y_t$ is actually i.i.d.
+- The sample mean of $\{ X_t \}$ is `r mean(pop.diff)` in units of millions.
+- Suppose we want to estimate the variance of this sample mean using the bootstrap (of course we could use a formula as well) with $M = 10^5$.
+
+```{r}
+n <- length(pop.diff)
+pop.mean <- mean(pop.diff)
+pop.edf <- sort(pop.diff)
+
+monte.means <- NULL
+Monte <- 100000
+for(i in 1:Monte)
+{
+	monte.sample <- sample(pop.edf,size=n,replace=TRUE)
+	monte.means <- c(monte.means,mean(monte.sample))
+}
+var.mean <- var(monte.means)
+```
+
+- The resulting estimate is `r var.mean` in units of millions.
+- Note: results change each time notebook is rendered, because seed is not fixed!
+

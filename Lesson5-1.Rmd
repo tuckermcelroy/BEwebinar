@@ -1,0 +1,149 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 14: ARMA Processes
+
+- ARMA processes generalize the AR and MA processes, and are central to classical time series analysis. They are very useful for modeling and forecasting stationary time series data.
+
+## Definition 5.1.1.
+
+- $\{ X_t \}$ is an ARMA($p$,$q$) process if it is stationary and satisfies
+\[
+  X_t - \sum_{j=1}^p \phi_j \, X_{t-j} = Z_t + \sum_{j=1}^q \theta_j \, Z_{t-j},
+\]
+ where $Z_t \sim \mbox{WN} (0,\sigma^2)$. The $\{ Z_t \}$ process is called the *inputs*.
+- This is a recursive definition.  It requires $p$ initial conditions to start the process.
+- An ARMA is like an AR process with MA inputs.
+- Special cases: $p=0$ gives an MA($q$), and $q=0$ gives an AR($p$).
+
+
+## Paradigm 5.1.3. ARMA as a Linear Filter
+
+- We can compactly write the ARMA equation in terms of the backward shift operator $B$. Define the polynomials
+\[
+ \phi (z) =  1 - \sum_{j=1}^p \phi_j z^j \qquad \theta (z) = 1 + \sum_{j=1}^q \theta_j z^j.
+ \]
+ Then the ARMA process satisfies
+\[
+ \phi (B) X_t = \theta (B) Z_t.
+\]
+
+## Causality of an ARMA Process
+
+- The ARMA process $\{ X_t \}$ is *causal* with respect to its inputs $\{ Z_t \}$ if there exists a power series $\psi (z) = \sum_{j \geq 0} \psi_j z^j$ such that
+\[
+  X_t = \psi (B) Z_t = \sum_{j \geq 0 } \psi_j \, Z_{t-j}.
+\]
+ This is called the MA($\infty$) representation.
+- Causality is used to derive the $h$-step ahead forecast filter.
+
+## Example: AR(1) Process
+
+- From the AR(1) recursion
+\[
+  X_t = \phi_1 \, X_{t-1} + Z_t,
+\]
+ we can recursively solve.
+- So we obtain
+\[
+  X_t = \phi_1 \, \left( \phi_1 X_{t-2} + Z_{t-1} \right) + Z_t
+   = \phi_1^2 \, X_{t-2} + \phi_1 \, Z_{t-1} + Z_t.
+\]
+- Iterating this argument further, we obtain
+\[
+  X_t = \phi_1^t \, X_0 + \phi_1^{t-1} \, Z_1 + \ldots + \phi_1 \, Z_{t-1} + Z_t.
+\]
+- Going further into the past, we obtain
+\[
+  X_t = Z_t + \phi \, Z_{t-1} + \ldots = \sum_{j \geq 0 } \phi_1^j \, Z_{t-j}.
+\]
+- This gives a causal representation, where $\psi_j = \phi_1^j$.
+
+## Theorem 5.4.3.
+
+- Let $\{ X_t \}$ be an ARMA($p$,$q$) where $\phi(z)$ and $\theta(z)$ have no common roots. Then $\{ X_t \}$ is causal if and only if all the roots of $\phi (z)$ are outside the unit circle, i.e., $|z|>1$ when $\phi (z) = 0$. In this case,
+\[
+  \psi (z) = \frac{ \theta (z) }{ \phi (z)}.
+\]
+- The coefficients $\psi_j$ can be computed by recursions or by the theory of Ordinary Difference Equations.
+
+## Invertibility of an ARMA Process
+
+- The ARMA process $\{ X_t \}$ is *invertible* with respect to its inputs $\{ Z_t \}$ if there exists a power series $\pi (z) = \sum_{j \geq 0} \pi_j z^j$ such that
+\[
+  Z_t = \pi (B) X_t = \sum_{j \geq 0 } \pi_j \, X_{t-j}.
+\]
+ This is called the AR($\infty$) representation.
+- Invertibility is crucial for prediction applications.
+
+## Theorem 5.5.3.
+
+- Let $\{ X_t \}$ be an ARMA($p$,$q$) where $\phi(z)$ and $\theta(z)$ have no common roots. Then $\{ X_t \}$ is invertible if and only if all the roots of $\theta (z)$ are outside the unit circle, i.e., $|z|>1$ when $\theta (z) = 0$. In this case,
+\[
+  \pi (z) = \frac{ \phi (z) }{ \theta (z)}.
+\]
+- The coefficients $\pi_j$ can be computed by recursions or by the theory of Ordinary Difference Equations.
+
+## Example 5.5.7. ARMA(1,2) Process
+
+- Consider the ARMA(1,2) process
+\[
+   X_t - (1/2) X_{t-1} = Z_t + (5/6) Z_{t-1} + (1/6) Z_{t-2}.
+\]
+So $\phi (z) = 1 - (1/2)z$ and $\theta (z) = (1 + (1/2)z) ( 1 + (1/3)z)$. 
+- Since the root of $\phi(z)$ is $z=2$, which has magnitude larger than one, the process is causal. Then 
+\[
+   \phi (z) \psi(z) = \theta (z).
+\]
+By matching coefficients,
+\[
+  \psi_k - (1/2) \psi_{k-1} = \theta_k
+\]
+ for $k \geq 0$, where $\psi_k = 0$ if $k < 0$.  Also $\theta_k = 0$ if $k > 2$, while $\theta_0 = 1$, $\theta_1 = 5/6$, and $\theta_2 = 1/6$. Solving recursively, we get
+ \begin{align*}
+ \psi_0 & = 1 \\
+ \psi_1 & = 4/3 \\
+ \psi_2 & = 5/6 \\
+ \psi_k & = (1/2) \psi_{k-1} \qquad k \geq 3.
+\end{align*}
+
+```{r}
+psi <- c(1,4/3,5/6,(10/3)*(1/2)^seq(2,10))
+plot(ts(psi,start=0),type="h",xlab="Index",ylab=expression(psi))
+```
+
+- Since  the roots of $\theta(z)$ are $z=-2,-3$, which have magnitude larger than one, the process is invertible. Then 
+\[
+   \theta (z) \pi(z) = \phi (z).
+\]
+By matching coefficients,
+\[
+  \pi_k + (5/6) \pi_{k-1} + (1/6) \pi_{k-2} = \begin{cases} 1 \qquad \mbox{if} \; k = 0 \\
+   -1/2 \quad \mbox{if} \; k = 1 \\ 0 \qquad \mbox{if} \; k \geq 2 \end{cases}
+\]
+ for $k \geq 0$, where $\pi_k = 0$ if $k < 0$. Solving recursively, we get
+ \begin{align*}
+ \pi_0 & = 1 \\
+ \pi_1 & = -4/3 \\
+ \pi_k & = -(5/6) \pi_{k-1} - (1/6) \pi_{k-2} \qquad k \geq 2.
+\end{align*}
+
+```{r}
+pi <- c(1,-4/3)
+for(j in 2:10)
+{
+  pi <- c(pi,(-5/6)*pi[j]+(-1/6)*pi[j-1])
+}
+plot(ts(pi,start=0),type="h",xlab="Index",ylab=expression(pi))
+```
+
+
+

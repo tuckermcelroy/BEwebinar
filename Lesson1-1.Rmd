@@ -1,0 +1,69 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 1: Time Series Data
+
+- A *time series* is a dataset where the observations are recorded at discrete time intervals.
+- We denote the obervation a time $t$ by $x_t$, and the random variable by $X_t$.
+- We have times $t = 1, 2, \ldots, n$ for the *sample* $X_1, X_2, \ldots, X_n$.
+- Time series data might not be i.i.d. (Independent and Identically Distributed)!
+
+## Example 1.1.3. U.S. Population
+
+- U.S. Population growth over the twentieth century.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+plot(pop*10e-7,xlab="Year",ylab="U.S. Population",lwd=1)
+```
+
+## Example 1.1.4. Urban World Population
+
+- Urban World Population trends upwards more strongly after WWII.
+
+```{r}
+urban <- read.table("urbanpop.dat")
+urban <- ts(urban[67:1,], start = 1951)
+plot(urban*1e-9,xlab="Year",ylab="Urban Population",lwd=1)
+```
+
+## Example 1.1.5. Non-Defense Capitalization
+
+- Non-Defense Capitalization (New Orders) shows non-monotonic trend, and is more *noisy*.
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+plot(ndc,xlab="Year",ylab="Non-defense Cap")
+```
+
+## Serial Dependence and Forecasting
+
+- Smoothness corresponds to high positive association (correlation) between adjacent variables.
+- High association means forecasting (prediction of future values) is easier.
+
+## Example 1.1.8. Dow Jones Industrial Average
+
+- Dow Jones Industrial Average has trend, but is hard to forecast one day ahead.
+
+```{r}
+dow <- read.table("dow.dat")
+dow <- ts(dow,start=c(2008,164),frequency=252)
+plot(dow,xlab="Year",ylab="Dow Levels")
+```
+
+- We can plot the log returns (consecutive difference of logged data), which shows how volatility is not constant.
+
+```{r}
+dow.diff <- diff(log(dow[,1]))
+plot(dow.diff,xlab="Year",ylab="Dow Log Returns")
+```

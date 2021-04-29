@@ -1,0 +1,223 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 23: GARCH Processes
+
+- For financial data, we need models that explain *fat tails* and *volatility clustering*.
+- The ARCH and GARCH models are popular nonlinear time series models for financial data.
+
+## Remark 11.3.1. Volatility Clustering
+
+- Financial time series exhibit periods of high variability followed by low variability.
+- In intra-day trading data, volatility is higher at the beginning and end of the day.
+
+## Definition 11.4.1.
+
+- The *Generalized Autoregressive Conditionally Heteroscedastic* process of order $p,q$, or GARCH(p,q), is a process $\{ X_t \}$ defined via
+\begin{align*}
+  X_t &  = \sigma_t \, Z_t \\
+  \sigma^2_t & = a_0 + \sum_{j=1}^p a_j X^2_{t-j} + \sum_{k=1}^q b_k \sigma^2_{t-k}.
+\end{align*}
+- The $\{ Z_t \}$ inputs are i.i.d. mean zero, variance 1. 
+- The parameters satisfy $a_j \geq 0$, $b_k \geq 0$.
+- The *stationarity restriction* is that $\sum_{j=1}^p a_j + \sum_{k=1}^q b_k < 1$. 
+
+## Example 11.4.4. GARCH(1,1)
+
+- Set $p=q=1$ for the most popular GARCH specification.
+\[
+  \sigma^2_t = a_0 + a_1 X^2_{t-1} + b_1 \sigma^2_{t-1}.
+\]
+- We can solve recursively for the volatility $\sigma^2_t$:
+\[
+ \sigma^2_t = \frac{a_0}{1 - b_1} + a_1 \, \sum_{j=0}^{\infty} b_1^j X^2_{t-1-j}.
+\]
+- This is called the ARCH($\infty$) representation of the GARCH(1,1).
+
+## Remark 11.4.6. Fitting a GARCH Model
+
+- Note that $Z_t = X_t/\sigma_t$, which is i.i.d. with some given probability density function $p_Z$.
+- From a sample, we have realization $x_t$ and compute
+\[
+ s_t^2  = \frac{a_0}{1 - b_1} + a_1 \, \sum_{j=0}^{\infty} b_1^j x^2_{t-1-j},
+\]
+ truncating the sum where the sample begins.
+- Then the *pseudo-likelihood* is defined as
+\[
+  \sum_{t=2}^n  \left(  \log p_Z ( x_t/ s_t) - \log s_t \right),
+\]
+where we truncate the $s_t$ calculation as needed.  
+- This pseudo-likelihood is a function of $a_0, a_1, b_1$, and can be maximized.
+
+## Example 11.4.7. Fitting a Gaussian GARCH(1,1) to Dow Log Returns
+
+- We consider the Dow Log Returns, and fit a Gaussian GARCH(1,1) model.
+
+```{r}
+dow <- read.table("dow.dat")
+dow <- diff(log(dow[,1]))
+dow <- ts(dow,start=c(2008,164),frequency=252)
+```
+
+- We use custom R code that enforces the stationarity restriction: https://github.com/tuckermcelroy/GARCH-param
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+
+psi2arch <- function(psi)
+{
+
+	#################################
+	#	psi2arch by Tucker McElroy
+	#
+	#	gives exact parametrization of ARCH(p)
+	#	input: p+1 vector of reals
+	#	output: coefs a0, a1, ..., ap of ARCH(p)
+	###############################################
+
+	p <- length(psi)-1
+	a.0 <- exp(psi[1])
+	if(p > 0)
+	{
+		r <- (1 + exp(-psi[2]))^(-1)
+		if(p > 1)
+		{
+			a.1 <- (1 + sum(exp(-psi[3:(p+1)])))^(-1)
+			a.j <- a.1
+			for(j in 2:p)
+			{
+				a.j <- c(a.j,exp(-psi[j+1])*a.1)
+			}
+			a.j <- r*a.j
+		} else { a.j <- r }
+		a.0 <- c(a.0,a.j)
+	}
+	return(a.0)
+}
+
+lik.garch <- function(psi,data,p.order,df,fitting=TRUE)
+{
+	#################################
+	#	lik.garch by Tucker McElroy
+	#
+	#	evaluates GARCH(p,q) lik using euclidean parametrization, 
+	#		p.order > 0
+	#	input: psi is a p+q+1 vector of reals, data is T-vector of data
+	#	output: value of -2 times log Gaussian/t lik
+	###############################################
+
+	p <- p.order
+	q <- length(psi)-p-1
+	T <- length(data)
+	coef <- psi2arch(psi)
+	acoef <- coef[1:(p+1)]
+	bcoef <- NULL
+	if(q > 0) { bcoef <- coef[(p+2):(p+q+1)] }
+	theta <- bcoef
+	phi <- acoef[-1]
+	psi <- c(1,ARMAtoMA(ar=theta,ma=NULL,lag.max=T))
+	psi <- polymul(psi,phi) 
+
+	lik <- 0
+	resids <- NULL
+	for(t in (p+1):T)
+	{
+		new.sigt <- sqrt(acoef[1]/(1-sum(theta)) + sum(psi[1:(t-1)]*data[(t-1):1]^2))
+		if(df==Inf) { lik <- lik + (-2)*log(dnorm(data[t],sd=new.sigt)) } else {
+			lik <- lik + (-2)*log(dt(data[t]/new.sigt,df=df)/new.sigt) }
+		resids <- c(resids,data[t]/new.sigt)
+	}
+	if(fitting) { return(lik) } else { return(resids) }
+}
+
+p <- 1
+q <- 1
+psi.init <- rep(0,p+q+1)
+garch.fit <- optim(psi.init,fn=lik.garch,data=dow,p.order=p,df=Inf,method="BFGS")
+print(garch.fit)
+garch.par <- psi2arch(garch.fit$par)
+print(round(garch.par,digits=3))
+```
+
+- The estimated parameters are: $a_0$ is `r garch.par[1]`, $a_1$ is `r garch.par[2]`, and $b_1$ is `r garch.par[3]`.
+- There is a high degree of persistence in volatility due to the high value of $b_1$.
+
+```{r}
+z <- lik.garch(garch.fit$par,dow,p,Inf,FALSE)
+m <- length(z)
+kurt <- m*sum((z - mean(z))^4)/(sum((z - mean(z))^2))^2 - 3
+```
+
+- Also $a_1 + b_1 \approx 1$, indicating high variance. We can check the residuals' kurtosis: it is `r kurt`. This high value indicates that the residuals have fat tails.
+
+## Example 11.4.8. Fat-Tailed GARCH(1,1) for Dow Log Returns
+
+- The above fitted model assumes a Gaussian input, but the variance was large.
+- So we should try a fat-tailed distribution.  Consider Student t.
+
+```{r}
+lik.tgarch <- function(psi,data,p.order)
+{
+	#################################
+	#	lik.tgarch by Tucker McElroy
+	#
+	#	evaluates t-GARCH(p,q) lik using euclidean parametrization, 
+	#		p.order > 0
+	#	input: psi is a p+q+2 vector of reals, data is T-vector of data,
+	#		last parameter corresponds to degrees of freedom
+	#	output: value of -2 times log t lik
+	###############################################
+
+	p <- p.order
+	q <- length(psi)-p-2
+	T <- length(data)
+	df <- 2 + exp(psi[p+q+2])
+	coef <- psi2arch(psi[1:(p+q+1)])
+	acoef <- coef[1:(p+1)]
+	bcoef <- NULL
+	if(q > 0) { bcoef <- coef[(p+2):(p+q+1)] }
+	theta <- bcoef
+	phi <- acoef[-1]
+	psi <- c(1,ARMAtoMA(ar=theta,ma=NULL,lag.max=T))
+	psi <- polymul(psi,phi) 
+
+	lik <- 0
+	for(t in (p+1):T)
+	{
+		new.sigt <- sqrt(acoef[1]/(1-sum(theta)) + sum(psi[1:(t-1)]*data[(t-1):1]^2))
+		new.sigt <- new.sigt/sqrt(df/(df-2))
+		lik <- lik + (-2)*log(dt(data[t]/new.sigt,df=df)/new.sigt) 
+	}
+	return(lik)
+}
+
+p <- 1
+q <- 1
+# initialize with values close to those of the Gaussian GARCH
+psi.init <- c(garch.fit$par,1)
+tgarch.fit <- optim(psi.init,fn=lik.tgarch,data=dow,p.order=p,method="BFGS")
+print(tgarch.fit)
+tgarch.par <- c(psi2arch(tgarch.fit$par[1:(p+q+1)]),2+exp(tgarch.fit$par[p+q+2]))
+print(round(tgarch.par,digits=3))
+```
+
+- The estimated parameters are: $a_0$ is `r tgarch.par[1]`, $a_1$ is `r tgarch.par[2]`, and $b_1$ is `r tgarch.par[3]`. The degrees of freedom is `r tgarch.par[4]`.
+- We still have $a_1 + b_1 \approx 1$, indicating high variance. 
+
+

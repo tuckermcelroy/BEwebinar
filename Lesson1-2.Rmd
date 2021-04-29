@@ -1,0 +1,82 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 2: Cycles and Transforms
+
+- High association can occur for non-adjacent random variables. 
+- For some fixed $h > 1$, we may have $X_t$ and $X_{t-h}$ associated for all $t$.
+- This is a *periodic* effect, called a *cycle*, of period $h$.
+
+## Example 1.2.1. Sunspots
+
+- Wolfer sunspots series measures number of sunspots recorded each month.
+- Cycles are roughly 11 years (so $h \approx 132$).
+
+```{r}
+wolfer <- read.table("wolfer.dat")
+wolfer <- ts(wolfer,start=1749,frequency=12)
+plot(wolfer,xlab="Year",ylab="Sunspots")
+```
+
+## Example 1.2.2. Unemployment Insurance Claims
+
+- Weekly measurements of claims for unemployment insurance (pre-Covid).
+- There is a weekly cylical pattern, corresponding to a cycle of annual period ($h=52$).
+
+```{r}
+ui <- read.table("ui.dat")
+ui <- ts(ui,start=1967,frequency=52)
+plot(ui,ylab="UI Claims",xlab="Year")
+```
+
+## Example 1.2.3. Mauna Loa carbon Dioxide
+
+- Monthly measurements of CO2 levels on mount Mauna Loa.
+- Apparent upward trend and monthly ($h=12$) cycle.
+
+```{r}
+mau <- read.table("mauna.dat",header=TRUE,sep="")
+mau <- ts(mau,start=1958,frequency=12)
+plot(mau,ylab="Mauna Loa CO2",xlab="Year")
+```
+
+## Example 1.2.4. Retail Sales of Motor Vehicles and Parts Dealers
+
+- Monthly measurements of retail sales.
+- Shows trend, monthly ($h=12$) cycle, and Great Recession.
+
+```{r}
+Ret441 <- read.table("retail441.b1",header=TRUE,skip=2)[,2]
+Ret441 <- ts(Ret441,start = 1992,frequency=12)
+plot(Ret441, ylab="Motor Retail Sales",xlab="Year")
+```
+
+## Example 1.2.5. Housing Starts
+
+- Monthly measurements of housing construction started (West Region).
+- Shows trend, monthly ($h=12$) cycle, and some recessions/expansions.
+
+```{r}
+Wstarts <- read.table("Wstarts.b1",header=TRUE,skip=2)[,2]
+Wstarts <- ts(Wstarts,start = 1964,frequency=12)
+plot(Wstarts, ylab="West Starts",xlab="Year")
+```
+
+## Log Transformation
+
+- To visualize and model time series better, sometimes we apply a log transform (if the data is positive).
+- If cycle amplitude depends on trend level, applying a log may separate this effect so that cycle amplitude is no longer growing.
+
+```{r}
+Ret441_trans <- ts(cbind(Ret441,log(Ret441)),start = 1992,frequency=12)
+plot(Ret441_trans, ylab="Motor Retail Sales",xlab="Year",main="")
+```
+

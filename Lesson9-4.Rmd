@@ -1,0 +1,102 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 18: Sample Autocovariance
+
+We want to estimate the ACVF: they are used in prediction, and are helpful in understanding serial dependence in the time series.
+
+## Remark 9.4.1. ACVF Estimator for Known Mean
+
+- Suppose that the mean $\mu$ of the stationary time series $\{ X_t \}$ was known, and we want to estimate $\gamma (h)$.
+- This is the expectation of $Y_t$, where
+\[
+ Y_t = (X_{t+h} - \mu)(X_t - \mu).
+\]
+- We can compute $Y_1,\ldots, Y_{n-h}$ for any $0 \leq h < n$, because $\mu$ is known.
+- The sample mean of these would be
+\[
+   \frac{1}{n-h} \sum_{t=1}^{n-h} Y_t =
+   \frac{1}{n-h} \sum_{t=1}^{n-h} (X_{t+h} - \mu)(X_t - \mu).
+\]
+ This has expectation $\gamma (h)$.
+- The long-run variance of this sample mean is based on the ACVF of $\{ Y_t \}$, and has a complicated expression known as *Bartlett's Formula*.
+- This suggests an estimator
+\[
+  \overline{\gamma} (h) = \frac{1}{n-h} \sum_{t=1}^{n-h} (X_{t+h} - \mu)(X_t - \mu),
+\]
+ which is unbiased for $\gamma (h)$.
+
+## Proposition 9.4.3. Bartlett's Formula
+
+Suppose $\{ X_t \}$ is a causal linear time series with i.i.d. inputs $\{ Z_t \}$, which have variance $\sigma^2$ and kurtosis $\eta$. Then the long-run variance of $\overline{\gamma}(h)$ is
+\[
+  \tau^2_{\infty} = \sum_{k = -\infty}^{\infty} \left(  \gamma (k+h) \gamma (k-h) + { \gamma (k)}^2 \right)
+    + { \gamma (h)}^2 (\eta - 3).
+\]
+
+## Remark 9.4.6. ACVF Estimator for Unknown Mean
+
+- Since $\mu$ is usually unknown, we can replace it by the sample mean $\overline{X}$.
+- The resulting estimator is asymptotically normal when the process $\{ X_t \}$ is $m$-dependent (i.e., random variables of at least lag $m$ between them are independent).
+
+## Remark 9.5.5. The Sample ACVF
+
+- The so-called *sample autocovariance function* (sample ACVF) is obtained by replacing $\mu$ by $\overline{X}$ in $\overline{\gamma} (h)$, and rescaling to guarantee a positive definite sequence:
+\[
+ \widehat{\gamma} (h) = \frac{1}{n} \sum_{t=1}^{n-h} (X_{t+h} - \overline{X})
+  (X_t - \overline{X})
+\]
+ for $h \geq 0$. 
+- Under $m$-dependence, Corollary 9.5.8 establishes a central limit theorem for the sample ACVF:
+  \[
+   \sqrt{n} ( \widehat{\gamma} (h)  - \gamma (h)) \Rightarrow \mathcal{N} (0, \tau^2_{\infty}).
+\]
+
+## Exercise 9.28. Sample ACVF of ARMA(1,2) Process
+
+- We simulate a Gaussian ARMA(1,2) process of length $n=200$.
+
+```{r}
+armapq.sim <- function(n,burn,ar.coefs,ma.coefs,innovar)
+{
+	p <- length(ar.coefs)
+	q <- length(ma.coefs)
+	z <- rnorm(n+burn+p+q,sd=sqrt(innovar))
+	x <- filter(z,c(1,ma.coefs),method="convolution",sides=1)
+	x <- x[(q+1):(q+n+burn+p)]
+	y <- x[1:p]
+	for(t in (p+1):(p+n+burn))
+	{
+		next.y <- sum(ar.coefs*y[(t-1):(t-p)]) + x[t]
+		y <- c(y,next.y)
+	}	
+	y <- y[(p+burn+1):(p+burn+n)]
+	return(y)
+}
+
+n <- 200
+phi1 <- .5
+theta1 <- 5/6
+theta2 <- 1/6
+x.sim <- armapq.sim(n,500,phi1,c(theta1,theta2),1)
+```
+
+- We construct and plot the sample acvf.
+
+```{r}
+y.sim <- x.sim - mean(x.sim)
+x.acf <- mean(y.sim^2)
+for(h in 1:20)
+{
+	x.acf <- c(x.acf,sum(y.sim[1:(n-h)]*y.sim[(h+1):n])/n)
+}
+plot(ts(x.acf,start=0,frequency=1),xlab="Lag",ylab="Sample Autocovariance",type="h")
+```

@@ -1,0 +1,90 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 3: Time Series Regression and Autoregression
+
+- It is tempting to regress time series data on time $t=1, \ldots, n$, as a covariate. Rarely does this provide satisfactory results (when used alone). 
+
+## Regression on Time Trend
+
+- Regression model with time trend:
+\[
+ X_t = \beta_0 + \beta_1 t + Z_t.
+\]
+ Is $\{ Z_t \}$ i.i.d.? Usually: **No**.
+
+### Example 1.1.3. U.S. Population
+
+- Try  out time trend regression for U.S. population.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+n <- length(pop)
+time <- seq(1,n)
+model1 <- lm(pop ~ time)
+summary(model1)
+plot(ts(model1$residuals))
+```
+
+- Highly structured residuals! We could add higher order polynomial effects to time trend, but it won't really help.
+
+## Regression on Past of Self
+
+- Let past values of the time series be the covariates. Called *Autoregression*.
+- Autoregressive model:
+\[
+  X_t = \rho \, X_{t-1} + Z_t.
+\]
+Assume $\{ Z_t \}$ i.i.d. 
+
+### Example 1.1.3. U.S. Population
+
+- Try  out autoregression for U.S. population.
+- Here we include a constant regressor as well.
+
+```{r}
+model2 <- lm(pop[-1] ~ pop[-n])
+summary(model2)
+plot(ts(model2$residuals))
+```
+
+- Residuals are less structured, though maybe still not i.i.d.
+- Why does this seem to work?
+
+```{r}
+cor(pop[-1],pop[-n])
+plot(pop[-1],pop[-n],xlab="X Past",ylab="X Present")
+```
+
+## Incorporate Time Trend
+
+- We can incorporate time trend into an autoregression.
+- One way to do it:
+\[
+ X_t = \rho X_{t-1} + \beta_0 + \beta_1 t + Z_t,
+\]
+- This makes the mean ${\mathbf E} [ X_t ]$ depend on $\rho$.
+- Another way to do it:
+\begin{align*}
+ Y_t & = \beta_0 + \beta_1 t + X_t \\
+  X_t & = \rho \, X_{t-1} + Z_t.
+\end{align*}
+
+```{r}
+model3 <- lm(pop[-1] ~ pop[-n] + time[-1])
+summary(model3)
+plot(ts(model3$residuals))
+```
+
+- This implements the first approach.
+- Notice slope coefficient $\beta_1$ is not significant, and residuals resemble those of the pure autoregressive model. So not much benefit to using time covariate.
+

@@ -1,0 +1,67 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+ 
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+ 
+# Lesson 7: White Noise Processes
+
+- *White noise* is a fundamental building block for time series models.
+- Any $\{ X_t \}$ i.i.d. with mean zero and variance $\sigma^2$ is a $\mbox{WN}(0,\sigma^2)$.
+- Here we provide three examples of white noise. 
+
+
+## Example 2.6.1. Dependent White Noise
+  
+- Consider $X_t = Z_t \cdot Z_{t-1}$, where $Z_t$ is i.i.d. $N(0,1)$.  
+- Then $X_t \sim \mbox{WN} (0,1)$, but $\{ X_t \}$ is not i.i.d.
+
+```{r}
+n <- 101
+z <- rnorm(n)
+x <- z[-n]*z[-1]
+plot(ts(x),xlab="Time",ylab="")
+#acf(x)
+```
+
+## Example 2.6.2. Non-identically Distributed White Noise
+
+- Let $\{ Y_t \}$ and $\{ Z_t \}$ be independent of each other. Set $Z_t$ i.i.d. $N(0,1)$ and $Y_t$ i.i.d. uniform on $(-\sqrt{3},\sqrt{3})$. Let 
+\[
+ X_t = \begin{cases} Z_t \quad t \; \mbox{even} \\ Y_t \quad t \; \mbox{odd} \end{cases}
+\]
+- Then $X_t \sim \mbox{WN} (0,1)$, although the process is not stationary (since the marginal distribution depends on $t$).
+
+```{r}
+n <- 100
+z <- rnorm(n)
+y <- runif(n,-3^(1/2),3^(1/2))
+x <- matrix(t(cbind(y,z)),ncol=1)
+plot(ts(x),xlab="Time",ylab="")
+#acf(x)
+```
+
+
+## Example 2.6.3. ARCH Process
+
+- Model of Engel (1982), a Nobel laureate.
+- Set $Z_t$ i.i.d. $N(0,1)$, and $X_t = Z_t \, \sqrt{\alpha + \beta X_{t-1}^2}$.
+- Then $X_t \sim \mbox{WN} (0,\alpha/(1-\beta))$.
+
+```{r}
+n <- 101
+z <- rnorm(n)
+alpha <- .2
+beta <- .3
+x <- 0
+for(t in 2:n) { x <- c(x,z[t]*sqrt(alpha + beta*x[t-1]^2)) }
+plot(ts(x),xlab="Time",ylab="")
+#acf(x)
+```
+
+

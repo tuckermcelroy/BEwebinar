@@ -1,0 +1,135 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 28: Subsampling
+
+- An alternative to the bootstrap is to replicate properties of the sample by examining *subsamples*.
+
+## Paradigm 12.7.1. Roots and Subsampling
+
+- Suppose that $\{ X_t \}$ is strictly stationary.
+- We also suppose that the process is $m$-dependent, which says that serial dependence vanishes between variables that are more than lag $m$ apart.   
+- Suppose $\widehat{\theta}_n$ is an estimator of $\theta$ based on the sample $X_1, \ldots, X_n$.
+- Suppose that $\tau_n$ is a rate of convergence for the estimator, such that
+\[
+   \tau_n (\widehat{\theta}_n - \theta) \Rightarrow S,
+\]
+ where $S$ is some random variable with cdf $J$.  
+- The cdf of our centered statistic is
+\[
+ J_n (x) = {\mathbb P} [  \tau_n (\widehat{\theta}_n - \theta) \leq x ].
+\]
+- So $J_n (x) \rightarrow J(x)$ as $n \rightarrow \infty$.
+- We can compute the statistic on smaller sub-spans of the full sample, and the corresponding cdf will also converge.
+
+## Paradigm 12.7.2. Blocking Schemes
+
+- We can divide $X_1, \ldots, X_n$ into smaller blocks.
+- Here we focus on overlapping blocks of size $b$, where $b < n$.
+- There are $Q = n-b+1$ such blocks, or *subsamples*.  For $1 \leq i \leq Q$
+\[
+  X_{i}, \ldots, X_{i+b-1}
+\]
+is the $i$th subsample.
+- Adjacent blocks have $b-1$ values in common.
+
+
+
+## Paradigm 12.7.5. Subsampling Methodology
+
+- Consider overlapping blocks, and evaluate the statistic on each:
+\[
+ \widehat{\theta}_{b,i} = \widehat{\theta} ( X_{i}, \ldots, X_{i+b-1}).
+\]
+- The centered statistic is then
+\[
+  Z_{b,i} = \tau_b  (\widehat{\theta}_{b,i} - \theta ).
+\]
+Note the rate is $\tau_b$, not $\tau_n$.
+- As $b \rightarrow \infty$, the cdf of $Z_{b,i}$ tends to $J$, for each $i$.
+- Fixing $b$, each $Z_{b,i}$ has the same distribution, and they are dependent random variables. The idea is to take their edf to estimate $J_n (x)$.
+- However, $\theta$ in $Z_{b,i}$ is unknown, so we replace it by $\widehat{\theta}_n$ based on the whole sample, which converges at a faster rate.
+\[
+    \widehat{Z}_{b,i} = \tau_b  (\widehat{\theta}_{b,i} - \widehat{\theta} ).
+\]
+- The *classical subsampling estimator* is then defined as
+\[
+   L_{n,b} (x) = \frac{1}{Q} \sum_{i=1}^Q 1_{ \{ \widehat{Z}_{b,i} \leq x \} }.
+\]
+- This is an edf.  Its quantiles are the order statistics of $\widehat{Z}_{b,i}$.
+- Neighboring blocks share lots of time series observations, and the corresponding $\widehat{Z}_{b,i}$ random variables will be more highly correlated.
+- By the $m$-dependence assumption, blocks that are sufficiently separated (far apart from one another) will be uncorrelated. 
+- Assuming that $\tau_b/ \tau_n \rightarrow 0$, the result is a consistent estimator of $J(x)$, and the difference $L_{n,b} (x) - J_n (x)$ tends to zero in probability.
+
+
+## Example 12.7.13. Subsampling Inference for Lag 1 Autocovariance of Non-Defense Capitalization
+
+- In previous notebook we studied the Non-Defense Capitalization time series.
+- After differencing, we wish to estimate $\gamma (1)$ and compute the cdf $\zeta = {\mathbb P} [ \widehat{\gamma} (1) - \gamma (1) \leq x]$.
+
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+ndc.diff <- diff(ndc)
+n <- length(ndc.diff)
+gamma.hat <- acf(ndc.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+ndc.acf1 <- gamma.hat[2]
+```
+
+- The lag 1 autocovariance is estimated to be `r ndc.acf1`.
+- We use the subsampling methodology, with $\tau_n = \sqrt{n}$. 
+- First consider $b = 5$.
+
+```{r}
+b.sub <- 5
+q.sub <- floor(n-b.sub+1)
+sub.edf <- NULL
+for(i in 1:q.sub)
+{
+	sub.ndc <- ndc.diff[i:(i+b.sub-1)]
+	gamma.sub <- acf(sub.ndc,lag=b.sub-1,type="covariance",plot=FALSE)$acf[,,1]
+	sub.edf <- c(sub.edf,sqrt(b.sub)*(gamma.sub[2]-ndc.acf1))
+}
+sub.edf <- sort(sub.edf)
+interval <- c(sub.edf[floor(.025*q.sub)],sub.edf[floor(.975*q.sub)])
+```
+
+- The $95 \%$ confidence interval based on subsampling is [`r ndc.acf1 - interval[2]`,`r ndc.acf1 - interval[1]`].
+- We plot the subsampling edf.
+
+```{r}
+plot(sub.edf,seq(1,q.sub)/q.sub,type="l",xlab="x",ylab="",lwd=2)
+```
+
+- Repeat with $b = 10$.
+
+```{r}
+b.sub <- 10
+q.sub <- floor(n-b.sub+1)
+sub.edf <- NULL
+for(i in 1:q.sub)
+{
+	sub.ndc <- ndc.diff[i:(i+b.sub-1)]
+	gamma.sub <- acf(sub.ndc,lag=b.sub-1,type="covariance",plot=FALSE)$acf[,,1]
+	sub.edf <- c(sub.edf,sqrt(b.sub)*(gamma.sub[2]-ndc.acf1))
+}
+sub.edf <- sort(sub.edf)
+interval <- c(sub.edf[floor(.025*q.sub)],sub.edf[floor(.975*q.sub)])
+```
+
+- The $95 \%$ confidence interval based on subsampling is [`r ndc.acf1 - interval[2]`,`r ndc.acf1 - interval[1]`].
+- We plot the subsampling edf.
+
+```{r}
+plot(sub.edf,seq(1,q.sub)/q.sub,type="l",xlab="x",ylab="",lwd=2)
+```
+

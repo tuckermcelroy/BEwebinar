@@ -1,0 +1,222 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 22: Iterative Forecasting 
+
+- With a fitted model we can compute forecasts, backcasts, and missing values using the normal equations.
+- The fitted model provides us with estimated autocovariances, which are needed in the normal equations.
+
+## Proposition 10.11.3
+
+- The $h$-step-ahead predictor can be calculated in terms of $j$-step-ahead predictors, for $1 \leq j < h$.
+- Get the $2$-step-ahead from the $1$-step-ahead predictor as follows:
+\begin{align*}
+   \widehat{X}_{n+1} & = \underline{\varphi}_n^{\prime} \underline{X}_n \\
+   \widehat{X}_{n+2} & =  \underline{\varphi}_{n+1}^{\prime} \,
+     \left[ \begin{array}{c} \underline{X}_n \\  \widehat{X}_{n+1} \end{array} \right].
+\end{align*}
+- Continue on iteratively to get the $h$-step-ahead: append the forecast and apply the next one-step-ahead predictor.
+
+
+
+## Remark 10.11.4.  Iterative Forecasting is Efficient
+
+- Direct calculation from the normal equations of forecasts would be expensive, because we have to invert a $n$-dimensional covariance matrix.
+- The one-step-ahead predictors $\underline{\varphi}_n$ are efficiently computed in the Durbin-Levinson algorithm, so the iterative approach of Proposition 10.11.3 is faster.
+
+## Paradigm 10.11.7.  Forecasting an Integrated Process
+
+- Suppose that $\{ X_t \}$ is a nonstationary time series that is integrated, and we want to forecast it.
+- Suppose that $\delta (B) = 1 - \sum_{j=1}^d \delta_j B^j$ is a *differencing* polynomial that reduces $\{ X_t \}$ to stationarity, i.e.,
+\[
+  Y_t = \delta (B) X_t = X_t - \sum_{j=1}^d \delta_j X_{t-j}
+\]
+ is a stationary process.  
+- Then we can forecast $\{ X_t \}$ as follows: forecast the $\{ Y_t \}$ series, obtaining $\widehat{Y}_{n+1}$, and use the formula
+\[
+   \widehat{X}_{n+1} = \sum_{j=1}^d \delta_j X_{n+1-j} + \widehat{Y}_{n+1}.
+\]
+- This works when $X_n, \ldots, X_{n+1-d}$ are observed.
+ 
+## Example 10.11.8.  Forecasting Gasoline Sales
+
+- We forecast the Gasoline sales time series of Example 3.3.4.  
+- Recall that this series is seasonally adjusted.  We use $\delta (B) = 1-B$ to reduce it to stationarity, after taking logs.
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymul(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+```
+
+- We fit an AR(12) model to $Y_t = X_t - X_{t-1}$ via the Yule-Walker equations.  
+
+```{r}
+arp.fityw <- function(data,p)
+{
+	gamma.hat <- acf(data,lag=p,type="covariance",plot=FALSE)$acf[,,1]
+	phi <- solve(toeplitz(gamma.hat[1:p]),gamma.hat[2:(p+1)])
+	sigma2 <- gamma.hat[1] - sum(phi*gamma.hat[2:(p+1)])
+	hess <- sigma2*diag(solve(toeplitz(gamma.hat[1:p])))
+	return(list(phi,sigma2,hess))
+}
+
+gassa <- read.table("GasSA_2-11-13.dat")
+gassa <- ts(log(gassa),start=1992,frequency=12)
+gas.diff <- diff(gassa)
+n <- length(gas.diff)
+ar.coef <- arp.fityw(gas.diff,12)[[1]]
+sigma2 <- arp.fityw(gas.diff,12)[[2]]
+```
+
+- We generate $50$ forecasts iteratively, withholding the last $50$ data points for comparison.
+
+```{r}
+pred.k <- function(gamma,max.lag)
+{
+	kappa.vec <- gamma[2]/gamma[1]
+	varphi.vec <- kappa.vec
+	if(max.lag > 1) {
+	for(k in 2:max.lag)
+	{
+		schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
+		kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
+		kappa.new <- kappa.new[1,1]
+		if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+		kappa.vec <- c(kappa.vec,kappa.new)
+		varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+		varphi.vec <- rev(c(varphi.vec,kappa.new))
+	} }
+	return(varphi.vec)
+}
+
+H <- 50
+lag <- n
+gamma <- ARMAauto(ar.coef,NULL,lag)*sigma2
+x <- gas.diff[1:(n-H)]
+for(k in 1:H)
+{
+	varphi.vec <- pred.k(gamma,n-H+k-1)
+	cast <- sum(varphi.vec * x)
+	x <- c(x,cast)
+}
+gassa.fore <- c(gassa[1],filter(x,1,method="recursive",init=gassa[1]))
+gassa.fore <- ts(c(rep(NA,n-H),gassa.fore[(n-H+1):n]),start=1992,frequency=12)
+``` 
+
+- The forecasts are plotted beside the true observed values (in log scale).  
+- There is a discrepancy, which is because we generate forecasts from before the onset of the Great Recession.
+
+```{r}
+plot(gassa,xlab="Year",ylab="",lwd=1)
+lines(gassa.fore,col=4,lwd=2)
+```
+
+
+## Exercise 10.61. Recursive Forecasting of Mauna Loa
+
+- We will forecast the Mauna Loa time series.
+- We first fit an AR(p) model to the annual differences of the logged data.
+
+```{r}
+mau <- read.table("mauna.dat",header=TRUE,sep="")
+mau <- ts(mau,start=1958,frequency=12)
+mau.gr <- diff(log(mau),lag=12)
+plot(mau,ylab="",xlab="Year")
+plot(mau.gr,ylab="",xlab="Year")
+```
+
+- We also examine the pacf.
+
+```{r}
+delta <- c(1,rep(0,11),-1)
+d <- length(delta)-1
+n <- length(mau.gr) 
+mau.pacf <- pacf(mau.gr,lag.max=120)
+```
+
+- By inspection of the pacf plot, we choose $p=49$. We fit an AR(49) model using Yule-Walker.
+
+```{r}
+p.hat <- 49
+ar.coef <- arp.fityw(mau.gr,p.hat)[[1]]
+sigma2 <- arp.fityw(mau.gr,p.hat)[[2]]
+```
+
+- Then we forecast $50$ steps ahead.  The basic pattern gets extended.
+
+```{r}
+H <- 50
+gamma <- ARMAauto(ar.coef,NULL,n+H)*sigma2
+x <- mau.gr
+for(k in 1:H)
+{
+	varphi.vec <- pred.k(gamma,n+k-1)
+	cast <- sum(varphi.vec * x)
+	x <- c(x,cast)
+}
+mau.fore <- c(log(mau)[1:d],filter(x,-delta[-1],method="recursive",init=log(mau)[d:1]))
+mau.fore <- ts(exp(mau.fore),start=1958,frequency=12)
+
+plot(mau.fore,col=2)
+lines(mau)
+```
+

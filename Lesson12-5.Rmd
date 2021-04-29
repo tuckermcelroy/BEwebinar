@@ -1,0 +1,164 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 27: Sieve Bootstrap
+
+- We now investigate two transformations $\Pi$: the AR sieve and the MA sieve.
+
+## Paradigm 12.5.2.  Sieves
+
+- Consider the case that the transformation $\Pi$ involves infinitely many parameters.
+- So we consider a sequence of transformations $\Pi_1, \Pi_2, \ldots$, where $\Pi_j$ has $j$ parameters.
+- We suppose these transformations to be nested. This means that $\Pi_j$ is obtained from $\Pi_{j+1}$ by restricting the $j+1$th parameter to some constant value (such as zero).
+- Also we suppose that taking the limit of these transformations gives $\Pi$.
+- Such a collection is called a *sieve*.
+- The *method of sieves* is to apply $\Pi_m$ to the sample $X_1, \ldots, X_n$, with $m$ chosen large enough that $\Pi_m \approx \Pi$, while also $m$ is small enough that we can estimate all the parameters.
+- If we get additional data ($n$ increases), then we would also increase $m$.
+
+## Paradigm 12.5.4. Autoregressive Sieve and the AR Sieve Bootstrap
+
+- Suppose we have an AR($\infty$) process:
+\[
+   \Xi (B) X_t = \epsilon_t \sim \mbox{i.i.d.} G.
+\]
+- We take $\Pi_p$ to be an AR($p$) model.  This is called the *AR sieve*.
+- Notation:
+\[
+   \phi^{(p)} (B) = 1 - \sum_{j=1}^p \phi_j^{(p)} B^j.
+\]
+- So as $p$ increases, all the coefficients can change (and we get more coefficients, too).
+- The order $p$ can be linked to sample size $n$ by a formula. Or $p$ can be determined empirically, as a statistic of the sample.
+- Once this $\Pi_p$ is determined, we can do an AR($p$) bootstrap (generalizing the $p=1$ case considered in previous notebook).
+- Because $p$ grows with $n$, this is called the *AR sieve bootstrap*.
+
+## Example 12.5.6.  Lag 12 Autocorrelation of Gasoline Sales
+
+- Consider the seasonally adjusted gasoline sales data.
+- Apply logs and differences, obtaining a linear process (this is an assumption).
+
+```{r}
+gassa <- read.table("GasSA_2-11-13.dat")
+gassa <- ts(log(gassa),start=1992,frequency=12)
+gas.diff <- diff(gassa)
+n <- length(gas.diff)
+```
+
+- We want to estimate $\rho (12)$, and get the cdf of $\widehat{\rho} (12) - \rho (12)$.
+- We use an AR sieve bootstrap with $p=12$ (based on analysis of the PACF plot) for this sample size. There are $M=10^5$ replications, and the pseudo-samples are constructed using a burnin of $500$.
+
+```{r}
+rho.hat <- acf(gas.diff,lag=n-1,type="correlation",plot=FALSE)$acf[,,1]
+gas.acf12 <- rho.hat[13]
+p.order <- 12
+phi.ar <- solve(toeplitz(rho.hat[1:p.order])) %*% rho.hat[2:(p.order+1)]
+
+gas.resids <- gas.diff[(p.order+1):n]
+for(i in 1:p.order) { gas.resids <- gas.resids - phi.ar[i]*gas.diff[(p.order+1-i):(n-i)] }
+gas.resids <- gas.resids - mean(gas.resids)
+gas.edf <- sort(gas.resids)
+
+monte.roots <- NULL
+burnin <- 500
+Monte <- 100000
+for(i in 1:Monte)
+{
+	monte.resids <- sample(gas.edf,size=n+burnin,replace=TRUE)
+	init.value <- rep(0,p.order)
+	monte.sample <- filter(monte.resids,phi.ar,method="recursive",init=init.value)[(burnin+1):(burnin+n)]
+	monte.root <- acf(monte.sample,lag=n-1,plot=FALSE)$acf[,,1][13] - gas.acf12
+	monte.roots <- c(monte.roots,monte.root)
+}
+# hist(monte.roots)
+interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
+```
+
+- The lag 12 autocorrelation is estimated to be `r gas.acf12`.
+- The $95 \%$ confidence interval based on the bootstrap is [`r gas.acf12 - interval[2]`,`r gas.acf12 - interval[1]`].
+- We plot the bootstrap edf.
+
+```{r}
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
+```
+
+  
+
+## Paradigm  12.5.8. Linear Process Bootstrap
+
+- Consider a stationary process $\{ Y_t \}$ with mean $\mu$ and acvf $\gamma (h)$.
+- For a sample of size $n$, we have $\Gamma_n$ is the Toeplitz covariance matrix of the sample.  Recall that $\Gamma_n = { \{ \gamma (j-k) \}}$.
+- We can taper the sample autocovariance estimators in order to estimate the whole matrix:
+\[
+   \breve{\gamma} (h) = \Lambda (h/d) \widehat{\gamma} (h).
+\]
+- Here $\Lambda$ is a *taper*, which is a symmetric function on $[-1,1]$ with non-negative values, which down-weights $\widehat{\gamma}$ when $|h|$ is large.
+- Also $d$ is the *bandwidth*, which is chosen by the user, and typically satisfies $d/n \rightarrow 0$.
+- For example, $\Lambda$ can be a trapezoid function.
+- Then we construct $\breve{\Gamma}_n$ by inserting $\breve{\gamma} (h)$ for $\gamma (h)$, and ensuring the matrix is positive-definite.
+- There is a Cholesky decomposition of the matrix, of the form
+\[
+   \breve{\Gamma} = L \, D \, L^{\prime},
+\]
+ where $L$ is unit lower-triangular and $D$ is diagonal with positive entries.
+- Then we can transform the data to residuals by first subtracting the sample mean, and then multiplying the sample vector by $D^{-1/2} L^{-1}$.
+- To the resulting residuals  we apply the i.i.d. bootstrap; this whole procedure is called the *Linear process bootstrap*.
+- When using a trapezoidal taper, $\breve{\gamma} (h) = 0$ if $|h| > d$, so we can think of these autocovariance estimates as corresponding to an MA($d$) process.
+- If we use some taper such that $\breve{\gamma} (h)$ truncates at $h = q$, the structure resembles that of an MA($q$) process, and the resulting procedure is called the *MA sieve bootstrap*.
+
+
+## Example 12.5.11. Lag 1 Autocovariance of Non-Defense Capitalization
+
+- Consider the Non-Defense Capitalization time series.
+- After differencing, we wish to estimate $\gamma (1)$ and compute the cdf $\zeta = {\mathbb P} [ \widehat{\gamma} (1) - \gamma (1) \leq x]$.
+
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+ndc.diff <- diff(ndc)
+n <- length(ndc.diff)
+```
+
+- We use an MA sieve bootstrap with the truncation taper and $q=10$ for this sample size. There are $M=10^5$ replications.
+
+```{r}
+gamma.hat <- acf(ndc.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+ndc.acf1 <- gamma.hat[2]
+q.order <- 10
+gamma.mat <- toeplitz(c(gamma.hat[1:(q.order+1)],rep(0,n-(q.order+1))))
+
+gamma.chol <- t(chol(gamma.mat))
+ndc.resids <- solve(gamma.chol,ndc.diff)
+ndc.resids <- ndc.resids - mean(ndc.resids)
+ndc.edf <- sort(ndc.resids)
+
+monte.roots <- NULL
+Monte <- 100000
+for(i in 1:Monte)
+{
+	monte.resids <- sample(ndc.edf,size=n,replace=TRUE)
+	monte.sample <- gamma.chol %*% monte.resids
+	monte.root <- acf(monte.sample,lag=n-1,plot=FALSE,type="covariance")$acf[,,1][2] - ndc.acf1
+	monte.roots <- c(monte.roots,monte.root)
+}
+# hist(monte.roots)
+interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
+```
+
+- The lag 1 autocovariance is estimated to be `r ndc.acf1`.
+- The $95 \%$ confidence interval based on the bootstrap is [`r ndc.acf1 - interval[2]`,`r ndc.acf1 - interval[1]`].
+- We plot the bootstrap edf.
+
+```{r}
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
+```
+
+
+ 

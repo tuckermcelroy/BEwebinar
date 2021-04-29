@@ -1,0 +1,163 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 9: Trends
+
+- Trends measure the long-term behavior of a time series.
+- Trends are steady movements in the level of a time series.
+- We can use smoothers to estimate trends.
+- Removing a trend by subtraction allows us to see other features.
+
+## Example 3.4.1. Western Housing Starts Cycle
+
+- We estimate and eliminate the trend in the Westing Housing Starts data, so that we can more clearly see the business cycle movements.
+
+```{r}
+hpsa <- function(n,period,q,r)
+{
+	# hpsa
+	#     gives an HP filter for seasonal data
+	#	presumes trend+seas+irreg structure
+	#		trend is integrated rw
+	#		seas is seasonal rw
+	#		irreg is wn
+	#	q is snr for trend to irreg
+	#	r is snr for seas to irreg
+
+# define trend differencing matrix
+
+delta.mat <- diag(n)
+temp.mat <- 0*diag(n)
+temp.mat[-1,-n] <- -2*diag(n-1)
+delta.mat <- delta.mat + temp.mat
+temp.mat <- 0*diag(n)
+temp.mat[c(-1,-2),c(-n,-n+1)] <- 1*diag(n-2)
+delta.mat <- delta.mat + temp.mat
+diff.mat <- delta.mat[3:n,]
+
+# define seasonal differencing matrix
+
+delta.mat <- diag(n)
+temp.mat <- 0*diag(n)
+inds <- 0
+for(t in 1:(period-1))
+{
+	temp.mat <- 0*diag(n)
+	temp.mat[-(1+inds),-(n-inds)] <- 1*diag(n-t)
+	delta.mat <- delta.mat + temp.mat
+	inds <- c(inds,t)
+}
+sum.mat <- delta.mat[period:n,]
+
+# define two-comp sig ex matrices
+
+#trend.mat <- solve(diag(n) + t(diff.mat) %*% diff.mat/q)
+#seas.mat <- solve(diag(n) + t(sum.mat) %*% sum.mat/r)
+trend.mat <- diag(n) - t(diff.mat) %*% solve(q*diag(n-2) + diff.mat %*% 
+	t(diff.mat)) %*% diff.mat
+seas.mat <- diag(n) - t(sum.mat) %*% solve(r*diag(n-period+1) + sum.mat %*% 
+	t(sum.mat)) %*% sum.mat
+
+# define three-comp sig ex matrices
+
+trend.filter <- solve(diag(n) - trend.mat %*% seas.mat) %*%
+	trend.mat %*% (diag(n) - seas.mat)
+seas.filter <- solve(diag(n) - seas.mat %*% trend.mat) %*%
+	seas.mat %*% (diag(n) - trend.mat)
+irreg.filter <- diag(n) - (trend.filter + seas.filter)
+
+filters <- list(trend.filter,seas.filter,irreg.filter)
+return(filters)
+}
+
+Wstarts <- read.table("Wstarts.b1",skip=2)[,2]
+Wstarts <- ts(Wstarts,start = 1964,frequency=12)
+n <- length(Wstarts)
+q <- .0001
+r <- 1
+hp.filters <- hpsa(n,12,q,r)
+
+wstarts.trend <- hp.filters[[1]] %*% Wstarts
+wstarts.seas <- hp.filters[[2]] %*% Wstarts
+wstarts.cycle <- hp.filters[[3]] %*% Wstarts
+wstarts.sa <- wstarts.trend + wstarts.cycle
+
+comps <- ts(cbind(wstarts.trend,wstarts.seas,wstarts.cycle),start=1964,frequency=12)
+trend <- ts(wstarts.trend,start=1964,frequency=12)
+cycle <- ts(wstarts.cycle,start=1964,frequency=12)
+
+par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(3,1),cex.lab=.8)
+plot(Wstarts, ylab="West Starts",xlab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(trend,xlab="",ylab = "Trend",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(cycle,xlab="",ylab = "Business Cycle",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+mtext(text="Year",side=1,line=1,outer=TRUE)
+```
+
+## Paradigm 3.4.12. Nonparametric Trend Estimation
+
+- We consider trends $\mu_t$ to be either a deterministic (but unknown) function of time, or are an unobserved stochastic process:
+\[
+  X_t = \mu_t + Z_t.
+\]
+ Here ${\mathbb E} [ X_t ] = \mu_t$ and $\{ Z_t \}$ is a mean zero time series.
+- A *two-sided moving average* is a linear filter that can be used to estimate trends:
+\[
+  \Psi (B) = \sum_{k = -m}^m \psi_k B^k.
+\]
+ When all the weights are equal, this is a simple moving average. It is two-sided because the moving average uses past and future data:
+ \[
+  \widehat{\mu}_t = \Psi (B)  X_t = \sum_{k= -m}^m \psi_k X_{t-k}.
+\]
+- A *symmetric moving average* weights future and past equally, i.e., $\psi_k = \psi_{-k}$.
+- Because the filter uses $m$ past and $m$ future observations, we can only compute trend estimates for times $m+1 \leq t \leq T-m$, where the sample consists of times $1,2, \ldots,T$.
+- As an estimator $\widehat{\mu}_t$ of the unknown trend $\mu_t$, there is less bias if $m$ is small, and less variance if $m$ is large. This is a **Bias-Variance Dilemma**.
+- Example with US population, and $m = 10$ for a simple moving average.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+
+p <- 10
+mu.smooth <- filter(pop,rep(1,2*p+1)/(2*p+1),method="convolution")
+mu.smooth <- ts(mu.smooth,start= 1901)
+
+par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
+plot(ts(pop,start=1901),lwd=3,lty=1,col=gray(.8),
+	ylab="U.S. Population",xlab="Year",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+lines(ts(mu.smooth,start=1901),lwd=1,lty=3,col=1)
+```
+
+## Paradigm 3.4.15. Trend Elimination
+
+- We can remove a trend by subtracting off its estimate.
+- We can also apply the differencing filter.
+- Example with US population, detrended by a $m = 10$ simple moving average and by the difference filter.
+
+```{r}
+pop.diff <- diff(pop)
+
+par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
+plot(ts(pop - mu.smooth,start=1901),lwd=1,lty=3,ylim=c(-3.5*10^6,3.5*10^6),
+	ylab="U.S. Population",xlab="Year",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+lines(pop.diff,col=gray(.8),lwd=2)
+```
+
+ 

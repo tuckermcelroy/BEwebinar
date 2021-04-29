@@ -1,0 +1,100 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 24: Volatility Filtering
+
+- ARCH and GARCH models do not *fully* capture volatility clustering and *fat tails* (i.e., extreme observations).
+- We can use a model-free approach to describe $\sigma_t$, the volatility.
+- In this lesson we view $\sigma_t$ as deterministic, and defined via $\sigma_t = {\mathbb E} [X^2_t]$.
+
+## Definition 11.6.2
+
+- Consider a moving average of squared returns:
+\[
+  \Pi (B) X_t^2 = \sum_{j= -\infty}^{\infty} \pi_j \, X_{t-j}^2.
+\]
+ This is a *volatility filter*, if all $\pi_j \geq 0$.  
+- A volatility filter can be causal, symmetric, etc.
+
+## Paradigm 11.6.3. Unbiased Volatility Filtering
+
+- We consider estimating volatility $\sigma_t^2 = {\mathbb E} [ X_t^2]$ by a volatility filter, just like we did for estimating the mean $\mu_t = {\mathbb E} [ X_t]$:
+\[
+ \widehat{\sigma}_t^2 = \Pi (B) X_t^2.
+\]
+- The same bias-variance trade-off applies as with mean estimation.
+ 
+ 
+## Example 11.6.4. Volatility Filtering of Dow Jones Log Returns
+
+- Consider the volatility filter $\pi_j = 1/11$ for $|j| \leq 5$.
+- Observe the increased volatility in more recent years.
+
+```{r}
+dow <- read.table("dow.dat")
+dow <- diff(log(dow[,1]))
+dow <- ts(dow,start=c(2008,164),frequency=252)
+
+p <- 5
+dow.vol <- filter(dow^2,rep(1,2*p+1)/(2*p+1),method="convolution",sides=2)
+plot(dow.vol,xlab="Year",ylab="",lwd=1)
+```
+
+## Definition 11.6.5.
+
+- When $\Pi (B)$ is causal, then $\widehat{\sigma}^2_t$ depends only on present and past data.
+- Then we can divide out by the (square root) volatility, getting a *pseudo-residual*:
+\[
+   W_t = \frac{ X_t}{ \widehat{\sigma}_t}.
+\]
+ This is called the *Normalizing and Variance Stabilizing* (NoVaS) transform.
+- The NoVaS denominator $\widehat{\sigma}_t$ is unbiased if $\Pi (1) = 1$, i.e., the sum of all coefficients equals one.
+
+## Paradigm 11.6.6.  NoVaS with Simple Weights
+
+- The idea is to choose a NoVaS transform $\Pi (B)$ such that $\{ W_t \}$ is close to i.i.d. Gaussian. 
+- We want light tails and no serial correlation.
+- We can search over volatility filters to find pseudo-residuals with this property.
+- NoVaS with simple weights: take $\Pi (B)$ causal with $\pi_0 = \pi_1 = \ldots = \pi_p= 1/(p+1)$.
+- We just need to choose $p$, which is done by making the kurtosis low (close to that of a Gaussian).
+
+## Example 11.6.7. Simple NoVaS Applied to Dow Log Returns
+
+- Test out Simple NoVaS on dow time series.
+
+```{r}
+p <- 9
+psi <- rep(1,p+1)/(p+1)
+n <- length(dow)
+dow.vol <- filter(dow^2,psi,method="convolution",sides=1)[(p+1):n]
+z <- dow[(p+1):n]/sqrt(dow.vol)
+m <- length(z)
+plot(ts(z))
+```
+
+- It turns out, the serial correlation is low and the kurtosis is close to three (the Gaussian case)!
+
+```{r}
+kurt <- m*sum((z - mean(z))^4)/(sum((z - mean(z))^2))^2 - 3
+kurt.std <- sqrt(m)*kurt/sqrt(mean(z^8)-mean(z^4)^2)
+z.acf <- acf(z,plot=TRUE,lag.max=m-1,type="covariance")$acf
+lambda <- seq(-m/2+1,m/2)*2*pi/m
+pgram <- cos(0*lambda)*z.acf[1]
+for(h in 1:(m-1))
+{
+	pgram <- pgram + 2*cos(h*lambda)*z.acf[h+1]
+}
+pgram <- ts(pgram,start=0,frequency=m)
+tot.var <- .5*mean(pgram^2) - z.acf[1]^2
+tot.std <- sqrt(m)*tot.var/sqrt(2*z.acf[1]^4)
+print(c(kurt,kurt.std))
+print(c(tot.var,tot.std))
+```

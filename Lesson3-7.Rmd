@@ -1,0 +1,90 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 11: Integrated Processes
+
+- Sometimes non-stationarity arises in the mean function ${\mathbb E} [ X_t ] = \mu_t$.
+- But the mean may not explain all the non-stationarity of a time series.
+- *Integrated Processes* are stochastic processes that exhibit a type of non-stationarity.
+
+## Example 3.7.1. Random Walk
+
+- We revisit the *random walk* $\{ X_t \}$, where
+\[
+  X_t = X_{t-1} + Z_t
+\]
+ for $t \geq 1$, and $\{ Z_t \}$ are i.i.d. $(0, \sigma^2)$.  
+- We can initialize with $X_0 = 0$.
+- Note that differencing yields the increment:
+\[
+  (1- B)X_t = Z_t.
+\]
+- Writing the recursion out yields
+\[
+  X_t = X_0 + \sum_{k=1}^t Z_k.
+\]
+- This is a cumulation, hence an *integrated process*.
+
+## Integrated Process
+
+- Suppose that $\{ X_t \}$ is a non-stationary stochastic process such that 
+\[
+  (1-B) X_t = Z_t
+\]
+ is stationary. Then it is called an *integrated process*.
+- Differencing $1-B$ cancels out the cumulation.
+
+## Example of Integrated Moving Average
+
+- Suppose that $\{ Z_t \}$ is an MA(1), and $X_t= X_{t-1} + Z_t$. 
+- We simulate a sample path.
+
+```{r}
+set.seed(777)
+n <- 100
+eps <- rnorm(n+1)		# Gaussian input
+theta <- .8
+z <- eps[-1] + theta*eps[-(n+1)]
+x <- cumsum(z)
+plot(ts(cbind(x,z)),xlab="Time",ylab="",main="")
+```
+
+## Example 3.7.3. Unit Root Process
+
+- The AR(1) process $\{ X_t \}$ satisfies
+\[
+  X_t = \phi X_{t-1} + Z_t,
+\]
+and can be written as
+\[
+   (1 - \phi B) X_t = Z_t.
+   \]
+   So when $\phi =1$, the AR(1) is a random walk. The polynomial $1- \phi z$ has root $1/\phi$, and when this root equals one, the root is *unit*. Hence a random walk (and more
+   generally, an integrated process) is sometimes called a *unit root process*.
+- Consider a sample path of an AR(1) with high value of $\phi$.
+
+```{r}
+n <- 100
+for(i in 1:2)
+{
+set.seed(123)
+z <- rnorm(n)
+x <- rep(0,n)
+phi <- .80+(i-1)*.199
+x0 <- 0
+x[1] <- x0 + z[1]
+for(t in 2:n) { x[t] <- phi*x[t-1] + z[t] }
+plot(ts(x),xlab="Time",ylab="")
+}
+```
+   
+   
+   

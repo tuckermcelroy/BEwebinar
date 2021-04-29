@@ -1,0 +1,259 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 20: The Gaussian Likelihood
+
+- We can fit AR(p) models using the sample Yule-Walker equations, or using OLS.
+- We can fit MA(q) models using a *spectral factorization*, which is akin to Yule-Walker in that it is a method-of-moments approach.
+- Here we study Maximum Likelihood Estimation (MLE).
+
+## Paradigm 10.5.9. The Gaussian Log Likelihood
+
+- We consider the log likelihood of a length $n$ sample from a stationary Gaussian time series. Multiplying by $-2$, we obtain the *Gaussian divergence*:
+\[
+  \mathcal{L} (\underline{\omega}, \sigma^2) =
+   n\log (2 \pi) + \log \det \Gamma_n + {( \underline{X} - \underline{\mu})}^{\prime} \,
+    \Gamma_n^{-1} \, {( \underline{X} - \underline{\mu})}.
+\]
+- Here $\underline{\mu}$ is the mean vector, and equals the mean $\mu$ times a vector of ones.
+- Also $\underline{\omega}$ is the parameter vector (all the parameters except the input variance $\sigma^2$).
+- Note that for AR, MA, and ARMA models, there is a parameter vector $\underline{\omega}$, which together with $\sigma^2$ determines $\gamma (h)$, and thereby $\Gamma_n$.
+- To fit a model, we seek to minimize the Gaussian divergence over $\underline{\omega}$ and $\sigma^2$. The resulting minimizers are the MLEs $\widehat{\underline{\omega}}$ and $\widehat{\sigma^2}$.
+
+## Remark 10.5.10. Profile Gaussian Log Likelihood
+
+- For many models, we can factor out $\sigma^2$ from each $\gamma (h)$.
+- In such a case, write $\upsilon (h) = \gamma (h) / \sigma^2$, and construct the Toeplitz $\Upsilon_n$ from these $\upsilon (h)$ values.
+- Then the divergence becomes
+\[
+  \mathcal{L} (\underline{\omega}, \sigma^2) =
+   n\log (2 \pi) + n \log \sigma^2 +
+   \log \det \Upsilon_n + \sigma^{-2} {( \underline{X} - \underline{\mu})}^{\prime} \,
+    \Upsilon_n^{-1} \, {( \underline{X} - \underline{\mu})}.
+\]
+- Use calculus: differentiate with respect to $\sigma^2$, set equal to zero, and solve.
+- Get a minimizer $\widehat{\sigma^2}$ that is a function of the still unknown $\underline{\omega}$. 
+- Plugging this formula back in to the divergence is called *concentration*, and we get a *profile likelihood* $\mathcal{L} (\underline{\omega},\widehat{\sigma^2})$.
+- The result is
+\begin{align*}
+  \widehat{\sigma^2} & = n^{-1} {( \underline{X} - \underline{\mu})}^{\prime} \,
+    \Upsilon_n^{-1} \, {( \underline{X} - \underline{\mu})}  \\
+  \mathcal{L} (\underline{\omega},\widehat{\sigma^2}) & = 
+    n \log (2\pi) + (n+1) \log \widehat{\sigma^2} + \log \det \Upsilon_n.
+\end{align*}
+- So we can minimize the profile likelihood as a function of $\underline{\omega}$, obtaining $\widehat{\underline{\omega}}$, and then finally get the input variance MLE via plugging into the first formula.
+- For large $n$, it can be shown that $n^{-1} \log \det \Upsilon_n \approx 0$, which implies we can dump the last term in the profile likelihood. Then approximately, we can just minimize $\widehat{\sigma^2}$, which is interpretable as a measure of one-step ahead forecast mean squared error.
+
+## Definition 10.6.4
+
+- The $k$-fold *predictors* are minimizers of the linear prediction MSE of $X_{k+1}$ from $\underline{X}_k = {[X_1, \ldots, X_k]}^{\prime}$. They are given by
+\[
+ \underline{\varphi}_k = \Pi_k \, \Gamma_k^{-1} \, \underline{\gamma}_k,
+\]
+ where $\Pi_k$ is a permutation matrix that reverses a vector (top to bottom).
+- Recall $\underline{\gamma}_k = {[\gamma (1), \ldots, \gamma (k)]}^{\prime}$.
+- So $\widehat{X}_{k+1} = \underline{\varphi}_k^{\prime} \underline{X}_k$.
+ 
+## Paradigm 10.7.1.  The Durbin-Levinson Algorithm
+
+- We want an efficient way to compute the divergence, or the profile likelihood.
+- The *Durbin-Levinson algorithm* gives efficient computation.
+- How does it work?  It can be shown that
+\[
+   \underline{X}_n^{\prime} \, \Gamma_n^{-1} \, \underline{X}_n 
+    = \sum_{k=1}^n \epsilon_k^2 / d_k,
+\]
+ where $\epsilon_k$ are in-sample forecast errors and $d_k$ are their variances.
+- These are computed recursively as follows:
+\begin{align*}
+  \epsilon_{k+1} & = X_{k+1} - \underline{\varphi}_k^{\prime} \underline{X}_k \\
+   d_{k+1} & = \gamma (0) - \underline{\varphi}_k^{\prime} \Gamma_k \underline{\varphi}_k.
+\end{align*}
+- In the first equation, this is $\epsilon_{k+1} = X_{k+1} - \widehat{X}_{k+1}$, the one-step-ahead forecast error. 
+- In the second equation, it can be shown this variance is always positive.
+- We get both updates if we know $\underline{\varphi}_k$. This can also be recursively computed (omitted) from previously computed predictors as well as the pacf $\kappa (k+1)$.
+
+## Exercise 10.47. Fitting an MA(1) Model to Non-Defense Capitalization
+
+- We will use the profile likelihood based on the Durbin-Levinson algorithm to fit an MA(1) model to the Non-Defense Capitalization series.
+- We have to load some R functions: polynomial multiplication and ARMA autocovariance calculation.
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymul(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+```
+
+- Next we load the Durbin-Levinson algorithm.
+
+```{r}
+dl.alg <- function(gamma,data)
+{
+	# assumes that n > 1
+	# assumes gamma includs lags 0 through n
+	n <- length(data)
+	kappa.vec <- gamma[2]/gamma[1]
+	varphi.vec <- kappa.vec
+	quad.new <- 0
+	quads <- NULL
+	ldet <- 0
+	ldets <- NULL
+	eps <- NULL
+
+	for(k in 2:n)
+	{
+		schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
+		eps.new <- data[k] - t(varphi.vec) %*% data[1:(k-1)]
+		eps <- c(eps,eps.new)
+		quad.new <- quad.new + eps.new^2/schur.new
+		quads <- c(quads,quad.new)
+		ldet <- ldet + log(schur.new)
+		ldets <- c(ldets,ldet)
+		kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
+		kappa.new <- kappa.new[1,1]
+		if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+		kappa.vec <- c(kappa.vec,kappa.new)	
+		varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+		varphi.vec <- rev(c(varphi.vec,kappa.new))
+	}
+	gauss.lik <- n*log(2*pi) + quads[n-1] + ldets[n-1]
+	gauss.likprof <- n*(1 + log(2*pi)) + n*log(quads[n-1]/n) + ldets[n-1]
+
+	return(list(gauss.lik,gauss.likprof,quads[n-1]/n,eps))
+}
+```
+
+- Next we load functions that ensure stable parameterizing of ARMA polynomials.
+
+```{r}
+psi2phi <- function(psi)
+{
+	p <- length(psi)
+	pacfs <- (exp(psi)-1)/(exp(psi)+1)
+	if(p==1)
+	{
+		phi <- pacfs
+	} else
+	{
+		phi <- as.vector(pacfs[1])
+		for(j in 2:p)
+		{
+			A.mat <- diag(j-1) - pacfs[j]*diag(j-1)[,(j-1):1,drop=FALSE]
+			phi <- A.mat %*% phi
+			phi <- c(phi,pacfs[j])
+		}
+	}
+	return(phi)
+}
+
+phi2psi <- function(phi)
+{
+	p <- length(phi)
+	pacfs <- phi[p]
+	if(p > 1)
+	{
+		phi <- as.vector(phi[-p])
+		for(j in p:2)
+		{
+			A.mat <- diag(j-1) - pacfs[1]*diag(j-1)[,(j-1):1,drop=FALSE]
+			phi <- solve(A.mat,phi)
+			pacfs <- c(phi[j-1],pacfs)
+			phi <- phi[-(j-1)]
+		}
+	}
+	psi <- log(1+pacfs) - log(1-pacfs)
+	return(psi)
+}
+```
+
+- Next we write the profile likelihood function.
+
+```{r}
+likprof.ma <- function(psi,data)
+{
+	n <- length(data)
+	theta <- -1*psi2phi(psi)
+	gamma <- ARMAauto(NULL,theta,n)
+	lik <- dl.alg(gamma,data)[[2]]
+	return(lik)
+}
+```
+
+- Now we are ready to do the fitting.
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+ndc.diff <- diff(ndc)
+n <- length(ndc.diff)
+psi.init <- 0
+fit.ma1 <- optim(psi.init,likprof.ma,data=ndc.diff,method="BFGS")
+psi.mle <- fit.ma1$par
+theta.mle <- -1*psi2phi(psi.mle)
+gamma <- ARMAauto(NULL,theta.mle,n)
+sig2.mle <- dl.alg(gamma,ndc.diff)[[3]]
+```
+
+- The results are: $\widehat{\theta_1} =$ `r theta.mle` and $\widehat{\sigma^2} =$ `r sig2.mle`.
+
+
+
+

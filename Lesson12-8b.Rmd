@@ -1,0 +1,114 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 30: Stationary Bootstrap
+
+- We consider some generalizations of the block bootstrap.
+
+## Paradigm 12.8.6. The Generalized Block Bootstrap
+
+- Consider a block bootstrap where the block size $b$ is random, i.e., there is a discrete random variable $R$ that generates the block size.
+- For example, $R$ could be Poisson plus one.
+
+```{r}
+r.block <- 1 + rpois(10,lambda =3)
+print(r.block)
+```
+
+- This gives us some variation in block size. The procedure is called the *generalized block bootstrap*.
+- The algorithm is like that of Paradigm 12.8.2 of previous notebook, but replace the first two steps as follows:
+
+1. For $1 \leq j \leq M$, randomly draw indices $U_1^{(j)}, U_2^{(j)}, \ldots \sim \mbox{i.i.d.} \mbox{Uniform} \{ 1, 2, \ldots, n\}$, and randomly draw block sizes $V_1^{(j)}, V_2^{(j)}, \ldots \sim \mbox{i.i.d.} R$.  Then set 
+\[
+  B_i^{*(j)} = \{ X_{U_i^{(j)}}, X_{U_i^{(j)}+1}, \ldots, X_{U_i^{(j)} + V_i^{(j)} -1} \},
+\]
+for $i = 1, 2, \ldots$.  We proceed until we reach $k$ such that $\sum_{i=1}^k V_i^{(j)} \geq n$.  
+2. Concatenate for each $j$ those draws, obtaining the $j$th pseudo-series $X_1^{*(j)}, \ldots, X_n^{*(j)}$ from $B_1^{*(j)}, B_2^{*(j)}, \ldots, B_k^{*(j)}$.
+
+- The $U$ random variables tell us where the block starts, and the $V$ random variables tell us the size of the block.
+- In constructing the blocks, we wrap around the circle, as in the circular block bootstrap.
+- We only need to draw random variables $V$ until the total length is at least $n$. If ${\mathbb P} [ V = 0] = 0$, then the number $k$ of random variables needed will be finite.
+- The last block $B_k^{*(j)}$ could make our pseudo-series have length greater than $n$, in which case we just trim off the extra.
+- Special case: ${\mathbb P}[ V = b] = 1$ corresponds to regular circular block bootstrap.
+
+## Remark 12.8.7. The Stationary Bootstrap
+
+- Suppose we take a generalized block bootstrap with $R$ a Geometric distribution of parameter $p_n$.
+
+```{r}
+r.block <- rgeom(10,prob=.5)
+print(r.block)
+```
+
+- This can generate zero values, which amounts to just skipping that block (it would have length zero).
+- With this choice, the sample paths of the pseudo-series are strictly stationary in the bootstrap world (i.e., conditional on the sample)!
+- The expected block size is $1/p_n$.
+- So we should choose $p_n \rightarrow 0$, but we also want $n p_n \rightarrow \infty$.
+
+
+## Exercise 12.35.  Stationary Bootstrap for the Mauna Loa Mean
+
+- Again consider annual differences of the logged Mauna Loa CO2 time series.
+- We want to estimate the mean using the stationary bootstrap. So we apply the above method to obtain the cdf of the centered statistic.
+
+```{r}
+mau <- read.table("mauna.dat",header=TRUE,sep="")
+mau <- ts(mau,start=1958,frequency=12)
+mau.gr <- 1000*diff(log(mau),lag=12)
+n <- length(mau.gr)
+mau.mean <- mean(mau.gr)
+```
+
+- The sample mean (after rescaling) is `r mau.mean`.
+- First try $p_n = 1/\sqrt{n}$ and $M = 10^5$.
+- We can also try $p_n = n^{-1/3}$ by rerunning the code chunk.
+
+```{r}
+# Make choice of p.geo, and then run 
+p.geo <-  1/sqrt(n)
+# p.geo <-  n^{-1/3}
+
+monte.roots <- NULL
+Monte <- 100000
+for(i in 1:Monte)
+{
+	tot.len <- 0
+	monte.sample <- NULL
+	while(tot.len < n)
+	{
+		boot.index <- sample(n,size=1)
+		boot.size <- rgeom(1,prob=p.geo)
+		if(boot.size>0)
+		{
+			boot.size <- min(boot.size,n)
+			monte.index <- seq(boot.index,boot.index+boot.size-1)
+			monte.index <- union(monte.index[monte.index <= n],monte.index[monte.index > n] %% n)
+			boot.sample <- mau.gr[monte.index]
+			monte.sample <- c(monte.sample,boot.sample)
+		}
+		tot.len <- tot.len + boot.size
+	}
+      monte.root <- mean(monte.sample) - mau.mean
+	monte.roots <- c(monte.roots,monte.root)
+}
+#hist(monte.roots)
+interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
+```
+
+- The $95 \%$ confidence interval based on the bootstrap is [`r mau.mean - interval[2]`,`r mau.mean - interval[1]`].
+- We plot the bootstrap edf.
+
+```{r}
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
+```
+
+
+

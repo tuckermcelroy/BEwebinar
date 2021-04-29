@@ -1,0 +1,132 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 17: Sample Mean
+
+- We need to know the statistical properties of common time series estimators.
+- We here focus on the sample mean, which estimates the population mean of a stationary time series.
+- The sample mean is 
+\[
+ \overline{X} = n^{-1} \sum_{t=1}^n X_t.
+\]
+
+## Remark 9.2.1. The Long-Run Variance
+
+- Suppose $\{X_t\}$ is stationary and the autocovariance function (ACVF) is absolutely summable:
+\[
+   \sum_{h = - \infty}^{\infty} | \gamma (h) | < \infty.
+\]
+- Then the *long-run variance* is defined as
+\[
+   \sum_{h = - \infty}^{\infty}  \gamma (h).
+\]
+- This is denoted by $\sigma^2_{\infty}$.  Observe this is equal to $G(1)$, i.e., setting $z=1$ in the AGF.
+- The long-run variance can be zero: suppose $\{ X_t \}$ has a MA representation $X_t = \psi (B) Z_t$, so that
+\[
+ \sigma^2_{\infty} = G(1) = {\psi (1) }^2 \sigma^2.
+\]
+ Then if $\psi(1) = 0$, the long-run variance is zero.  For example, consider an MA(1) process with $\theta (z) = 1 -z$.
+
+## Proposition 9.2.2.
+
+Suppose $\{ X_t \}$ is stationary with mean $\mu$, and ACVF that is absolutely summable. Then $\overline{X}$ is unbiased for $\mu$, and its scaled variance tends to the long-run variance:
+\[
+   \mbox{Var} [ \sqrt{n} \overline{X} ]  \rightarrow \sigma^2_{\infty}.
+\]
+
+
+## Theorem 9.2.7.
+
+- So long as the long-run variance is non-zero, we can establish a central limit theorem for the sample mean under the condition that the inputs (in the MA representation) are i.i.d.
+- Suppose $\{ X_t \}$ has causal MA representation
+\[
+  X_t = \mu + \psi (B) Z_t,
+  \]
+   where $Z_t \sim i.i.d. (0, \sigma^2)$.  Suppose $\sum_{j \geq 0} j | \psi_j| < \infty$ and
+   $\psi (1) \neq 0$.  Then
+  \[
+   \sqrt{n} ( \overline{X} - \mu) \Rightarrow \mathcal{N} (0, \sigma^2_{\infty}).
+\]
+
+## Remark 9.2.8. Inference for the Mean
+
+As an application, suppose we want to construct a confidence interval for the mean based on our estimator $\overline{X}$. To get the standard error, we need to know the long-run variance. This suggests the need to estimate all the autocovariances (however, that is not possible).
+
+## Exercise 9.13. Simulating an AR(1) Limiting Variance
+
+- We simulate a Gaussian AR(1) process with parameter $\phi_1 = .8$ and $\sigma^2 = 1$.
+
+```{r}
+armapq.sim <- function(n,burn,ar.coefs,ma.coefs,innovar)
+{
+	p <- length(ar.coefs)
+	q <- length(ma.coefs)
+	z <- rnorm(n+burn+p+q,sd=sqrt(innovar))
+	x <- filter(z,c(1,ma.coefs),method="convolution",sides=1)
+	x <- x[(q+1):(q+n+burn+p)]
+	y <- x[1:p]
+	for(t in (p+1):(p+n+burn))
+	{
+		next.y <- sum(ar.coefs*y[(t-1):(t-p)]) + x[t]
+		y <- c(y,next.y)
+	}	
+	y <- y[(p+burn+1):(p+burn+n)]
+	return(y)
+}
+phi <- .8
+```
+
+- Based on sample sizes $n = 50, 100, 200$, we compute the sample mean.
+- Repeating over $10,000$ simulations, we approximate the scaled variance of the sample mean, and see how close this is to the long-run variance.
+
+```{r}
+# small sample
+n <- 50
+x.means <- NULL
+for(i in 1:10000)
+{
+	x.sim <- armapq.sim(n,500,phi,NULL,1)
+	x.means <- c(x.means,mean(x.sim))
+}
+y <- sqrt(n)*x.means
+var(y)
+(1-phi)^{-2}
+```
+
+```{r}
+# moderate sample
+n <- 100
+x.means <- NULL
+for(i in 1:10000)
+{
+	x.sim <- armapq.sim(n,500,phi,NULL,1)
+	x.means <- c(x.means,mean(x.sim))
+}
+y <- sqrt(n)*x.means
+var(y)
+(1-phi)^{-2}
+```
+
+```{r}
+# large sample
+n <- 200
+x.means <- NULL
+for(i in 1:10000)
+{
+	x.sim <- armapq.sim(n,500,phi,NULL,1)
+	x.means <- c(x.means,mean(x.sim))
+}
+y <- sqrt(n)*x.means
+var(y)
+(1-phi)^{-2}
+``` 
+
+

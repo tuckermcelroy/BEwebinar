@@ -1,0 +1,124 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 26: Model-based Bootstrap
+
+- We don't want to assume i.i.d. data, because time series data have serial dependence.
+
+## Paradigm 12.4.2.  Bootstrapping an AR(1) Model
+
+- Suppose $\{ X_t \}$ is a stationary AR(1) process with i.i.d. inputs with cdf $G$:
+\[
+  X_t - \phi X_{t-1} = \epsilon_t,
+\]
+ where $\epsilon_t \sim \mbox{i.i.d.} G$.
+- Suppose we want to estimate the cdf of $\widehat{\phi} - \phi$, where $\widehat{\phi}$ is the Yule-Walker estimator.
+- So for any $x$, we want a bootstrap estimate of $\zeta = {\mathbb P} [ \widehat{\phi} - \phi \leq x]$.
+- We compute residuals
+\[
+  e_t = X_t - \widehat{\phi} X_{t-1},
+\]
+ and use these as proxies for $\epsilon_t$.
+- Center the residuals by their sample mean, and let $\widehat{G}$ be their edf.
+
+1. For large $M$ simulate
+\begin{align*}
+  & \epsilon_1^{*(1)}, \ldots, \epsilon_n^{*(1)} \sim \mbox{i.i.d.} \widehat{G} \\
+  & \epsilon_1^{*(2)}, \ldots, \epsilon_n^{*(2)} \sim \mbox{i.i.d.} \widehat{G} \\
+  & \ldots \\
+  & \epsilon_1^{*(M)}, \ldots, \epsilon_n^{*(M)} \sim \mbox{i.i.d.} \widehat{G}.
+\end{align*}
+2. For $1 \leq j \leq M$ construct
+\[
+   X_t^{*(j)} = \widehat{\phi} X_{t-1}^{*(j)} + \epsilon_t^{*(j)}
+\]
+for $1 \leq t \leq n$.
+3. Compute $\widehat{\phi}^{*(j)}$ from the *pseudo-sample* $X_1^{*(j)}, \ldots, X_n^{*(j)}$.
+4. Our bootstrap estimator of $\zeta$ is
+\[
+  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \widehat{\phi}^{*(j)} - \phi \leq x  \}}.
+\]
+
+
+## Example 12.4.3. Bootstrap for the AR(1) Coefficient of U.S. Population Growth
+
+- For the U.S. Population time series $\{ Y_t \}$, we can also consider fitting an AR(1) model to first differences.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+pop.diff <- diff(pop)*10^(-6)
+acf(pop.diff)
+```
+
+- Let $X_t = (1-B) Y_t$, and consider the AR(1) model for $\{ X_t\}$.
+- Suppose we want to estimate the cdf of $\widehat{\phi} - \phi$ using the bootstrap with $M = 10^5$.
+
+```{r}
+n <- length(pop.diff)
+kappa.hat <- pacf(pop.diff,lag=n-1,plot=FALSE)$acf[,,1]
+pop.ar1 <- kappa.hat[1]
+pop.resids <- pop.diff[2:n] - pop.ar1*pop.diff[1:(n-1)]
+pop.resids <- pop.resids - mean(pop.resids)
+pop.edf <- sort(pop.resids)
+
+monte.roots <- NULL
+Monte <- 100000
+for(i in 1:Monte)
+{
+	monte.resids <- sample(pop.edf,size=n,replace=TRUE)
+	init.value <- sample(pop.diff,size=1)
+	monte.sample <- filter(monte.resids,pop.ar1,method="recursive",init=init.value)
+	monte.root <- pacf(monte.sample,lag=n-1,plot=FALSE)$acf[,,1][1] - pop.ar1
+	monte.roots <- c(monte.roots,monte.root)
+}
+# hist(monte.roots)
+interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
+```
+
+- The AR(1) coefficient is estimated to be `r pop.ar1`.
+- The $95 \%$ confidence interval based on the bootstrap is [`r pop.ar1 - interval[2]`,`r pop.ar1 - interval[1]`].
+- We plot the bootstrap edf.
+
+```{r}
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
+```
+  
+
+
+## Paradigm 12.4.7. Bootstrap and the Model-Free Principle 
+ 
+- Using a transformation (instead of a model) that produces i.i.d. residuals from the data process  is called the *model-free principle*.
+- So to do a time series bootstrap, we should seek such a transformation, bootstrap the residuals, reconstruct the process, and evaluate the statistic on the pseudo-samples.
+- Suppose there exists an invertible transformation $\Pi$ such that $\underline{\epsilon} = \Pi (\underline{X})$ is a vector of i.i.d. components, where $\underline{X} = {[ X_1, \ldots, X_n ]}^{\prime}$.
+- Let $G$ denote the cdf of $\epsilon_t$.  
+- Suppose we have a statistic $\widehat{\theta}_n$ and we want the cdf $\zeta = {\mathbb P} [ \widehat{\theta}_n - \theta \leq x]$.
+- Compute the residuals, and estimate $G$ via the residual edf $\widehat{G}$.
+- Then the *Model-free bootstrap* is:
+
+1. For large $M$ simulate
+\begin{align*}
+  & \epsilon_1^{*(1)}, \ldots, \epsilon_n^{*(1)} \sim \mbox{i.i.d.} \widehat{G} \\
+  & \epsilon_1^{*(2)}, \ldots, \epsilon_n^{*(2)} \sim \mbox{i.i.d.} \widehat{G} \\
+  & \ldots \\
+  & \epsilon_1^{*(M)}, \ldots, \epsilon_n^{*(M)} \sim \mbox{i.i.d.} \widehat{G}.
+\end{align*}
+2. For $1 \leq j \leq M$ construct
+\[
+   \underline{X}^{*(j)} = \Pi^{-1} [ \underline{\epsilon}^{*(j)} ].
+\]
+3. Compute $\widehat{\theta}_n^{*(j)}$ from the *pseudo-sample* $\underline{X}^{*(j)}$.
+4. Our bootstrap estimator of $\zeta$ is
+\[
+  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \widehat{\theta}_n^{*(j)} - \theta \leq x  \}}.
+\]
+
+ 

@@ -1,0 +1,143 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 16: Partial Autocorrelation 
+
+- Recall from linear models that partial correlation allows us to explore the relationship between a dependent variable and a covariate, while accounting for other covariates.
+- We apply this concept to stationary time series, where we look at the relationship between time present and time past, while accounting for the in-between times.
+
+## Definition 6.5.1.
+
+- The partial correlation function (PACF) of stationary time series $\{ X_t \}$ is a sequence $\kappa (h)$ defined by  $\kappa (1)  = \mbox{Corr} [ X_1, X_0]$ and
+ \[
+  \kappa (h) = \mbox{Corr} [ X_h, X_0 \vert X_1,\ldots, X_{h-1}]
+\]
+ when $h \geq 2$.  The conditioning stands for projection (of the demeaned time series) on the random variables.
+- What does this mean? Linearly predict $X_h$ from $X_1, \ldots, X_{h-1}$, and call that $\widehat{X}_h$.  Also linearly predict $X_0$ from $X_1, \ldots, X_{h-1}$, and call that $\widehat{X}_0$. Then $\kappa(h)$ is the correlation of the prediction errors:
+\[
+ \kappa (h) = \mbox{Corr} [ X_h - \widehat{X}_h, X_0 - \widehat{X}_0].
+\]
+- Because of stationarity, we could also write
+\[
+  \kappa (h) = \mbox{Corr} [ X_{t+h}, X_t \vert X_{t+1},\ldots, X_{t+h-1}]
+\]
+for any $t$. 
+
+## Example 6.5.2. Partial Autocorrelation of an AR($p$) Process
+
+- Suppose $\{ X_t \}$ is an AR(1), where $\phi (z) = 1 - \phi_1 z$. Then $\kappa (1) = \phi_1$.
+- Also for $h \geq 2$, $\widehat{X}_h = \phi_1 X_{h-1}$ and $\widehat{X}_0 = \phi_1 X_1$ (follows from the normal equations).
+- The prediction errors are then
+\begin{align*}
+  X_h - \widehat{X}_h & = Z_h \\
+  X_0 - \widehat{X}_0 & = (1 - \phi_1^2) X_0 - \phi_1 Z_1.
+\end{align*}
+ These are uncorrelated for $h \geq 2$. So $\kappa (h) = 0$.
+- The argument can be generalized to the case of an AR($p$), for which $\kappa (h) = 0$ when $h > p$.
+
+## Proposition 6.5.5. 
+
+If $\{ X_t \}$ has mean zero, the PACF at lag $h$ is given by solving the Yule-Walker equations of order $h$, and taking the last coefficient, i.e., letting $\underline{e}_h$
+ denote the length $h$ unit vector with one in the last position, 
+\[
+  \kappa (h) = \underline{e}_h^{\prime} \, \Gamma_h^{-1} \, \underline{\gamma}_h.
+\]
+
+## Exercise 6.54. PACF of MA($q$)
+
+- We use the formula of Proposition 6.5.5 to compute the PACF for the MA(3) process with $\theta(z)  = 1 + .4z + .2 z^2 - .3 z^3$.
+
+```{r}
+polymult <- function(a,b) {
+bb <- c(b,rep(0,length(a)-1))
+B <- toeplitz(bb)
+B[lower.tri(B)] <- 0
+aa <- rev(c(a,rep(0,length(b)-1)))
+prod <- B %*% matrix(aa,length(aa),1)
+return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymult(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+
+armapq.pacf <- function(ar.coefs,ma.coefs,max.lag)
+{
+	gamma <- ARMAauto(ar.coefs,ma.coefs,max.lag)
+	kappa <- NULL
+	for(k in 1:max.lag)
+	{
+		new.kappa <- solve(toeplitz(gamma[1:k]),gamma[2:(k+1)])[k]		
+		kappa <- c(kappa,new.kappa)
+	}
+	return(kappa)
+}
+
+# MA(3) process
+ma.coefs <- c(.4,.2,-.3)
+kappa <- armapq.pacf(NULL,ma.coefs,10)
+plot(ts(kappa,start=1),xlab="Lag",ylab="Partial Autocorrelation",
+     ylim=c(min(kappa),max(kappa)),type="h")
+```
+
+## Exercise 6.55. PACF pf ARMA($p$,$q$)
+
+- Compute the PACF of Example 5.5.7.
+
+```{r}
+# Example 5.5.7
+phi1 <- .5
+theta1 <- 5/6
+theta2 <- 1/6
+kappa <- armapq.pacf(phi1,c(theta1,theta2),10)
+plot(ts(kappa,start=1),xlab="Lag",ylab="Partial Autocorrelation",
+     ylim=c(min(kappa),max(kappa)),type="h")
+```

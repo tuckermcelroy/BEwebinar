@@ -1,0 +1,179 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 15: Autocovariance Generating Function
+
+- We want a way to summarize the autocovariances for an ARMA process.
+
+## Definition 5.6.1.
+
+The *autocovariance generating function* (AGF) of a stationary time series with autocovariance function $\gamma (k)$ is
+\[
+  G(z) = \sum_{k = - \infty}^{\infty} \gamma (k) z^k
+\]
+ (if it converges in some annulus $1/r < |z| < r$ for $r > 1$).
+ 
+## Example 5.6.3. Constant AGF
+
+- Suppose $X_t \sim \mbox{WN}(0, \sigma^2)$. Then $\gamma (0) = \sigma^2$, and $\gamma (k) = 0$ if $k \neq 0$.  Hence
+\[
+  G(z) = \gamma (0) = \sigma^2.
+\]
+- The AGF for white noise is a constant function.
+ 
+## Theorem 5.6.6.
+
+Suppose we filter stationary $\{ X_t \}$ with some $\psi (B)$, yielding $Y_t = \psi (B) X_t$. Then the AGFs of input and output are related by
+\[
+   G_y (z) = \psi (z) \psi (z^{-1}) G_x (z).
+\]
+
+## Remark 5.6.8. ARMA Transfer Function
+
+- Because a causal ARMA can be written in MA representation as $X_t = \psi (B) Z_t$, we have
+\[
+  G_x (z) = \psi (z) \psi (z^{-1}) \sigma^2,
+\]
+ by Example 5.6.3.  
+- Using $\psi (z) = \theta (z)/ \phi (z)$, we obtain
+\[
+  G_x (z) =  \frac{ \theta (z) \theta (z^{-1}) }{ \phi (z) \phi (z^{-1}) } \sigma^2.
+\]
+
+## Example 5.6.1. MA(1) AGF
+
+- We can use the AGF to compute autocovariances from MA parameters.
+- Suppose $\{ X_t \}$ is an MA(1) process with polynomial $\theta(z) = 1 + \theta_1 z$. Then
+\[
+ G_x (z) = \theta (z) \theta (z^{-1}) \sigma^2
+  = (1 + \theta_1 z) (1 + \theta_1 z^{-1}) \sigma^2 
+   = \left( 1 + \theta_1^2 + \theta_1 z + \theta_1 z^{-1} \right) \sigma^2.
+\]
+- Because the coefficient of $z^0 = 1$ is $\gamma (0)$, we have
+\[
+ \gamma (0 ) = (1 + \theta_1^2) \sigma^2.
+\]
+- Also, the coefficient of both $z$ and $z^{-1}$ is $\gamma (1)$. Therefore
+\[
+ \gamma (1) = \theta_1 \sigma^2.
+\]
+
+## Example 5.6.2. AR(1) AGF
+
+- We can also compute the AGF for an AR(1).
+- Suppose $\{ X_t \}$ is an AR(1) with causal polynomial $\phi (z) = 1 - \phi_1 z$. Then
+\[
+ G_x (z) = \frac{1}{ \phi (z) \phi (z^{-1})} \sigma^2 
+  = \frac{1}{ (1 - \phi_1 z) (1 - \phi_1 z^{-1})} \sigma^2.
+\]
+- By geometric series, 
+\[
+  {(1 -  \phi_1 z)}^{-1} = \sum_{j \geq 0} \phi_1^j z^j.
+\]
+ (Causality guarantees that $|\phi_1| < 1$!)
+- Therefore
+\begin{align*}
+ G_x (z) & = \left( \sum_{j \geq 0} \phi_1^j z^j \right) 
+ \left( \sum_{j \geq 0} \phi_1^j z^{-j} \right) \sigma^2 \\
+ & = \sum_{j,k \geq 0} \phi_1^{j+k} z^{j-k} \sigma^2 \\
+ & = \sum_{h = -\infty}^{\infty} \sum_{k \geq 0} \phi_1^{|h| + 2k} z^h \sigma^2 \\
+ & = \sum_{h = -\infty}^{\infty} \frac{ \phi_1^{|h|}}{1 - \phi_1^2} z^h \sigma^2.
+\end{align*}
+- Now we read off the coefficient of $z^h$ (or $z^{-h}$) is $\gamma (h)$:
+\[
+ \gamma (h) = \frac{ \phi_1^{|h|}}{1 - \phi_1^2} \sigma^2.
+\]
+
+## Computing Autocovariances of an ARMA Process
+
+- Given the ARMA polynomials $\theta (z)$ and $\phi (z)$, we need algorithms to compute the autocovariances. 
+- Method 1: first determine $\psi (z)$, the MA representation. Then compute 
+\[
+ \gamma (h) = \sum_{j \geq 0 } \psi_j \psi_{j+|h|} \sigma^2,
+\]
+ which follows from the AGF.
+- Method 2: determine a recursive relation for the $\gamma (h)$:
+\[
+  \gamma (k) - \sum_{j=1}^p \phi_j \gamma (k-j) = \begin{cases} \sigma^2 \sum_{j=0}^{q-k} \theta_{j+k} \psi_j \quad \mbox{if} \; k \leq q \\
+  0 \qquad \mbox{if} \; k > q.
+  \end{cases}
+  \]
+ 
+## Exercise 5.51. Direct Algorithm for Autocovariance Function for the ARMA($p$,$q$)
+
+- We encode method 2 and run on Example 5.5.7.
+
+```{r}
+polymult <- function(a,b) {
+bb <- c(b,rep(0,length(a)-1))
+B <- toeplitz(bb)
+B[lower.tri(B)] <- 0
+aa <- rev(c(a,rep(0,length(b)-1)))
+prod <- B %*% matrix(aa,length(aa),1)
+return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymult(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+
+# Example 5.5.7
+phi1 <- .5
+theta1 <- 5/6
+theta2 <- 1/6
+sigma <- 1
+n <- 10
+ 
+my.acf <- ARMAauto(phi1,c(theta1,theta2),n)*sigma^2
+plot(ts(my.acf,start=0),xlab="Lag",ylab="Autocovariance",
+     ylim=c(min(my.acf),max(my.acf)),type="h")
+```
+

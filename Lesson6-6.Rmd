@@ -1,0 +1,223 @@
+---
+title: 'Time Series: A First Course with Bootstrap Sampler'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+```
+
+# Lesson 19: Model Identification 
+
+- How do we determine a model to be fitted?  AR, MA, ARMA, or something else?
+- How do we determine the order of the model?
+
+## Paradigm 6.6.1. Characterizing AR and MA Processes
+
+- The autocorrelation function (ACF) and partial autocorrelation function (PACF) have distinctive behavior for AR and MA processes.
+
+### ACF
+
+- For an MA($q$) process, the ACF truncates at lag $q$, i.e., $\gamma (h) = 0$ if $|h| >q$. However, it is possible for $\gamma (h) = 0$ for $0 < h <q$ as well.
+- For an AR($p$) process, or for an ARMA($p$,$q$) process (with $p > 0$), the ACF decays at geometric rate. The correlations can oscillate, but they are bounded by some $C r^{|h|}$ for $0 < r < 1$ and $C >0$.
+
+### PACF
+
+- For an AR($p$) process, the PACF truncates at lag $p$, i.e., $\kappa (h) = 0$ if $|h|>p$.
+- for an MA($q$) process, or for an ARMA($p$,$q$) process (with $q > 0$), the PACF decays at geometric rate.
+
+
+### Finding Truncation
+
+This suggests to plot estimates of the ACF and PACF, and see if there is a lag cut-off where one or the other seems to negligible.  
+
+
+## Example of U.S. Population
+
+- For the U.S. Population time series, we difference once and then plot the sample ACF and PACF. Dotted blue lines are confidence limits (discussed below).
+- We should guess an AR(1) model.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+acf(diff(pop))
+pacf(diff(pop))
+```
+ 
+## Paradigm 10.1.2. Sequential Testing for the MA Order
+
+- To identify an MA model, we must use the sample ACF rather than the true ACF
+- Take as null hypothesis that the process is an MA(q), such that
+\[
+ H_0 :  \gamma (h) = 0 \quad \mbox{for all} \;  h > q.
+\]
+- We can use the estimate $\widehat{\gamma} (h)$ as test statistic, for any $h > q$.
+- Under $H_0$, the asymptotic variance is $n^{-1}$ times
+\[
+   \tau^2_{\infty} =  \sum_{k = -\infty}^{\infty} { \gamma (k) }^2.
+\]
+- We utilize an estimator of $\tau^2_{\infty}$ based on concepts of the so-called *frequency domain*. We form the *periodogram* $I$ by computing
+\[
+  I(\lambda_{\ell}) = \sum_{k= -n+1}^{n-1} \widehat{\gamma} (k) \cos (\lambda_{\ell} k),
+\]
+ where $\lambda_{\ell} = 2 \pi \ell/n$ for some integer $-[n/2]-n+1 \leq \ell \leq [n/2]$.
+- Then our estimator is
+\[
+ \widehat{\tau^2_{\infty}} = \frac{1}{2n} \, \sum_{\ell = -[n/2]-n+1}^{[n/2]}
+  { I (\lambda_{\ell} )  }^2. 
+\]
+- Our normalized test statistic is 
+\[
+   \sqrt{n} \frac{ \widehat{\gamma} (h) }{ \widehat{\tau_{\infty} }},
+\]
+ which is asymptotically standard normal.
+- Note that we have not addressed the multiple testing problem of multiple lags $h$!
+
+## Example 10.1.3. Sequential Identification of Non-Defense Capitalization.
+ 
+- We examine the Non-Defense Capitalization (New Orders) series.
+- We take first differences because of non-stationarity.
+- We plot the ACF and PACF.
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+ndc.diff <- diff(ndc)
+n <- length(ndc.diff)
+acf(ndc.diff)
+gamma.hat <- acf(ndc.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+kappa.hat <- pacf(ndc.diff,lag=n-1)$acf[,,1]
+```
+
+- These plots indicate that an MA model may be appropriate, because the ACF seems to truncate whereas the PACF has geometric decay.
+- We do sequential testing, examining lags 1 through 8. 
+- Individual tests get rejected at lags 1 and 6. The lag 6 result is barely significant at the 5% level, and may be spurious due to multiple testing. 
+- We tentatively conclude with an MA(1) model specification.
+
+```{r}
+lambda <- seq(-n/2+1,n/2)*2*pi/n
+pgram <- cos(0*lambda)*gamma.hat[1]
+for(h in 1:(n-1))
+{
+	pgram <- pgram + 2*cos(h*lambda)*gamma.hat[h+1]
+}
+pgram <- ts(pgram,start=0,frequency=n)
+tau.hat <- sqrt(.5*sum(pgram^2)/n)
+tstat <- sqrt(n)*gamma.hat[2:9]/tau.hat
+round(rbind(tstat,rep(qnorm(1-.05/2),8)),digits=5)
+```
+
+## Paradigm 10.1.4. Joint Testing for the MA Order
+
+- We want to test at multiple lags.
+- $H_0$ is equivalent to $0 = \mbox{max} \{ | \rho (h) |, h > q \}$.
+- **Empirical Rule**: let $\widehat{q}$ be the smallest positive integer such that 
+\[
+ |\widehat{\rho} (\widehat{q}+k) | < c \sqrt{n^{-1} \log n} 
+\]
+ for all $k = 1, \ldots, K_n$, where $c > 0$ is a fixed constant, and $K_n$ is a positive, non-decreasing integer-valued function of $n$ such that $K_n = o(\log n)$.
+- $\widehat{q}$ is consistent for $q$.
+- Choose $c = 1.96$ and $K_n = 1 + [3 \sqrt{ \log n}]$
+
+## Example 10.1.5. Joint Testing Identification of Non-Defense Capitalization
+
+- We now apply the Empirical Rule.
+- $n =292$ implies $K_n = 5$.
+- The first $5$ sample autocorrelations are given below.
+
+
+```{r}
+alpha <- .05
+crit <- qnorm(1-alpha/2)
+K.n <- 1 + floor(3*sqrt(log(n,base=10)))
+rho.hat <- gamma.hat[-1]/gamma.hat[1]
+print(rho.hat[1:K.n])
+rho.test <- rho.hat/sqrt(log(n,base=10)/n)
+k <- 1
+while(k < (n-K.n))
+{
+	if(max(abs(rho.test[k:(k+K.n-1)])) < crit) 
+	{ 
+		q.hat <- k-1
+		k <- n-K.n
+	} else { k <- k+1 }
+}
+```
+
+- The selected model order is `r q.hat`, which agrees with our results above.
+
+
+## Remark 10.3.1. AR Model Identification
+
+- To identify an AR model, we must use the sample PACF rather than the true PACF.
+- Take as null hypothesis that the process is an AR(p), such that
+\[
+ H_0 :  \kappa (h) = 0 \quad \mbox{for all} \;  h > p.
+\]
+- We can use the estimate $\widehat{\kappa} (h)$ as test statistic, for any $h > p$.
+- We require an asymptotic distribution theory.
+   
+
+## Corollary 10.3.4.
+
+Suppose $\{ X_t \}$ is an AR($p$) process with mean $\mu$ and i.i.d. inputs of variance $\sigma^2$. Then
+\[
+  \sqrt{n}  (\widehat{\kappa} (h) - \kappa (h)) \Rightarrow \mathcal{N} (0, \sigma^2
+    \underline{e}_h^{\prime} \Gamma_h^{-1} \underline{e}_h ),
+\]
+ where $\underline{e}_h$ is the unit vector with one in last (index $h$) position.
+
+
+## Paradigm 10.3.6. AR Model Identification
+
+- Suppose the true model is AR(p), and we test $H_0$ with $h > p$.
+- Trick: the process is also an AR(h), where the last $h-p$ coefficients are zero!
+- So we can apply Corollary 10.3.4, and it can be shown that because $h > p$ the limiting variance is $1$, i.e.,
+\[
+   \sqrt{n} \, \widehat{\kappa} \Rightarrow \mathcal{N} (0,1)
+\]
+under $H_0$.  
+- So we can do sequential testing using the sample PACF, with the same cautions about multiple testing.
+- We also have an *Empirical Rule* for AR identification.
+- **Empirical Rule**: let $\widehat{p}$ be the smallest positive integer such that 
+\[
+ | \widehat{\kappa} (\widehat{p}+k)| < c \sqrt{n^{-1} \log n}
+\]
+ for all $k=1, \ldots, K_n$, where $c > 0$ is a fixed constant, and $K_n$ is a positive, non-decreasing integer-valued function of $n$ such that $K_n = o(\log n)$.
+ 
+
+## Example of Identifying AR Order for U.S. Population
+
+- For the U.S. Population time series, we difference once and compute sample PACF. 
+- Dotted blue lines are confidence limits, based on asymptotic variance of $1/n$, and quantiles from the normal at a 5% level.
+- The AR(1) specification seems reasonable, although the lag 8 test statistic is barely significant.
+
+```{r}
+n <- length(diff(pop))
+pop.pacf <- pacf(diff(pop))
+tstat <- sqrt(n)*pop.pacf$acf[1:8]
+round(rbind(tstat,rep(qnorm(1-.05/2),8)),digits=5)
+```
+
+- We also apply the *Empirical Rule*.
+ 
+```{r}
+alpha <- .05
+crit <- qnorm(1-alpha/2)
+K.n <- 1 + floor(3*sqrt(log(n,base=10)))
+kappa.test <- pop.pacf$acf/sqrt(log(n,base=10)/n)
+k <- 1
+while(k < (n-K.n))
+{
+	if(max(abs(kappa.test[k:(k+K.n-1)])) < crit) 
+	{ 
+		p.hat <- k-1
+		k <- n-K.n
+	} else { k <- k+1 }
+}
+```
+
+- This results in AR identification of order `r p.hat`.
+
