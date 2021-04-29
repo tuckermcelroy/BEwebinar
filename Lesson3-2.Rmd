@@ -1,12 +1,12 @@
 ---
-title: 'Time Series: A First Course with Bootstrap Sampler'
+title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
     df_print: paged
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 8: Linear Filters
@@ -42,7 +42,7 @@ plot(ts(gassa.log,start=1992,frequency=12),col=1,ylab="",xlab="Year",lwd=2)
 lines(ts(gas.trend,start=1992,frequency=12),col=2,lwd=2)
 
 ### Movie
-movie <- TRUE
+movie <- FALSE
 delay <- 0
 flex <- 0
 siglen <- length(gas.trend) - 2*h

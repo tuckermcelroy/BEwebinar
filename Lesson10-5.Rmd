@@ -1,12 +1,12 @@
 ---
-title: 'Time Series: A First Course with Bootstrap Sampler'
+title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
     df_print: paged
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 20: The Gaussian Likelihood

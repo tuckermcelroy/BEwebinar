@@ -1,12 +1,12 @@
 ---
-title: 'Time Series: A First Course with Bootstrap Sampler'
+title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
     df_print: paged
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/TimeSeriesR/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 26: Model-based Bootstrap
@@ -44,7 +44,7 @@ for $1 \leq t \leq n$.
 3. Compute $\widehat{\phi}^{*(j)}$ from the *pseudo-sample* $X_1^{*(j)}, \ldots, X_n^{*(j)}$.
 4. Our bootstrap estimator of $\zeta$ is
 \[
-  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \widehat{\phi}^{*(j)} - \phi \leq x  \}}.
+  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \widehat{\phi}^{*(j)} - \widehat{\phi} \leq x  \}}.
 \]
 
 
@@ -118,7 +118,7 @@ plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
 3. Compute $\widehat{\theta}_n^{*(j)}$ from the *pseudo-sample* $\underline{X}^{*(j)}$.
 4. Our bootstrap estimator of $\zeta$ is
 \[
-  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \widehat{\theta}_n^{*(j)} - \theta \leq x  \}}.
+  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \widehat{\theta}_n^{*(j)} - \widehat{\theta} \leq x  \}}.
 \]
 
  
