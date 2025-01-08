@@ -10,7 +10,7 @@ output:
 ##  **Time Series: A First Course with Bootstrap Starter**
 
 ### Abstract: 
-The proposed course will cover the content of the book *Time Series: A First Course with Bootstrap Starter* in three parts, each covering 4 chapters. 
+The proposed course will cover the content of the book *Time Series: A First Course with Bootstrap Starter* in three parts, each covering four chapters. 
 The course will be sponsored by the Business and Economics Statistics section. The intended audience includes statisticians with little or no knowledge 
 of time series, but a general knowledge of statistics. Prerequisites include a course on linear models, a course on mathematical statistics 
 (such concepts as bias, variance, and the Gaussian distribution), and a familiarity with linear algebra (the transpose, inverse, and eigen-values of 
