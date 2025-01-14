@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 2: Cycles and Transforms
+# Lesson 1-2: Cycles and Transforms
 
 - High association can occur for non-adjacent random variables. 
 - For some fixed $h > 1$, we may have $X_t$ and $X_{t-h}$ associated for all $t$.
@@ -70,13 +70,5 @@ Wstarts <- ts(Wstarts,start = 1964,frequency=12)
 plot(Wstarts, ylab="West Starts",xlab="Year")
 ```
 
-## Log Transformation
 
-- To visualize and model time series better, sometimes we apply a log transform (if the data is positive).
-- If cycle amplitude depends on trend level, applying a log may separate this effect so that cycle amplitude is no longer growing.
-
-```{r}
-Ret441_trans <- ts(cbind(Ret441,log(Ret441)),start = 1992,frequency=12)
-plot(Ret441_trans, ylab="Motor Retail Sales",xlab="Year",main="")
-```
 

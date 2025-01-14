@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 1: Time Series Data
+# Lesson 1-1: Time Series Data
 
 - A *time series* is a dataset where the observations are recorded at discrete time intervals.
 - We denote the obervation a time $t$ by $x_t$, and the random variable by $X_t$.

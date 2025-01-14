@@ -1,0 +1,75 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+## Windowing 
+
+- Focusing on a sub-section of the time series is called *windowing*. 
+- A *window* has a fixed width, and the starting and ending times change as it
+slides through the data.
+- Windowing is useful for exploratory analysis, to visualize changes.
+
+## Example 1.3.2. Industrial Production
+
+- Industrial Production is a monthly time series, starting in 1949.
+- It has strong trend and moderate seasonality. 
+
+```{r}
+indprod <- read.table("ind.dat")
+indprod <- ts(indprod,start=1949,frequency=12)
+plot(indprod,xlab="Year",ylab="Industrial Production")
+```
+
+- We can create a moving window through the data.
+
+```{r}
+window <- 20
+n <- length(indprod)/12
+for(t in 1:(n-window +1))
+{
+  subsamp <- indprod[((t-1)*12+1):((t-1+window)*12)]
+  newyear <- 1948 + t
+  plot(ts(subsamp,start=newyear,frequency=12),ylab="")
+  Sys.sleep(.5)
+}
+```
+ 
+
+## Log Transformation
+
+- To visualize and model time series better, sometimes we apply a log transform (if the data is positive).
+- If cycle amplitude depends on trend level, applying a log may separate this effect so that cycle amplitude is no longer growing.
+- Some extreme effects can be attenuated through the log transform.
+
+## Example 1.3.4. Gasoline Sales
+
+- Monthly measurements of sales at gasoline stations.
+- Variation depends on level, so we apply a log transformation.
+
+```{r}
+gas <- read.table("GasRaw_2-11-13.dat")[,1]
+loggas <- log(gas)
+gas_trans <- ts(cbind(gas,loggas),start = 1992,frequency=12)
+plot(gas_trans,xlab="Year",main="Gas Sales")
+```
+
+## Example 1.3.5. Electronics and Appliance Stores
+
+- Monthly measurements of sales at electronics stores
+- Large seasonal movements due to December sales
+- We apply a log transformation
+
+```{r}
+elec <- read.table("retail443.b1",header=FALSE,skip=2)[,2]
+logelec <- log(elec)
+elec_trans <- ts(cbind(elec,logelec),start = 1992,frequency=12)
+plot(elec_trans, xlab="Year",main="Electronics Sales")
+```
+

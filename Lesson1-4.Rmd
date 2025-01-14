@@ -9,7 +9,7 @@ output:
 knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 3: Time Series Regression and Autoregression
+# Lesson 1-4: Time Series Regression and Autoregression
 
 - It is tempting to regress time series data on time $t=1, \ldots, n$, as a covariate. Rarely does this provide satisfactory results (when used alone). 
 
