@@ -1,0 +1,87 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 2-1: Random Vectors
+
+- A time series sample is a finite stretch of realizations, i.e., a vector.
+- A vector of random variables is called a random vector: $\underline{X} = {[X_1, \ldots, X_n]}^{\prime}$.
+
+## Mean and Covariance
+
+- The mean of $\underline{X}$ is a vector, each of whose components is the expectation
+of the corresponding random variable: ${\mathbf E} [ X_i]$.
+- The covariance matrix of $\underline{X}$ has entries given by the covariance between
+the corresponding components of the random vector: $\mbox{Cov} [X_j, X_k]$.
+- The covariance matrix $\mbox{Cov} [\underline{X}]$ of a random vector is non-negative definite
+and symmetric. Its eigenvalues are real and non-negative.
+
+## Affine Transforms
+
+- $\underline{Y} = A \underline{X} + \underline{b}$ is an affine transform of $\underline{X}$.
+- If ${\mathbf E} \underline{X} = \underline{\mu}$ and $\mbox{Cov} [\underline{X}] = \Sigma$,
+then ${\mathbf E} \underline{Y} = A \underline{\mu} + \underline{b}$ and
+$\mbox{Cov} [\underline{Y}] = A \Sigma A^{\prime}$.
+
+## Covariance Decomposition
+
+- We can decompose a symmetric matrix $\Sigma$ as
+\[
+ \Sigma = P \Lambda P^{\prime}
+\]
+for an orthogonal matrix $P$ (i.e., $P^{\prime} = P^{-1}$), and where $\Lambda$ is 
+a diagonal matrix consisting of the real eigenvalues of $\Sigma$.
+- A symmetric non-negative definite matrix $\Sigma$ can be decomposed as $\Sigma = B B^{\prime}$,
+and $B$ is called a square root (it is not unique). One such square root is the *Cholesky* factor.
+- If $\underline{Z}$ has i.i.d. components with mean zero and variance one, then 
+$\underline{X} = B \underline{Z} + \underline{\mu}$ is a random vector with mean $\underline{\mu}$
+and covariance matrix $B B^{\prime}$. 
+
+### Simulation Example
+
+- Simulate a bivariate random vector with mean $[1,2]$ and covariance matrix
+\[
+\Sigma = \left[ \begin{array}{cc} 2 & 1 \\ 1 & 4 \end{array} \right].
+\]
+
+```{r}
+Sigma <- rbind(c(2,1),c(1,4))
+mu <- c(1,2)
+B <- t(chol(Sigma))
+z <- matrix(rnorm(2*100),nrow=2)
+x <- B %*% z + mu
+print(colMeans(t(x)))
+print(var(t(x)))
+```
+
+## Gaussian Random Vectors
+
+- A random vector $\underline{Y}$ is Gaussian with mean $\underline{\mu}$ and 
+non-singular covariance matrix $\Sigma$ if its joint pdf is
+\[
+ p_{\underline{Y}} (\underline{y}) = {(2 \pi)}^{-n/2} {(\det \Sigma)}^{-1/2}
+  \exp \{ - {( \underline{y} - \underline{\mu} )}^{\prime} \Sigma^{-1}
+   {( \underline{y} - \underline{\mu} )} /2   \}.
+\]
+- Denoted by writing $\underline{Y} \sim \mathcal{N} (\underline{\mu}, \Sigma)$.
+- An affine transformation of a Gaussian vector is still Gaussian. In particular, 
+sub-vectors are Gaussian.
+- We can decorrelate a Gaussian random vector: $\underline{X} = B^{-1} \underline{Y}$
+has $\mbox{Cov} [\underline{X}] = B^{-1} \Sigma B^{-1 \prime} = 1_n$, the identity
+matrix.
+- The quadratic form 
+\[
+{(\underline{Y} - \underline{\mu})}^{\prime} \Sigma^{-1} {(\underline{Y} - \underline{\mu})}
+\]
+ has a $\chi^2$ distribution on $n$ degrees of freedom.
+
+
+
+

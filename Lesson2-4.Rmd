@@ -6,39 +6,13 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 5: Stationarity
+# Lesson 2-4: Autocovariance
 
-- We want to generalize the concept of *identical distribution* to a stochastic process.
+- Now we study the autocovariance function.
 
-## Marginal Distributions
-
-- First marginals are just the $X_t$ random variables' distributions.
-- Second marginals are joint distributions for all pairs $(X_t,X_s)$.
-- Third marginals are joint distributions for all triplets, etc.
-
-### Same First Marginals
-
-- Saying $\{ X_t \}$ has same first marginal is same as saying they are identically distributed.
-- Sometimes called *First Order Stationary*.
-- In particular, all means are the same: ${\mathbf E} [X_t] = {\mathbf E} [X_s]$ for all $t,s$.
-
-### Second Marginals Under Shift
-
-- Suppose all pairs have the same distribution when shifted: 
-\[
-  (X_1, X_2) \sim (X_2, X_3) \sim (X_3, X_4) \ldots
-\]
-- Then second marginal distribution only depends on lag $h$, i.e., distribution of $(X_t, X_{t-h})$ does not depend on $t$.
-- Sometimes called *Second Order Stationary*.
-- Then the product mean (the covariance) depends only on lag:
-\[
- {\mathbf E} [ X_t \, X_{t-h}] 
-\]
- does note depend on $t$.  
- 
 ## Strict and Weak Stationarity
 
 - Strict stationarity: all marginals (of all orders) are time shift invariant.
@@ -53,6 +27,10 @@ This function is called the **autocovariance**.
  \rho (h) = \frac{ \gamma (h) }{ \gamma (0)}.
  \]
 - Weak stationarity is sometimes called *covariance stationarity*. 
+ 
+## Example: Autocorrelation of an AR(1)
+
+- We plot $\rho (h)$ versus $h$ (on x-axis).
  
 ```{r}
 rho <- .8

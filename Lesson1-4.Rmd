@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 1-4: Time Series Regression and Autoregression

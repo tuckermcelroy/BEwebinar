@@ -6,10 +6,10 @@ output:
 ---
  
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
  
-# Lesson 7: White Noise Processes
+# Lesson 2-6: White Noise Processes
 
 - *White noise* is a fundamental building block for time series models.
 - Any $\{ X_t \}$ i.i.d. with mean zero and variance $\sigma^2$ is a $\mbox{WN}(0,\sigma^2)$.

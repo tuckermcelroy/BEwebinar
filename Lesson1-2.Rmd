@@ -9,7 +9,7 @@ output:
 knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 1-2: Cycles and Transforms
+# Lesson 1-2: Cycles 
 
 - High association can occur for non-adjacent random variables. 
 - For some fixed $h > 1$, we may have $X_t$ and $X_{t-h}$ associated for all $t$.

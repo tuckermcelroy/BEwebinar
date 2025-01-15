@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 6: Autoregression and Moving Average
+# Lesson 2-5: Autoregression and Moving Average
 
 - Examples of weakly stationary stochastic process.
 

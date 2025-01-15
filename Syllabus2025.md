@@ -64,7 +64,7 @@ students can follow along and modify the code, or rewrite it, and in real-time s
 
 1. Time Series Data
 2. Cycles
-3. Spanning and Scaling 
+3. Windows and Transforms 
 4. Regression and Autoregression
 
 ### Webinar 2

@@ -9,6 +9,10 @@ output:
 knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
+# Lesson 1-3: Windows and Transforms
+
+- To better visualize a time series, we may examine sub-spans, or use a transformation.
+
 ## Windowing 
 
 - Focusing on a sub-section of the time series is called *windowing*. 

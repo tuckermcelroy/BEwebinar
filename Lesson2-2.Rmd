@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 4: Stochastic Processes
+# Lesson 2-2: Stochastic Processes
 
 - A collection of random variables indexed by time is called a *stochastic process*, denoted as $\{ X_t \}$. The curly brackets let us know $\{ X_t \}$ is the process, whereas $X_t$ is a single random variable (at time $t$).
 - Usually time is $t \in {\mathbf Z}$, the integers.
