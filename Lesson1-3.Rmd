@@ -34,15 +34,19 @@ plot(indprod,xlab="Year",ylab="Industrial Production")
 - We can create a moving window through the data.
 
 ```{r}
+### Movie
+movie <- FALSE
+delay <- 0
 window <- 20
 n <- length(indprod)/12
+if(movie) {
 for(t in 1:(n-window +1))
 {
+  Sys.sleep(delay)
   subsamp <- indprod[((t-1)*12+1):((t-1+window)*12)]
   newyear <- 1948 + t
   plot(ts(subsamp,start=newyear,frequency=12),ylab="")
-  Sys.sleep(.5)
-}
+} }
 ```
  
 

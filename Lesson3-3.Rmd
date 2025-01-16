@@ -1,0 +1,110 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 3-3: Examples of Filters
+
+- We explore smoothers, differencing, and the backshift operator.
+
+## Paradigm 3.3.1. Smoother
+
+- Linear filters that suppress oscillations and reveal long-term trends are called *smoothers*. 
+- A simple moving average is an example of a smoother.
+
+## Example 3.3.2. Smoothers Applied to Gasoline Sales
+
+- We apply a simple moving average with $m=10$ to the logged seasonally adjusted gasoline series.
+
+```{r}
+gassa <- read.table("GasSA_2-11-13.dat")
+gassa.log <- ts(log(gassa),start=1992,frequency=12)
+
+h <- 10
+simple.ma <- rep(1,2*h+1)/(2*h+1)
+gas.trend <- filter(gassa.log,simple.ma,method="convolution",sides=2)
+gas.trend <- ts(gas.trend,start=1992,frequency=12)
+plot(ts(gassa.log,start=1992,frequency=12),col=1,ylab="",xlab="Year",lwd=2)
+lines(ts(gas.trend,start=1992,frequency=12),col=2,lwd=2)
+```
+
+- We can run a visualization in the notebook.
+
+```{r}
+### Movie
+movie <- FALSE
+delay <- 0
+flex <- 0
+siglen <- length(gas.trend) - 2*h
+range <- seq(1,siglen,1)
+if(movie) {
+for(t in range)
+{
+	Sys.sleep(delay)
+	filterweight <- c(rep(NA,t-1),simple.ma + gas.trend[h+t] + flex,
+		rep(NA,siglen-t))
+	plot(ts(gassa.log,start=1992,frequency=12),col=1,ylab="",xlab="Year",lwd=2)
+	lines(ts(gas.trend[1:(h+t)],start=1992,frequency=12),col=2,lwd=2)
+	lines(ts(filterweight,start=1992,frequency=12),col="#00FF0090",lwd=2)
+} }
+```
+
+
+## Paradigm 3.3.3.  Difference Filter
+
+- To suppress long-term dynamics, we can *difference*: 
+\[
+   Y_t = X_t - X_{t-1}.
+\]
+ This is a filter with weights $\psi_0 = 1$, $\psi_1 = -1$, and zero otherwise. It is called the *differencing filter*. This filter reduces polynomials in time by one degree; lines are reduced to constants.
+ 
+## Example 3.3.4. Differencing Applied to Gasoline Sales
+
+- We apply differencing to logged seasonally adjusted gasoline sales. The result can be interpreted as a *growth rate*. 
+
+```{r}
+gas.diff <- diff(gassa.log)
+par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(2,1),cex.lab=.8)
+plot(gassa.log,xlab="",ylab="Log Gas  Sales",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(gas.diff,xlab="",ylab = "Gas Growth Rate",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+mtext(text="Year",side=1,line=1,outer=TRUE)
+```
+
+## The Backward Shift
+
+- We define the *backward shift* (or *lag*) operator $B$, which shifts a time series back one time unit. This is a linear filter that lags time by one unit:
+\[
+    Y_t = X_{t-1}.
+\]
+ So the filter weights are $\psi_1 = 1$ and zero otherwise. Informally we write $B X_t = X_{t-1}$.
+ 
+## Powers of Backward Shift
+
+- Then $X_{t-k} = B^k X_t$, and a general filter is expressed as
+\[
+  Y_t = \sum_{k \in {\mathbb Z}} \psi_k \, X_{t-k}
+   =  \sum_{k \in {\mathbb Z}} \psi_k B^k \, X_{t},
+\]
+ so we write the filter as  $\sum_{k \in {\mathbb Z}} \psi_k B^k$. Call this $\Psi (B)$. (Mathematically, $\Psi (z)$ is a Laurent series.)
+ 
+### Simple Moving Average Filter
+
+- Expressed as $\Psi (B) = {(2m+1)}^{-1} \sum_{k = -m}^m B^k$.
+
+## Differencing Filter
+
+- Expressed as $\Psi (B) = 1 -B$.
+  
+
+
+

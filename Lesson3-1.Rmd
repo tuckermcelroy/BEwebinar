@@ -1,0 +1,84 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 3-1: Nonparametric Smoothing
+
+- The filtering of time series uses some concepts from nonparametric smoothing.
+
+## Nonparametric Regression
+
+- We might think of the time series mean $\mu_t = {\mathbb E} [X_t]$ as an arbitary, smoothly
+varying function.
+- A very simple case:
+\[
+ X_t = \mu_t + Z_t
+\]
+ with $Z_t \sim i.i.d. (0, \sigma^2)$.
+- We may estimate $\mu_t$ via averaging over neighboring values, e.g.,
+\[
+   \widehat{\mu}_t = \frac{1}{2m+1} \sum_{k = -m}^m   X_{t-k}.
+\]
+This works because
+\[
+ \widehat{\mu}_t = \mu_t + \frac{1}{2m+1} \sum_{k = -m}^m   Z_{t-k},
+\]
+and the second term has mean zero and variance $\sigma^2/(2m+1)$, which tends to
+zero as $m$ increases to $\infty$.
+
+## Kernel and Bandwidth
+
+- Above, we have equal weights on the observations. We can have unequal weights,
+through the device of a *kernel*, which is a function that weights the data.
+- The *bandwidth* $m$ defines a neighborhood of values around time $t$, for which
+we use the kernel's weights.  
+- Large bandwidth yields more smoothing, with suppression of local features.
+- Small bandwidth yields less smoothing, with higher variability.
+
+## Edge Effects
+
+- We can only compute $\widehat{\mu}_t$ for $t = m+1, \ldots, n-m$. So the values
+for $t = 1, \ldots, m$ and $t = n-m+1, \ldots, n$ are "missing".
+- Sometimes this so-called "edge effect" is addressed by designing asymmetric smoothing
+at the boundaries.
+- Often the edge effects are ignored, when we are interested in the interior of the 
+time series sample.
+
+### Nonparametric Regression for Population
+
+- Apply the nonparametric regression technique with $m=20$ to U.S. population data.
+- First, we write a function to do local averaging.
+
+```{r}
+simple.ma <- function(x,m)
+{
+	weights <- rep(1,2*m+1)/(2*m+1)
+	n <- length(x)
+	trend <- NULL
+	for(t in (m+1):(n-m))
+	{
+		trend <- c(trend,sum(x[(t-m):(t+m)]*weights))	
+	}
+	trend <- c(rep(NA,m),trend,rep(NA,m))
+	return(trend)
+}
+```
+
+- Then we apply this to the data.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+m <- 20
+pop.trend <- simple.ma(pop,m)
+plot(pop,xlab="Year",ylab="U.S. Population",col=1,lwd=1,yaxt="n",xaxt="n")
+lines(ts(pop.trend,start=1901,frequency=1),lty=1,lwd=1,col=2)
+```
+

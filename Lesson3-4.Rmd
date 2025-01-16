@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 9: Trends
+# Lesson 3-4: Trends
 
 - Trends measure the long-term behavior of a time series.
 - Trends are steady movements in the level of a time series.
@@ -123,25 +123,7 @@ mtext(text="Year",side=1,line=1,outer=TRUE)
   \widehat{\mu}_t = \Psi (B)  X_t = \sum_{k= -m}^m \psi_k X_{t-k}.
 \]
 - A *symmetric moving average* weights future and past equally, i.e., $\psi_k = \psi_{-k}$.
-- Because the filter uses $m$ past and $m$ future observations, we can only compute trend estimates for times $m+1 \leq t \leq T-m$, where the sample consists of times $1,2, \ldots,T$.
 - As an estimator $\widehat{\mu}_t$ of the unknown trend $\mu_t$, there is less bias if $m$ is small, and less variance if $m$ is large. This is a **Bias-Variance Dilemma**.
-- Example with US population, and $m = 10$ for a simple moving average.
-
-```{r}
-pop <- read.table("USpop.dat")
-pop <- ts(pop, start = 1901)
-
-p <- 10
-mu.smooth <- filter(pop,rep(1,2*p+1)/(2*p+1),method="convolution")
-mu.smooth <- ts(mu.smooth,start= 1901)
-
-par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
-plot(ts(pop,start=1901),lwd=3,lty=1,col=gray(.8),
-	ylab="U.S. Population",xlab="Year",yaxt="n",xaxt="n")
-axis(1,cex.axis=.5)
-axis(2,cex.axis=.5)
-lines(ts(mu.smooth,start=1901),lwd=1,lty=3,col=1)
-```
 
 ## Paradigm 3.4.15. Trend Elimination
 
@@ -150,14 +132,21 @@ lines(ts(mu.smooth,start=1901),lwd=1,lty=3,col=1)
 - Example with US population, detrended by a $m = 10$ simple moving average and by the difference filter.
 
 ```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+
+p <- 10
+pop.smooth <- filter(pop,rep(1,2*p+1)/(2*p+1),method="convolution")
+pop.smooth <- ts(pop.smooth,start= 1901)
 pop.diff <- diff(pop)
 
 par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
-plot(ts(pop - mu.smooth,start=1901),lwd=1,lty=3,ylim=c(-3.5*10^6,3.5*10^6),
+plot(ts(pop - pop.smooth,start=1901),lwd=1,lty=3,ylim=c(-3.5*10^6,3.5*10^6),
 	ylab="U.S. Population",xlab="Year",yaxt="n",xaxt="n")
 axis(1,cex.axis=.5)
 axis(2,cex.axis=.5)
 lines(pop.diff,col=gray(.8),lwd=2)
 ```
 
+ 
  

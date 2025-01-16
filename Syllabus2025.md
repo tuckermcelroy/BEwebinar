@@ -73,8 +73,8 @@ students can follow along and modify the code, or rewrite it, and in real-time s
 2. Stochastic Processes
 3. Stationarity
 4. Autocovariance
-5. Illustrations
-6. White Noise
+5. Autoregression and Moving Average
+6. White Noise Processes
 
 ### Webinar 3
 

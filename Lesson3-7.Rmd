@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 11: Integrated Processes
+# Lesson 3-7: Integrated Processes
 
 - Sometimes non-stationarity arises in the mean function ${\mathbb E} [ X_t ] = \mu_t$.
 - But the mean may not explain all the non-stationarity of a time series.

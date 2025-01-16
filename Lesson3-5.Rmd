@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 10: Seasonality
+# Lesson 3-5: Seasonality
 
 - Regular patterns of a periodic nature are called *seasonality*. 
 - The same notion as a *cycle*, but is associated with the calendar.
@@ -107,72 +107,4 @@ seas.elim <- diff(mau,lag=12)
 plot(seas.elim,xlab="Year",ylab="Mauna Loa")
 ```
 
-## Paradigm 3.6.8. Classical Decomposition from Trend Filtering
 
-- Consider a time series with both trend and seasonal effects.
-- We can design a trend filter that eliminates seasonality, obtaining $\widehat{T}_t$.
-- Then apply a seasonal filter to $X_t - \widehat{T}_t$, the de-trended data, obtaining $\widehat{S}_t$.
-- Removing $\widehat{S}_t$ from the de-trended data yields the irregular $\widehat{I}_t$.
-- Then we have the *classical decomposition*
-\[
-  X_t = \widehat{T}_t + \widehat{S}_t + \widehat{I}_t.
-\]
-
-## Example 3.6.13. Classical Decomposition of Western Housing Starts via Linear Filtering
-
-- We determine a classical decomposition by using a trend filter 
-\[
-   \frac{1}{2s} U(B) (1+B) B^{-s/2}
-   = \frac{1}{2s} B^{-s/2} + \frac{1}{s} B^{-s/2+1} + \ldots + \frac{1}{s} B^{s/2-1} + 
-     \frac{1}{2s} B^{s/2},
-\]
- when $s$ is even.  
- 
-```{r}
-compSmooth <- function(data,period,pseas)
-{
-	# compSmooth
-	#	Estimates trend, seasonal, and irregular from input data
-	#	using weighted moving averages.
-	#	data: an input time series
-	#	period: observations per year
-	#	pseas: odd integer giving number of years in seasonal moving average
-	#	
-
-	n <- length(data)
-	trendfilter <- seq(1,period)
-	trendfilter <- c(trendfilter[1:(period-1)],rev(trendfilter))/period^2
-	seasfilter <- c(1,rep(0,period-1))
-	seasfilter <- c(rep(seasfilter,pseas),rep(seasfilter,pseas),1)/(2*pseas+1)
-	trend <- filter(data,trendfilter,method="convolution",sides=2)
-	trend <- trend[period:(n-period+1)]
-	resid <- data[period:(n-period+1)] - trend
-	seasonal <- filter(resid,seasfilter,method="convolution",sides=2)
-	seasonal <- seasonal[(pseas*period + 1):(length(resid) - pseas*period)]
-	irreg <- resid[(pseas*period + 1):(length(resid) - pseas*period)] - seasonal
-
-	return(cbind(trend[(pseas*period + 1):(length(resid) - pseas*period)],seasonal,irreg))
-}
-
-Wstarts <- read.table("Wstarts.b1",skip=2)[,2]
-Wstarts <- ts(Wstarts,start = 1964,frequency=12)
-pseas <- 3
-comps <- compSmooth(Wstarts,12,pseas)
-
-par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(4,1),cex.lab=1.2)
-plot(Wstarts,ylab="Starts",xlab="",yaxt="n",xaxt="n")
-axis(1,cex.axis=.8)
-axis(2,cex.axis=.8)
-plot(ts(c(rep(NA,47),comps[,1],rep(NA,47)),start=1964,frequency=12),xlab="",ylab="Trend",yaxt="n",xaxt="n")
-axis(1,cex.axis=.8)
-axis(2,cex.axis=.8)
-plot(ts(c(rep(NA,47),comps[,2],rep(NA,47)),start=1964,frequency=12),xlab="",ylab="Seasonal",yaxt="n",xaxt="n")
-axis(1,cex.axis=.8)
-axis(2,cex.axis=.8)
-plot(ts(c(rep(NA,47),comps[,3],rep(NA,47)),start=1964,frequency=12),xlab="",ylab="Irregular",yaxt="n",xaxt="n")
-axis(1,cex.axis=.8)
-axis(2,cex.axis=.8)
-mtext(text="Year",side=1,line=1,outer=TRUE)
-```
- 
- 
