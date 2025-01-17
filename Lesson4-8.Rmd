@@ -1,0 +1,209 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 4-8: Projection of Signals
+
+- We investigate signal extraction through the device of *latent processes*.
+
+## Latent Processes
+
+- Suppose $\{ W_t \}$ and $\{ Z_t \}$ are independent of each other.
+- Suppose $X_t = W_t + Z_t$. They are both called latent processes of $\{ X_t \}$.
+
+## Signal and Noise
+
+- The dynamics of $\{ X_t \}$ are a combination of those of the latent processes.
+- The autocovariance functions sum up, due to independence:
+\[
+ \gamma_X = \gamma_W + \gamma_Z.
+\]
+- Perhaps we are interested in $\{ Z_t \}$, and $\{ W_t \}$ is viewed as irrelevant.
+Then $Z_t$ is *signal* and $W_t$ is *noise*.
+
+### Example 4.8.3. Latent AR(1) with White Noise
+
+- Suppose $\{ Z_t \}$ is an AR(1) and $\{ W_t \}$ is white noise of variance $\sigma^2$.
+- We suppose the autoregressive parameter is $\phi$ and the error variance is $q \sigma^2$,
+for some $q > 0$.
+- Recall that $\gamma_Z (h) = \phi^{|h|} {(1- \phi^2)}^{-1} q \sigma^2$.
+- Then
+\begin{align*}
+ \gamma_X (0) & = {(1- \phi^2)}^{-1} q \sigma^2 + \sigma^2 \\
+ \gamma_X (h) & = \phi^{|h|} {(1- \phi^2)}^{-1} q \sigma^2 \quad h \neq 0.
+\end{align*}
+- We can view the impact of $q$ on the autocovariance, with $\phi = .7$ and $\sigma = 1$
+- First we examine the case with $q=1$. Second, we decrease to $q = .1$, which makes the 
+noise relatively stronger, thus dampening the serial correlation.
+
+```{r}
+snr <- 1
+phi <- .7
+gamma <- snr*phi^{seq(0,20)}/(1-phi^2)
+gamma[1] <- gamma[1] + 1
+par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(2,1),cex.lab=.8)
+plot(ts(gamma),xlab="",ylab="Acf",yaxt="n",xaxt="n",type="h")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+
+snr <- .1
+phi <- .7
+gamma <- snr*phi^{seq(0,20)}/(1-phi^2)
+gamma[1] <- gamma[1] + 1
+plot(ts(gamma),xlab="",ylab="Acf",yaxt="n",xaxt="n",type="h")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+mtext(text="Time",side=1,line=1,outer=TRUE)
+```
+
+- We also examine a sample path, first with $q=1$ and second with $q = .1$.
+- We see that the second simulation has less structure, and more resembles white noise.
+
+```{r}
+snr <- 1
+w <- rnorm(100)
+e <- rnorm(100,sd=sqrt(snr))
+z <- rep(0,100)
+phi <- .7
+z0 <- rnorm(1,sd=sqrt(snr))/sqrt(1-phi^2)
+z[1] <- phi*z0 + e[1]
+for(t in 2:100) { z[t] <- phi*z[t-1] + e[t] }
+x <- z + w
+par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(2,1),cex.lab=.8)
+plot(ts(x),xlab="",ylab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+
+snr <- .1
+w <- rnorm(100)
+e <- rnorm(100,sd=sqrt(snr))
+z <- rep(0,100)
+phi <- .7
+z0 <- rnorm(1,sd=sqrt(snr))/sqrt(1-phi^2)
+z[1] <- phi*z0 + e[1]
+for(t in 2:100) { z[t] <- phi*z[t-1] + e[t] }
+x <- z + w
+plot(ts(x),xlab="",ylab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+mtext(text="Time",side=1,line=1,outer=TRUE)
+```
+
+## Paradigm 4.8.7.  Signal Extraction
+
+- Suppose we wish to know the signal, and get rid of the noise. This topic is called *signal extraction*.
+- We can approach this as a projection problem: we project $Z_t$ (for any time $t$) onto $\{ X_t \}$. So
+we seek $\widehat{Z}_t = P_{ \overline{\mbox{sp}} \{ X_t \}} Z_t$.
+- This $\widehat{Z}_t$ is a linear combination of the $\{ X_t \}$ variables, and can be written as a linear filter of $\{ X_t \}$.
+- The finite-sample signal extraction problem is to find $\widehat{Z}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_n \}} Z_t$,
+for any $1 \leq t \leq n$.
+
+### Case of White Noise
+
+- Suppose that $\{ W_t \}$ is white noise (with variance $\sigma^2$), and that the signal $\{ Z_t \}$ is stationary.
+- Then the normal equations yield
+\[
+ \widehat{W}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_n \}} W_t =
+ \sigma^2 \underline{e}_t^{\prime} \Gamma_n^{-1} \underline{X},
+\]
+ where $\underline{e}_t$ is the $t$th unit vector and $\Gamma_n$ is the Toeplitz covariance matrix of
+ $\underline{X} = {[ X_1, \ldots, X_n]}^{\prime}$.
+- Then we find
+\[
+ \widehat{Z}_t = X_t - \widehat{W}_t,
+\]
+ which follows from $\widehat{Z}_t + \widehat{W}_t = X_t$ (by the linearity of the projection).
+ 
+### Example 4.8.8. Extracting AR(1) Signal from White Noise
+
+- We apply the signal extraction formulas to Example 4.8.3.
+- The signal extraction is the dotted line, and the simulation is the solid grey line. The true latent signal is red.
+- The first plot has $q=1$, the second has $q= .1$. The former has a more accurate signal extraction.  
+
+```{r}
+snr <- 1
+w <- rnorm(100)
+e <- rnorm(100,sd=sqrt(snr))
+z <- rep(0,100)
+phi <- .7
+z0 <- rnorm(1,sd=sqrt(snr))/sqrt(1-phi^2)
+z[1] <- phi*z0 + e[1]
+for(t in 2:100) { z[t] <- phi*z[t-1] + e[t] }
+x <- z + w
+gamma <- snr*phi^{seq(0,99)}/(1-phi^2)
+gamma[1] <- gamma[1] + 1
+zhat <- x - solve(toeplitz(gamma),x)
+par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(2,1),cex.lab=.8)
+plot(ts(x),xlab="",ylab="",col=gray(.8),lwd=2,yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+lines(ts(zhat),lty=2)
+lines(ts(z),col=2)
+
+snr <- .1
+w <- rnorm(100)
+e <- rnorm(100,sd=sqrt(snr))
+z <- rep(0,100)
+phi <- .7
+z0 <- rnorm(1,sd=sqrt(snr))/sqrt(1-phi^2)
+z[1] <- phi*z0 + e[1]
+for(t in 2:100) { z[t] <- phi*z[t-1] + e[t] }
+x <- z + w
+gamma <- snr*phi^{seq(0,99)}/(1-phi^2)
+gamma[1] <- gamma[1] + 1
+zhat <- x - solve(toeplitz(gamma),x)
+plot(ts(x),xlab="",ylab="",col=gray(.8),lwd=2,yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+lines(ts(zhat),lty=2)
+lines(ts(z),col=2)
+mtext(text="Time",side=1,line=1,outer=TRUE)
+```
+
+## Paradigm 4.8.9. Time Series Interpolation.
+
+- Suppose that we have a single time series with an NA at time $t$.
+- We can approach as a projection problem: we project $X_t$ onto $\{ X_s, s \neq t \}$. So
+we seek $\widehat{X}_t = P_{ \overline{\mbox{sp}} \{ X_s, s \neq t \}} X_t$.
+- This $\widehat{X}_t$ is a linear combination of the $\{ X_s, s\neq t \}$ variables, and can be written as a linear filter of 
+them. 
+- The finite-sample interpolation problem is to find $\widehat{X}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_{t-1}, X_{t+1}, \ldots, X_n \}} X_t$.
+- Then the normal equations yield
+\[
+ \widehat{X}_t =  \underline{\upsilon}^{\prime} \Gamma_{n-1}^{-1} { [X_1, \ldots, X_{t-1}, X_{t+1}, \ldots, X_n ]}^{\prime},
+\]
+ where $\underline{\upsilon} = {[\gamma (t-1), \ldots, \gamma(1), \gamma(-1), \ldots, \gamma (t-n)]}^{\prime}$ and $\Gamma_{n-1}$ is the Toeplitz covariance matrix of ${ [X_1, \ldots, X_{t-1}, X_{t+1}, \ldots, X_n ]}^{\prime}$.
+- This is verified by checking the normal equations.
+
+### Example: Interpolation for an AR(1) Process.
+
+- Consider an AR(1) process. We claim that 
+\[
+\widehat{X}_t = \frac{\phi}{1 + \phi^2} ( X_{t+1} + X_{t-1}),
+\]
+which is verified through checking the normal equations. 
+- We apply the missing value interpolation to an AR(1) simulation.
+- The red dot is the imputation, and the green square is the true value (which we treat as missing).
+
+```{r}
+phi <- .9
+e <- rnorm(100,sd=1)
+x <- rep(0,100)
+x0 <- rnorm(1,sd=1)/sqrt(1-phi^2)
+x[1] <- phi*x0 + e[1]
+for(t in 2:100) { x[t] <- phi*x[t-1] + e[t] }
+x.val <- x[50]
+x[50] <- NA
+xhat <- (phi/(1+phi^2))*(x[49]+x[51])
+plot(ts(x),ylab="")
+points(ts(c(rep(NA,49),xhat,rep(NA,50))),col=2,pch=19)
+points(ts(c(rep(NA,49),x.val,rep(NA,50))),col=3,pch=22)
+```
+

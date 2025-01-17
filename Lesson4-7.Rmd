@@ -1,0 +1,143 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 4-7: Orthonormal Sets
+
+- We extend our discussion to sub-spaces that are linear combinations of infinitely many
+random variables.
+- This is so we can project onto the past of a time series (for forecasting), or onto an
+entire time series (for imputation or signal extraction).
+
+## Orthonormal Set
+
+- A collection $\{ e_t \}$ where the index set can be ${\mathbb Z}$, has the property that
+\[
+ \langle e_s, e_t \rangle = \begin{cases} 1 \qquad s=t, \\ 0 \qquad s \neq t \end{cases}
+\]
+
+### Examples
+
+- The unit vectors in Euclidean space are orthonormal.
+- In ${\mathbb L}_2$, a collection of i.i.d. random variables with variance 1 are orthonormal.
+
+## Closed Linear Span
+
+- We can take the span of a countable collection of random variables, by considering linear combinations.
+- If we also include the limits of sequences of such, it is called the *closed linear span*, denoted
+\[
+ \overline{\mbox{sp}} \{ e_t \}
+\]
+- If the basis of the span is finite (i.e., finitely many variables generate the space), then closure is automatic.
+
+## Infinite Projection
+
+- Now we can project onto an infinite set.
+- For forecasting, we project $X_{n+1}$ onto $\overline{\mbox{sp}} \{ X_t, t \leq n \}$. This is
+the orthonormal set of random variables $X_t$ for any $t \leq n$, and then we take the closure.
+- For index generation, we project one variable $Y_t$ onto an entire time series 
+$\overline{\mbox{sp}} \{ X_t, t \in {\mathbb Z} \}$.
+- For imputation, where the value at time $t$ is missing (an NA), we project $X_t$ onto
+$\overline{\mbox{sp}} \{ X_s, s \neq t \}$.
+- In each case, the unknown target (either a forecast, index, missing value, etc.) is projected onto
+the information we do have.
+
+### Example 4.7.8. Order Two Autoregression
+
+- Consider an order 2 autoregressive (or AR(2)) process:
+\[
+ X_t = \phi_1 X_{t-1} + \phi_2 X_{t-2} + Z_t
+\]
+with $Z_t \sim i.i.d. (0, \sigma^2)$. Suppose the recursion is intialized such that
+the process is stationary.
+- We see that $Z_t$ is independent of $X_s$ for all $s < t$.
+- The one-step ahead forecast based on the infinite past is denoted
+$\widehat{X}_{n+1} = P_{ \overline{\mbox{sp}} \{ X_t, t \leq n \} }$.
+- Its formula is
+\[
+ \widehat{X}_{n+1} = \phi_1 X_n + \phi_2 X_{n-1},
+\]
+which is established by verifying the normal equations: 
+\[
+ \langle \widehat{X}_{n+1} - X_{n+1}, X_t \rangle = \langle Z_{n+1}, X_t \rangle = 0
+\]
+for $t \leq n$. 
+- We look at an example with $\phi_1 = .7$ and $\phi_2 = .2$, and $\sigma^2 = 1$.
+
+```{r}
+set.seed(123)
+n <- 100
+phi <- c(.7,.2)
+sigma <- 1
+Phi <- rbind(phi,c(1,0))
+Sigma <- rbind(c(sigma^2,0),c(0,0))
+Gam.0 <- solve(diag(4) - Phi %x% Phi,matrix(Sigma,ncol=1))
+Gam.0 <- matrix(Gam.0,nrow=2)
+Gam.half <- t(chol(Gam.0))
+x0 <- Gam.half %*% rnorm(2)
+z <- rnorm(n)
+xvec <- matrix(0,nrow=2,ncol=n)
+xhat <- rep(0,n)
+xvec[,1] <- x0 
+for(t in 2:n) 
+{
+  xvec[,t] <- Phi %*% xvec[,t-1] + c(z[t],0)
+  xhat[t] <- sum(phi*xvec[,t-1])
+}
+plot(ts(xvec[1,]),xlab="Time",ylab="")
+lines(ts(xhat),col=2)
+```
+
+### Linear Prediction of AR(p) Processes
+
+- The AR(p) process has the equation
+\[
+ X_t = \sum_{j=1}^p \phi_j X_{t-j} + Z_t,
+\]
+with $Z_t \sim i.i.d. (0, \sigma^2)$. Suppose the recursion is intialized such that
+the process is stationary.
+- The one-step ahead forecast based on the infinite past is denoted
+$\widehat{X}_{n+1} = P_{ \overline{\mbox{sp}} \{ X_t, t \leq n \} }$.
+- Its formula is
+\[
+ \widehat{X}_{n+1} = \sum_{j=1}^p \phi_j X_{t-j},
+\]
+which is established by verifying the normal equations: 
+\[
+ \langle \widehat{X}_{n+1} - X_{n+1}, X_t \rangle = \langle Z_{n+1}, X_t \rangle = 0
+\]
+for $t \leq n$. 
+- We look at a $p=3$ example with $\phi_1 = .7$, $\phi_2 = .2$, and $\phi_3 = -.2$, and $\sigma^2 = 1$.
+
+```{r}
+set.seed(123)
+n <- 100
+phi <- c(.7,.2,-.2)
+sigma <- 1
+Phi <- rbind(phi,c(1,0,0),c(0,1,0))
+Mod(eigen(Phi)$values)
+Sigma <- rbind(c(sigma^2,0,0),c(0,0,0),c(0,0,0))
+Gam.0 <- solve(diag(9) - Phi %x% Phi,matrix(Sigma,ncol=1))
+Gam.0 <- matrix(Gam.0,nrow=3)
+Gam.half <- t(chol(Gam.0))
+x0 <- Gam.half %*% rnorm(3)
+z <- rnorm(n)
+xvec <- matrix(0,nrow=3,ncol=n)
+xhat <- rep(0,n)
+xvec[,1] <- x0 
+for(t in 2:n) 
+{
+  xvec[,t] <- Phi %*% xvec[,t-1] + c(z[t],0,0)
+  xhat[t] <- sum(phi*xvec[,t-1])
+}
+plot(ts(xvec[1,]),xlab="Time",ylab="")
+lines(ts(xhat),col=2)
+```
+

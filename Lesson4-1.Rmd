@@ -1,0 +1,61 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 4-1: Vector Space Geometry
+
+- Euclidean geometry and linear algebra are tools for analyzing n-dimensional space.
+- We can adapt these tools to studying time series random vectors. 
+
+## Example 4.1.1.  Angle Between Two Vectors
+
+- Let $\underline{x} = [1, \sqrt{3}]$ and $\underline{y} = [1,1]$
+- Let $\theta$ be the angle between them.
+- Their angles with the x-axis are $\pi/3$ and $\pi/4$ respectively. So $\theta = \pi/12$.
+
+```{r}
+x <- c(1,1)
+y <- c(1,sqrt(3))
+  
+par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
+plot(NA,xlim=c(-.2,2),ylim=c(-.2,2),xlab="x-axis",ylab="y-axis",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+x0 <- c(0,0,1,sqrt(3))
+y0 <- c(0,0,1,1)
+arrows(x0[1],x0[2],x0[3],x0[4],col=1,lwd=2)
+arrows(y0[1],y0[2],y0[3],y0[4],col=1,lwd=2)
+text(1.1,sqrt(3)-.05,"x",cex=1.5)
+text(1.1,.95,"y",cex=1.5)
+```
+
+## Inner Product
+
+- Measure a degree of similarity of two vectors via the *inner product*.
+- For vectors $\underline{x}, \underline{y} \in {\mathbb R}^n$, their inner product is
+\[
+ \langle \underline{x}, \underline{y} \rangle = \sum_{i=1}^n x_i y_i.
+\]
+- Also, $\| \underline{x} \| = \sqrt{ \langle \underline{x}, \underline{x} \rangle }$ is the norm of $\underline{x}$.
+- The angle $\theta$ between these two vectors satisfies
+\[
+ \cos (\theta) = \frac{\langle \underline{x}, \underline{y} \rangle }{ \| \underline{x} \| \| \underline{y} \|}.
+\]
+
+## Theorem 4.1.7. Cauchy-Schwarz Inequality
+
+- For $\underline{x}, \underline{y}$ in a vector space with inner product,
+\[
+ | \langle \underline{x}, \underline{y} \rangle | \leq \| \underline{x} \| \| \underline{y} \|.
+\]
+- Equality occurs if and only if the vectors are a scalar multiple of one another.
+
+
+

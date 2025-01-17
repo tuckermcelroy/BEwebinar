@@ -88,7 +88,7 @@ students can follow along and modify the code, or rewrite it, and in real-time s
 
 ### Webinar 4
 
-1. Random Variable Geometry
+1. Vector Space Geometry
 2. The L2 Space
 3. Projection in Hilbert Space
 4. Time Series Prediction

@@ -6,38 +6,12 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 12: Projection and Prediction
+# Lesson 4-5: Time Series Prediction
 
-- We use *Hilbert Spaces* to think about time series prediction (i.e., forecasting).
-
-## The Space ${\mathbb L}_2$
-
-- For a given probability space, let ${\mathbb L}_2$ denote all random variables with finite second moment.
-- Define an *inner product* on ${\mathbb L}_2$ as follows:
-\[
-  \langle X, Y \rangle = {\mathbb E} [ X Y ]
-\]
- for $X,Y \in {\mathbb L}_2$.
-- The *norm* is $\| X \| = \sqrt{ \langle X, X \rangle}$.
-- ${\mathbb L}_2$ is a Hilbert Space.
-
-## Remark 4.2.4. The Angle Between Two Random Variables
-
-- We can think of the inner product as being related to the angle:
-\[
-  \cos (\theta) = \frac{ \langle X, Y \rangle}{ \| X \| \cdot \| Y \| },
-\]
- where $\theta$ is interpreted as the angle between random variables $X$ and $Y$.
-- Hence the inner product is zero if $\theta = \pi/2$, i.e., the random variables are *orthogonal*.
-
-## Fact 4.4.2. Orthogonality Principle
-
-- Suppose we want to project $Y \in {\mathbb L}_2$ onto a subspace $\mathcal{M} \subset {\mathbb L}_2$. Let $\widehat{Y} \in \mathcal{M}$ be the projection. The distance to the projection is $\| Y - \widehat{Y} \|$.
-- The orthogonality principle states that the distance is minimized iff $Y - \widehat{Y}$ is orthogonal to all elements of $\mathcal{M}$.
-
+- We apply projection techniques to predict (or forecast) time series.
 
 ## Paradigm 4.5.1. The Conditional Expectation
 
@@ -47,7 +21,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 \[
   {\mathbb E} [ {( \widehat{X}_t - X_t)}^2]
 \]
-is the *Mean Squared Error* (MSE).  
+is the Mean Squared Error (MSE).  
 - Theorem 4.5.2. The minimal MSE predictor is the conditional expectation:
 \[
  \widehat{X}_t = {\mathbb E} [ X_t \vert X_1, \ldots, X_n].

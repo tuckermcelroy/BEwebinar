@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 13: Linear Prediction of Time Series
+# Lesson 4-6: Linear Prediction  
 
 - Now we focus on linear prediction. This is the same as the conditional expectation when the distribution is Gaussian, or in the case of a linear process (like the AR(1)).
 
@@ -22,7 +22,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 \[
   0 = \langle Y - \widehat{Y}, X_t \rangle
 \]
-for $t = 1, \ldots, n$. These are the *normal equations*.  They can be rewritten as
+for $t = 1, \ldots, n$. These are the normal equations. They can be rewritten as
 \[
    \langle \widehat{Y}, X_t \rangle = \langle Y, X_t \rangle.
 \]

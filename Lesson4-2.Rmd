@@ -1,0 +1,87 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 4-2: The L2 Space
+
+- We use *Hilbert Spaces* to think about time series prediction (i.e., forecasting).
+- A Hilbert Space is a vector space with inner product, where Cauchy sequences converge.
+
+## The Space ${\mathbb L}_2$
+
+- For a given probability space, let ${\mathbb L}_2$ denote all random variables with finite second moment.
+- Define an inner product on ${\mathbb L}_2$ as follows:
+\[
+  \langle X, Y \rangle = {\mathbb E} [ X Y ]
+\]
+ for $X,Y \in {\mathbb L}_2$.
+- The *norm* is $\| X \| = \sqrt{ \langle X, X \rangle}$.
+- ${\mathbb L}_2$ is a Hilbert Space.
+
+## Cauchy-Schwarz
+
+- The Cauchy-Schwarz inequality holds. If the random variables are mean zero, it says that
+\[
+ | \mbox{Cov} [X,Y] | \leq \sqrt{ \mbox{Var}[X] \mbox{Var} [Y] }.
+\]
+- This is equivalent to $|\mbox{Corr} [X,Y] | \leq 1$.
+
+## Angle Between Random Variables
+
+- Heuristically we can think of $\theta$ as the angle between $X, Y \in {\mathbb L}_2$, with
+\[
+ \cos (\theta) = \frac{ \langle X, Y \rangle }{ \| X \| \| Y \|}.
+\]
+- Hence the inner product is zero if $\theta = \pi/2$, i.e., the random variables are *orthogonal*.
+- So when mean zero random variables have zero covariance (or correlation), they
+are orthogonal. We say they are *collinear* if their correlation is $\pm 1$.
+
+## Paradigm 4.2.5. Projection
+
+- We can project $Y$ onto $X$ by finding a scalar $a$ such that $X$ is orthogonal to $Y - aX$.
+- So $0 = \langle X, Y  - a X\rangle$, or $\langle X, Y \rangle = a {\| X \|}^2$, 
+yielding
+\[
+ a = \frac{ \langle X, Y \rangle }{ { \| X \|}^2 }.
+\]
+- In summary, the projection of $Y$ onto $X$ is
+\[
+ \widehat{Y} = \frac{ \langle X, Y \rangle }{ { \| X \|}^2 } X.
+\]
+- If the random variables are mean zero, this is
+\[
+ \widehat{Y} = \frac{ \mbox{Cov} [ X,Y] }{ \mbox{Var} [ X] } X.
+\]
+
+```{r}
+par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
+plot(NA, xlim=c(-.2,2), ylim=c(-.2,2),xlab="x-axis",ylab="y-axis",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+x0 <- c(0,0,1,sqrt(3))
+y0 <- c(0,0,1,1)
+arrows(x0[1],x0[2],x0[3],x0[4],col=1,lwd=2)
+arrows(y0[1],y0[2],y0[3],y0[4],col=1,lwd=2)
+text(1.1,sqrt(3)-.05,"x",cex=1.5)
+text(1.1,.95,"y",cex=1.5)
+x <- c(1,sqrt(3))
+y <- c(1,1)
+dot <- sum(x*y)
+proj <- (dot/sum(x^2))*x
+z0 <- c(0,0,proj[1],proj[2])
+#arrows(z0[1],z0[2],z0[3],z0[4],col=1,lwd=2)
+w0 <- c(1,1,proj[1],proj[2])
+arrows(w0[1],w0[2],w0[3],w0[4],lwd=2,lty=2)
+text(.35,.45,expression(theta),cex=1.2,col=1)
+```
+
+
+
+

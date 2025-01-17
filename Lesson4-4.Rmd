@@ -1,0 +1,79 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 4-4: Projection in Hilbert Space
+
+- We further examine projections in Hilbert Spaces.
+
+## Projection on a Linear Space
+
+- We can project one vector onto a linear space spanned by many vectors.
+- Let $\mathcal{M} = \mbox{span} \{ \underline{x}_1, \ldots, \underline{x}_p \}$, which is all
+linear combinations of the $p$ spanning vectors.
+- To project $\underline{y}$ onto $\mathcal{M}$, we seek a linear combination $\widehat{\underline{y}}$ of the $p$
+spanning vectors, such that $\underline{y} - \widehat{\underline{y}}$ is orthogonal to $\mathcal{M}$, i.e.,
+to each $\underline{x}_i$. 
+
+## Projection in ${\mathbb L}_2$
+
+- Suppose we want to project $Y \in {\mathbb L}_2$ onto a subspace $\mathcal{M} \subset {\mathbb L}_2$. 
+- Suppose the subspace is the span of random variables $X_1, \ldots, X_p$.
+- Let $\widehat{Y} \in \mathcal{M}$ be the projection. Then $Y - \widehat{Y}$ is orthogonal
+to each $X_i$.
+
+## Fact 4.4.2. Orthogonality Principle
+
+- Consider projection in ${\mathbb L}_2$. The distance to the projection $\widehat{Y}$ is $\| Y - \widehat{Y} \|$.
+- The *orthogonality principle* states that the distance is minimized if and only if $Y - \widehat{Y}$ is orthogonal to all elements of $\mathcal{M}$.
+- So the projection onto a subspace actually minimizes the norm distance to that space.
+
+## Normal Equations
+
+- The condition for projection says that $0 = \langle Y - \widehat{Y}, X_i \rangle$ for $1 \leq i \leq p$.
+- These $p$ equations are called the *normal equations*, because they ensure that the error vector $\epsilon = Y - \widehat{Y}$ 
+is orthogonal (i.e., normal) to the subspace.
+- So we have to solve $\langle Y, X_i \rangle = \langle \widehat{Y}, X_i \rangle$ for $1 \leq i \leq p$.
+- The distance from $Y$ to the subspace is $\| \epsilon \|$.
+- In ${\mathbb L}_2$, ${\| \epsilon \| }^2 = {\mathbb E} [ {(Y - \widehat{Y})}^2]$ is the *Mean Squared Error* (MSE).
+
+### Example of Linear Projection in ${\mathbb L}_2$
+
+- We simulate bivariate Gaussian random variables with correlation $\rho$ and variance $1$.
+- We can do this by using
+\[
+ \left[ \begin{array}{cc} 1 & \rho \\ \rho & 1 \end{array} \right]
+ =  \left[ \begin{array}{cc} 1 & 0 \\ \rho &\sqrt{1-\rho^2} \end{array} \right]
+\left[ \begin{array}{cc} 1 & \rho \\ 0 & \sqrt{1-\rho^2} \end{array} \right].
+\]
+- From prior results, the projection of the second variable onto the first
+is $\rho$ times the first random variable.
+- We compute the projection, and plot.
+
+```{r}
+rho <- .9
+mat <- matrix(c(1,rho,0,sqrt(1-rho^2)),2,2)
+z <- rnorm(2000)
+x <- mat %*% matrix(z,2,1000)
+plot(x=x[1,],y=x[2,],xlab="x-axis",ylab="y-axis",axes=TRUE,lwd=2)
+proj <- rho*x[1,]
+points(x=x[1,],y=proj,col=2)
+```
+
+- The projection MSE is ${ \| X_2 - \rho X_1 \| }^2 = 1 - \rho^2$.
+- We compute the sample variance of the projection errors, and compare to the projection MSE.
+
+```{r}
+print(var(proj-x[2,]))
+print(1 - rho^2)
+```
+
+
+
