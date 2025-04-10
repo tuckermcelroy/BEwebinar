@@ -33,9 +33,9 @@ This function is called the **autocovariance**.
 - We plot $\rho (h)$ versus $h$ (on x-axis).
  
 ```{r}
-rho <- .8
-gamma <- rho^seq(0,20)/(1-rho^2)
-plot(ts(gamma,start=0),xlab="Lag",ylab="Gamma",type ="h")
+phi <- .8
+rho <- phi^seq(0,20)
+plot(ts(rho,start=0),xlab="Lag",ylab="Rho",type ="h")
 ```
 
 ## White Noise
