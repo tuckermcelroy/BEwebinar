@@ -1646,9 +1646,16 @@ X_t = \mu_t + Z_t
 averaging over neighboring values, e.g., <span class="math display">\[
 \widehat{\mu}_t = \frac{1}{2m+1} \sum_{k = -m}^m   X_{t-k}.
 \]</span> This works because <span class="math display">\[
-\widehat{\mu}_t = \mu_t + \frac{1}{2m+1} \sum_{k = -m}^m   Z_{t-k},
-\]</span> and the second term has mean zero and variance <span class="math inline">\(\sigma^2/(2m+1)\)</span>, which tends to zero as
-<span class="math inline">\(m\)</span> increases to <span class="math inline">\(\infty\)</span>.</li>
+\widehat{\mu}_t = \frac{1}{2m+1} \sum_{k = -m}^m \mu_{t-k} +
+\frac{1}{2m+1} \sum_{k = -m}^m   Z_{t-k},
+\]</span> and the first term is approximately equal to <span class="math inline">\(\mu_t\)</span> if <span class="math inline">\(m\)</span> is small and the mean is smooth (not
+changing too much over time). Also, the second term has mean zero and
+variance <span class="math inline">\(\sigma^2/(2m+1)\)</span>, which
+tends to zero as <span class="math inline">\(m\)</span> increases to
+<span class="math inline">\(\infty\)</span>.</li>
+<li>So bias is lower for small <span class="math inline">\(m\)</span>,
+but variance is lower for large <span class="math inline">\(m\)</span>,
+creating a tension.</li>
 </ul>
 </div>
 <div id="kernel-and-bandwidth" class="section level2">

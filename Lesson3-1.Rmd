@@ -28,10 +28,12 @@ varying function.
 \]
 This works because
 \[
- \widehat{\mu}_t = \mu_t + \frac{1}{2m+1} \sum_{k = -m}^m   Z_{t-k},
+ \widehat{\mu}_t = \frac{1}{2m+1} \sum_{k = -m}^m \mu_{t-k} + \frac{1}{2m+1} \sum_{k = -m}^m   Z_{t-k},
 \]
-and the second term has mean zero and variance $\sigma^2/(2m+1)$, which tends to
+and the first term is approximately equal to $\mu_t$ if $m$ is small and the mean is smooth
+(not changing too much over time). Also, the second term has mean zero and variance $\sigma^2/(2m+1)$, which tends to
 zero as $m$ increases to $\infty$.
+- So bias is lower for small $m$, but variance is lower for large $m$, creating a tension.
 
 ## Kernel and Bandwidth
 
