@@ -1688,11 +1688,11 @@ pop &lt;- ts(pop, start = 1901)
 
 m &lt;- 20
 ma.weights &lt;- rep(1,2*m+1)/(2*m+1)
-pop.trend1 &lt;- filter(pop,ma.weights,method=&quot;convolution&quot;,sides=2)
+pop.trend1 &lt;- stats::filter(pop,ma.weights,method=&quot;convolution&quot;,sides=2)
 
 m &lt;- 5
 ma.weights &lt;- rep(1,2*m+1)/(2*m+1)
-pop.trend2 &lt;- filter(pop,ma.weights,method=&quot;convolution&quot;,sides=2)
+pop.trend2 &lt;- stats::filter(pop,ma.weights,method=&quot;convolution&quot;,sides=2)
 
 plot(pop,xlab=&quot;Year&quot;,ylab=&quot;U.S. Population&quot;,col=1,lwd=1,yaxt=&quot;n&quot;,xaxt=&quot;n&quot;)
 lines(ts(pop.trend1,start=1901,frequency=1),lty=1,lwd=1,col=2)

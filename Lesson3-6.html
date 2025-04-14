@@ -1702,10 +1702,10 @@ Starts</li>
     trendfilter &lt;- c(trendfilter[1:(period-1)],rev(trendfilter))/period^2
     seasfilter &lt;- c(1,rep(0,period-1))
     seasfilter &lt;- c(rep(seasfilter,pseas),rep(seasfilter,pseas),1)/(2*pseas+1)
-    trend &lt;- filter(data,trendfilter,method=&quot;convolution&quot;,sides=2)
+    trend &lt;- stats::filter(data,trendfilter,method=&quot;convolution&quot;,sides=2)
     trend &lt;- trend[period:(n-period+1)]
     resid &lt;- data[period:(n-period+1)] - trend
-    seasonal &lt;- filter(resid,seasfilter,method=&quot;convolution&quot;,sides=2)
+    seasonal &lt;- stats::filter(resid,seasfilter,method=&quot;convolution&quot;,sides=2)
     seasonal &lt;- seasonal[(pseas*period + 1):(length(resid) - pseas*period)]
     irreg &lt;- resid[(pseas*period + 1):(length(resid) - pseas*period)] - seasonal
 

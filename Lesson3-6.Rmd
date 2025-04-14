@@ -69,10 +69,10 @@ compSmooth <- function(data,period,pseas)
 	trendfilter <- c(trendfilter[1:(period-1)],rev(trendfilter))/period^2
 	seasfilter <- c(1,rep(0,period-1))
 	seasfilter <- c(rep(seasfilter,pseas),rep(seasfilter,pseas),1)/(2*pseas+1)
-	trend <- filter(data,trendfilter,method="convolution",sides=2)
+	trend <- stats::filter(data,trendfilter,method="convolution",sides=2)
 	trend <- trend[period:(n-period+1)]
 	resid <- data[period:(n-period+1)] - trend
-	seasonal <- filter(resid,seasfilter,method="convolution",sides=2)
+	seasonal <- stats::filter(resid,seasfilter,method="convolution",sides=2)
 	seasonal <- seasonal[(pseas*period + 1):(length(resid) - pseas*period)]
 	irreg <- resid[(pseas*period + 1):(length(resid) - pseas*period)] - seasonal
 

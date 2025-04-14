@@ -52,11 +52,11 @@ pop <- ts(pop, start = 1901)
 
 m <- 20
 ma.weights <- rep(1,2*m+1)/(2*m+1)
-pop.trend1 <- filter(pop,ma.weights,method="convolution",sides=2)
+pop.trend1 <- stats::filter(pop,ma.weights,method="convolution",sides=2)
 
 m <- 5
 ma.weights <- rep(1,2*m+1)/(2*m+1)
-pop.trend2 <- filter(pop,ma.weights,method="convolution",sides=2)
+pop.trend2 <- stats::filter(pop,ma.weights,method="convolution",sides=2)
 
 plot(pop,xlab="Year",ylab="U.S. Population",col=1,lwd=1,yaxt="n",xaxt="n")
 lines(ts(pop.trend1,start=1901,frequency=1),lty=1,lwd=1,col=2)

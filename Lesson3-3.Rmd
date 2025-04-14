@@ -28,7 +28,7 @@ gassa.log <- ts(log(gassa),start=1992,frequency=12)
 
 h <- 10
 simple.ma <- rep(1,2*h+1)/(2*h+1)
-gas.trend <- filter(gassa.log,simple.ma,method="convolution",sides=2)
+gas.trend <- stats::filter(gassa.log,simple.ma,method="convolution",sides=2)
 gas.trend <- ts(gas.trend,start=1992,frequency=12)
 plot(ts(gassa.log,start=1992,frequency=12),col=1,ylab="",xlab="Year",lwd=2)
 lines(ts(gas.trend,start=1992,frequency=12),col=2,lwd=2)

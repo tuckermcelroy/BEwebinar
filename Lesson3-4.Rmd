@@ -136,7 +136,7 @@ pop <- read.table("USpop.dat")
 pop <- ts(pop, start = 1901)
 
 p <- 10
-pop.smooth <- filter(pop,rep(1,2*p+1)/(2*p+1),method="convolution")
+pop.smooth <- stats::filter(pop,rep(1,2*p+1)/(2*p+1),method="convolution")
 pop.smooth <- ts(pop.smooth,start= 1901)
 pop.diff <- diff(pop)
 
