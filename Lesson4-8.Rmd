@@ -100,9 +100,9 @@ mtext(text="Time",side=1,line=1,outer=TRUE)
 
 - Suppose we wish to know the signal, and get rid of the noise. This topic is called *signal extraction*.
 - We can approach this as a projection problem: we project $Z_t$ (for any time $t$) onto $\{ X_t \}$. So
-we seek $\widehat{Z}_t = P_{ \overline{\mbox{sp}} \{ X_t \}} Z_t$.
+we seek $\widehat{Z}_t = P_{ \overline{\mbox{sp}} \{ X_t \}} [Z_t]$.
 - This $\widehat{Z}_t$ is a linear combination of the $\{ X_t \}$ variables, and can be written as a linear filter of $\{ X_t \}$.
-- The finite-sample signal extraction problem is to find $\widehat{Z}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_n \}} Z_t$,
+- The finite-sample signal extraction problem is to find $\widehat{Z}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_n \}} [Z_t]$,
 for any $1 \leq t \leq n$.
 
 ### Case of White Noise
@@ -110,7 +110,7 @@ for any $1 \leq t \leq n$.
 - Suppose that $\{ W_t \}$ is white noise (with variance $\sigma^2$), and that the signal $\{ Z_t \}$ is stationary.
 - Then the normal equations yield
 \[
- \widehat{W}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_n \}} W_t =
+ \widehat{W}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_n \}} [W_t] =
  \sigma^2 \underline{e}_t^{\prime} \Gamma_n^{-1} \underline{X},
 \]
  where $\underline{e}_t$ is the $t$th unit vector and $\Gamma_n$ is the Toeplitz covariance matrix of
@@ -171,10 +171,10 @@ mtext(text="Time",side=1,line=1,outer=TRUE)
 
 - Suppose that we have a single time series with an NA at time $t$.
 - We can approach as a projection problem: we project $X_t$ onto $\{ X_s, s \neq t \}$. So
-we seek $\widehat{X}_t = P_{ \overline{\mbox{sp}} \{ X_s, s \neq t \}} X_t$.
+we seek $\widehat{X}_t = P_{ \overline{\mbox{sp}} \{ X_s, s \neq t \}} [X_t]$.
 - This $\widehat{X}_t$ is a linear combination of the $\{ X_s, s\neq t \}$ variables, and can be written as a linear filter of 
 them. 
-- The finite-sample interpolation problem is to find $\widehat{X}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_{t-1}, X_{t+1}, \ldots, X_n \}} X_t$.
+- The finite-sample interpolation problem is to find $\widehat{X}_t = P_{ \overline{\mbox{sp}} \{ X_1, \ldots, X_{t-1}, X_{t+1}, \ldots, X_n \}} [X_t]$.
 - Then the normal equations yield
 \[
  \widehat{X}_t =  \underline{\upsilon}^{\prime} \Gamma_{n-1}^{-1} { [X_1, \ldots, X_{t-1}, X_{t+1}, \ldots, X_n ]}^{\prime},

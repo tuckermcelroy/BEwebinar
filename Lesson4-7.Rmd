@@ -59,7 +59,7 @@ with $Z_t \sim i.i.d. (0, \sigma^2)$. Suppose the recursion is intialized such t
 the process is stationary.
 - We see that $Z_t$ is independent of $X_s$ for all $s < t$.
 - The one-step ahead forecast based on the infinite past is denoted
-$\widehat{X}_{n+1} = P_{ \overline{\mbox{sp}} \{ X_t, t \leq n \} }$.
+$\widehat{X}_{n+1} = P_{ \overline{\mbox{sp}} \{ X_t, t \leq n \} } [X_{n+1}]$.
 - Its formula is
 \[
  \widehat{X}_{n+1} = \phi_1 X_n + \phi_2 X_{n-1},
@@ -101,10 +101,10 @@ lines(ts(xhat),col=2)
 \[
  X_t = \sum_{j=1}^p \phi_j X_{t-j} + Z_t,
 \]
-with $Z_t \sim i.i.d. (0, \sigma^2)$. Suppose the recursion is intialized such that
+with $Z_t \sim i.i.d. (0, \sigma^2)$. Suppose the recursion is initialized such that
 the process is stationary.
 - The one-step ahead forecast based on the infinite past is denoted
-$\widehat{X}_{n+1} = P_{ \overline{\mbox{sp}} \{ X_t, t \leq n \} }$.
+$\widehat{X}_{n+1} = P_{ \overline{\mbox{sp}} \{ X_t, t \leq n \} } [X_{n+1}]$.
 - Its formula is
 \[
  \widehat{X}_{n+1} = \sum_{j=1}^p \phi_j X_{t-j},
