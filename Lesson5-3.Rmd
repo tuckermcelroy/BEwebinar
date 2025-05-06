@@ -1,0 +1,64 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 5-3: Causality of AR(1)
+ 
+- Causality is the concept that the present value of a time series does not depend
+on future values, only on present and past values.
+
+## Paradigm 5.3.3. The Causal AR(1) Case.
+
+- From the AR(1) recursion with $|\phi_1| < 1$,
+\[
+  X_t = \phi_1 \, X_{t-1} + Z_t,
+\]
+and we can recursively solve.
+- So we obtain
+\[
+  X_t = \phi_1 \, \left( \phi_1 X_{t-2} + Z_{t-1} \right) + Z_t
+   = \phi_1^2 \, X_{t-2} + \phi_1 \, Z_{t-1} + Z_t.
+\]
+- Iterating this argument further, we obtain
+\[
+  X_t = \phi_1^t \, X_0 + \phi_1^{t-1} \, Z_1 + \ldots + \phi_1 \, Z_{t-1} + Z_t.
+\]
+- Going further into the past, we obtain
+\[
+  X_t = Z_t + \phi \, Z_{t-1} + \ldots = \sum_{j \geq 0 } \phi_1^j \, Z_{t-j}.
+\]
+- So $X_t$ only depends on present and past variables $\{ Z_t \}$. This gives a 
+causal representation.
+
+## Remark 5.3.4. 
+
+- The ODE $(1 - \phi_1 B) X_t = Z_t$ is solved by
+\[
+X_t =   \sum_{j \geq 0 } \phi_1^j \, Z_{t-j}.
+\]
+- Check: 
+\[
+ X_t = Z_t + \sum_{j \geq 1} \phi_1^j Z_{t-j}
+ = Z_t + \sum_{j \geq 0} \phi_1^{j+1} Z_{t-j-1}
+ = Z_t + \phi_1 \, \sum_{j \geq 0} \phi_1^j Z_{t-1-j}
+ = Z_t + \phi_1 \, X_{t-1}.
+\]
+
+## Example 5.3.7. Causal AR(1) Autocovariance.
+
+- We see that the causal AR(1) solution corresponds to an MA($\infty$) with
+$\theta_j = \phi_1^j$.
+- Therefore the autocovariance for $h \geq 0$ is given by
+\[
+\gamma (h) = \sigma^2 \, \sum_{j=0}^{\infty} \phi_1^j \phi_1^{j+h}
+= \sigma^2 \, \phi_1^h \, \sum_{j=0}^{\infty} \phi_1^{2j}
+= \sigma^2 \, \phi_1^h / (1 - \phi_1^2).
+\]
+- So the variance is $\sigma^2/ (1 - \phi_1^2)$, and $\rho (h) = \phi_1^{|h|}$.

@@ -1,0 +1,107 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 5-8: Recursive Computation of Autocovariance
+
+- A second technique finds the autocovariances without first finding the MA representation.
+
+## Paradigm 5.8.1. Method 2 for ARMA Autocovariances 
+ 
+- Determine a recursive relation for the $\gamma (h)$:
+\[
+  \gamma (k) - \sum_{j=1}^p \phi_j \gamma (k-j) = \begin{cases} \sigma^2 \sum_{j=0}^{q-k} \theta_{j+k} \psi_j \quad \mbox{if} \; k \leq q \\
+  0 \qquad \mbox{if} \; k > q.
+  \end{cases}
+  \]
+- This is compactly written as $\phi (B) \gamma_k = 0$ for $k > q$, an ODE in terms of the autocovariance
+function.
+- To solve, we find the roots of $\phi (z)$ and determine the homogeneous solution, using initial 
+conditions for $\gamma_k$.
+- These initial conditions can be recursively determined, using other expressions for
+${\mathbb E} [ W_t X_{t-h}]$, where $W_t = \phi(B) X_t$ (this is the "moving average"
+portion of the ARMA process).
+
+ 
+## Exercise 5.51. Direct Algorithm for Autocovariance Function for the ARMA($p$,$q$)
+
+- We encode the second method and run on Example 5.5.7.
+- This encoding is *ARMAauto.r*. Most of the code has to do with computing the initial
+values of the autocovariance, and the latter part of the code has the recursion.
+
+```{r}
+polymult <- function(a,b) {
+bb <- c(b,rep(0,length(a)-1))
+B <- toeplitz(bb)
+B[lower.tri(B)] <- 0
+aa <- rev(c(a,rep(0,length(b)-1)))
+prod <- B %*% matrix(aa,length(aa),1)
+return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymult(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+```
+
+- We illustrate with particular settings.
+
+```{r}
+phi1 <- .5
+theta1 <- 5/6
+theta2 <- 1/6
+sigma <- 1
+n <- 10
+my.acf <- ARMAauto(phi1,c(theta1,theta2),n)*sigma^2
+plot(ts(my.acf,start=0),xlab="Lag",ylab="Autocovariance",
+     ylim=c(min(my.acf),max(my.acf)),type="h")
+```
+
+

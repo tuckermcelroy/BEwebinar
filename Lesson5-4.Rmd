@@ -1,0 +1,51 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 5-4: Causality of ARMA
+
+- Causality is a useful concept for forecasting, and can be used to derive the 
+$h$-step ahead forecast filter.
+
+## Definition 5.4.1.
+
+- The ARMA process $\{ X_t \}$ is *causal* with respect to its inputs $\{ Z_t \}$ 
+if there exists a power series $\psi (z) = \sum_{j \geq 0} \psi_j z^j$ such that
+\[
+  X_t = \psi (B) Z_t = \sum_{j \geq 0 } \psi_j \, Z_{t-j}.
+\]
+- This is called the MA($\infty$) representation, since it expresses $\{ X_t \}$ as
+an MA($\infty$) process.
+
+## Theorem 5.4.3.
+
+- Let $\{ X_t \}$ be an ARMA($p$,$q$) where $\phi(z)$ and $\theta(z)$ have no common roots. Then $\{ X_t \}$ is causal if and only if all the roots of $\phi (z)$ are outside the unit circle, i.e., $|z|>1$ when $\phi (z) = 0$. In this case,
+\[
+  \psi (z) = \sum_{j \geq 0} \psi_j z^j = \frac{ \theta (z) }{ \phi (z)}.
+\]
+- The coefficients $\psi_j$ can be computed by recursions, by partial fraction decomposition,
+or by the theory of ODE.
+
+## Remark 5.4.5. Common Roots.
+
+- If the AR and MA polynomials had a common root, it could be cancelled from both
+polynomials, yielding a simplified difference equation.
+- For example: $X_t - .5 X_{t-1} = Z_t - .5 Z_{t-1}$ has the solution $X_t = Z_t$, 
+given by cancellation.
+
+## Exercise 5.26. Cancellation in an ARMA(1,2).
+
+- Suppose that $X_t - .5 X_{t-1} = Z_t - 1.3 Z_{t-1} +.4 Z_{t-2}$. 
+- This is equivalent to an MA(1) process: $\phi(z) = 1-.5z$, and 
+\[
+\theta (z) =1 - 1.3 z + .4z^2 = (1 - .5z) (1-.8z).
+\]
+- Thus $X_t = Z_t - .8 Z_{t-1}$. 
+

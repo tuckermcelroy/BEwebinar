@@ -1627,105 +1627,97 @@ Starter</h1>
 </div>
 
 
-<div id="lesson-5-1-arma-processes" class="section level1">
-<h1>Lesson 5-1: ARMA Processes</h1>
+<div id="lesson-5-2-difference-equations" class="section level1">
+<h1>Lesson 5-2: Difference Equations</h1>
 <ul>
-<li>ARMA processes generalize the AR and MA processes, and are central
-to classical time series analysis. They are very useful for modeling and
-forecasting stationary time series data.</li>
+<li>To understand ARMA processes it is useful to study
+<em>difference</em> equations, which are a discrete analogue of
+differential equations.</li>
 </ul>
-<div id="definition-5.1.1." class="section level2">
-<h2>Definition 5.1.1.</h2>
+<div id="definition-5.2.2." class="section level2">
+<h2>Definition 5.2.2.</h2>
 <ul>
-<li><span class="math inline">\(\{ X_t \}\)</span> is an ARMA(<span class="math inline">\(p\)</span>,<span class="math inline">\(q\)</span>)
-process if it is stationary and satisfies <span class="math display">\[
-X_t - \sum_{j=1}^p \phi_j \, X_{t-j} = Z_t + \sum_{j=1}^q \theta_j \,
-Z_{t-j},
-\]</span> where <span class="math inline">\(Z_t \sim \mbox{WN}
-(0,\sigma^2)\)</span>. The <span class="math inline">\(\{ Z_t
-\}\)</span> process is called the <em>inputs</em>.</li>
-<li>This is a recursive definition. It requires <span class="math inline">\(p\)</span> initial conditions to start the
-process.</li>
-<li>An ARMA is like an AR process with MA inputs.</li>
-<li>Special cases: <span class="math inline">\(p=0\)</span> gives an
-MA(<span class="math inline">\(q\)</span>), and <span class="math inline">\(q=0\)</span> gives an AR(<span class="math inline">\(p\)</span>).</li>
+<li>The equation <span class="math inline">\(\phi (B) X_t = W_t\)</span>
+is a <em>linear ordinary difference equation</em> (ODE) for <span class="math inline">\(\{ X_t \}\)</span> with input <span class="math inline">\(\{ W_t \}\)</span>.</li>
+<li>If <span class="math inline">\(\phi (z)\)</span> has degree <span class="math inline">\(p\)</span>, then the ODE has order <span class="math inline">\(p\)</span>.</li>
+<li>If <span class="math inline">\(W_t \equiv 0\)</span>, the ODE is
+<em>homogeneous</em>.</li>
 </ul>
 </div>
-<div id="paradigm-5.1.3.-arma-as-a-linear-filter" class="section level2">
-<h2>Paradigm 5.1.3. ARMA as a Linear Filter</h2>
+<div id="paradigm-5.2.7.-solution-of-a-homogeneous-ode." class="section level2">
+<h2>Paradigm 5.2.7. Solution of a Homogeneous ODE.</h2>
 <ul>
-<li>We can compactly write the ARMA equation in terms of the backward
-shift operator <span class="math inline">\(B\)</span>. Define the
-polynomials <span class="math display">\[
-\phi (z) =  1 - \sum_{j=1}^p \phi_j z^j \qquad \theta (z) = 1 +
-\sum_{j=1}^q \theta_j z^j.
-\]</span> Then the ARMA process satisfies <span class="math display">\[
-\phi (B) X_t = \theta (B) Z_t.
+<li>The key is to obtain the roots of <span class="math inline">\(\phi
+(z)\)</span>.</li>
+<li>Why: let <span class="math inline">\(\zeta\)</span> be a root, so
+that <span class="math inline">\(\phi (\zeta) = 0\)</span>. Then check
+that <span class="math inline">\(X_t = \zeta^{-t}\)</span> solves the
+homogeneous ODE: <span class="math display">\[
+\phi (B) X_t = \sum_{j=0}^p \phi_j X_{t-j} = \sum_{j=0}^p \phi_j
+\zeta^{-t+j}
+= \zeta^{-t} \, \sum_{j=0}^p \phi_j \zeta^j = \zeta^{-t} \, \phi (\zeta)
+= 0.
 \]</span></li>
+<li>The polynomial has <span class="math inline">\(p\)</span> roots
+<span class="math inline">\(\zeta_1, \ldots, \zeta_p\)</span>. These can
+be complex numbers, and might be repeated or distinct.</li>
+<li>If the roots are distinct, the general solution has the format <span class="math display">\[
+X_t = \sum_{j=1}^p b_j \zeta_j^{-t},
+\]</span> where <span class="math inline">\(b_j\)</span> are
+coefficients to be determined by the initial conditions.</li>
+<li>Initial conditions are specified values for <span class="math inline">\(X_1, \ldots, X_p\)</span>. If these are real, then
+the solution <span class="math inline">\(X_t\)</span> for <span class="math inline">\(t &gt; p\)</span> will also be real. (Though the
+coefficients <span class="math inline">\(b_j\)</span> might be
+complex.)</li>
 </ul>
 </div>
-<div id="example-5.1.4.-maq-autocovariance" class="section level2">
-<h2>Example 5.1.4. MA(q) Autocovariance</h2>
+<div id="example-5.2.10.-fibonacci-sequence." class="section level2">
+<h2>Example 5.2.10. Fibonacci Sequence.</h2>
 <ul>
-<li>Take <span class="math inline">\(p=0\)</span> but <span class="math inline">\(q &gt; 0\)</span>, and determine the
-autocovariance function.</li>
-<li>Suppose <span class="math inline">\(h \geq 0\)</span>: <span class="math display">\[
-{\mathbf E} [ X_t X_{t+h}] = \sum_{j=0}^q \sum_{k=0}^q \theta_j \theta_k
-{\mathbb E} [ Z_{t-j} Z_{t+h-k}]
-= \sum_{j=0}^{q-h} \theta_j \theta_{j+h} \, \sigma^2,
-\]</span> where the sum is interpreted as zero if <span class="math inline">\(q&lt; h\)</span>.</li>
-<li>The second equality follows from white noise: <span class="math inline">\({\mathbb E} [ Z_{t-j} Z_{t+h-k}] = 0\)</span>
-unless <span class="math inline">\(t-j = t+h -k\)</span>, or <span class="math inline">\(j = k-h\)</span>. So the double sum collapses to a
-single sum, setting <span class="math inline">\(k=j+h\)</span>.</li>
-<li>But if <span class="math inline">\(h &gt; q\)</span>, then it’s
-impossible for <span class="math inline">\(k = j +h\)</span>, because
-<span class="math inline">\(j +h \geq h &gt; q \geq k\)</span>.</li>
-<li>This formula is a convolution of the sequence <span class="math inline">\(\{ \theta_j \}\)</span> with its reverse!</li>
+<li>Consider the Fibonacci recursion <span class="math inline">\(X_t =
+X_{t-1} + X_{t-2}\)</span>, which corresponds to an ODE with <span class="math inline">\(\phi (z) = 1 - z - z^2\)</span>.</li>
+<li>The roots are distinct and real: <span class="math inline">\(\zeta_1
+= -1/2 + \sqrt{5}/2\)</span>, <span class="math inline">\(\zeta_2 = -1/2
+- \sqrt{5}/2\)</span>.</li>
+<li>With initial conditions <span class="math inline">\(X_1 = X_0 =
+1\)</span>, the coefficients are found to be <span class="math inline">\(b_1 = -\zeta_2/\sqrt{5}\)</span> and <span class="math inline">\(b_2 = \zeta_1/\sqrt{5}\)</span>.</li>
+<li>Then <span class="math inline">\(X_t = b_1 \zeta_1^{-t} + b_2
+\zeta_2^{-t}\)</span> is the homogeneous solution.</li>
+<li>We plot the sequence (in log scale) with this initialization.</li>
 </ul>
+<pre class="r"><code>n &lt;- 10
+x &lt;- rep(1,n)
+for(i in 3:n) { x[i] &lt;- x[i-1] + x[i-2] }
+plot(ts(log(x)),xlab=&quot;Index&quot;,ylab=&quot;log Fibonnaci&quot;)</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /></p>
 </div>
-<div id="exercise-5.14.-product-of-polynomials" class="section level2">
-<h2>Exercise 5.14. Product of Polynomials</h2>
+<div id="example-5.2.11.-seasonal-difference." class="section level2">
+<h2>Example 5.2.11. Seasonal Difference.</h2>
 <ul>
-<li>We can quickly compute the autocovariance function for an MA process
-by convolution of the moving average polynomial with its reverse.</li>
-<li>The convolution is also obtained by reading off the product of
-polynomials.</li>
-<li>We apply this idea to numerically compute the autocovariance for an
-MA(3) with <span class="math inline">\(\theta(z) = 1 + .4z + .2z^2 -
-.3z^3\)</span>, and <span class="math inline">\(\sigma =
-1\)</span>.</li>
-<li>First we write a routine to multiply polynomials.</li>
-</ul>
-<pre class="r"><code>polymul &lt;- function(a,b) 
-{
-    bb &lt;- c(b,rep(0,length(a)-1))
-    B &lt;- toeplitz(bb)
-    B[lower.tri(B)] &lt;- 0
-    aa &lt;- rev(c(a,rep(0,length(b)-1)))
-    prod &lt;- B %*% matrix(aa,length(aa),1)
-    return(rev(prod[,1]))
-}</code></pre>
-<ul>
-<li>Then we define the polynomial, and take its product with itself
-<em>reversed</em>.</li>
-<li>This will yield the autocovariance at lags <span class="math inline">\(-3, -2, -1, 0, 1, 2, 3\)</span>.</li>
-</ul>
-<pre class="r"><code>theta &lt;- c(1,.4,.2,-.3)
-gamma &lt;- polymul(theta,rev(theta))
-print(gamma)</code></pre>
-<pre><code>## [1] -0.30  0.08  0.42  1.29  0.42  0.08 -0.30</code></pre>
-</div>
-<div id="example-5.1.5.-mainfty-process." class="section level2">
-<h2>Example 5.1.5. MA(<span class="math inline">\(\infty\)</span>)
-Process.</h2>
-<ul>
-<li>Letting <span class="math inline">\(q = \infty\)</span> in Example
-5.1.4, we obtain the important MA(<span class="math inline">\(\infty\)</span>) process: <span class="math inline">\(X_t = \sum_{j \geq 0} \theta_j
-Z_{t-j}\)</span>.</li>
-<li>Assumes the coefficients satisfy <span class="math inline">\(\sum_{j
-\geq 0} \theta_j^2 &lt; \infty\)</span>.</li>
-<li>The autocovariance function is <span class="math display">\[
-\gamma (h) = \sigma^2 \, \sum_{j =0}^{\infty} \theta_j \theta_{j+h}.
+<li>Any periodic function can be written as a sum of cosines and sines.
+Why?</li>
+<li>If <span class="math inline">\(X_t\)</span> is periodic with integer
+period <span class="math inline">\(s\)</span>, then it is annihilated by
+seasonal differencing, and <span class="math inline">\((1-B^s) X_t =
+0\)</span>.</li>
+<li>So <span class="math inline">\(\phi(z) = 1 - z^s\)</span>, which has
+roots <span class="math inline">\(\zeta_j = e^{2 \pi i j/s}\)</span> for
+<span class="math inline">\(j=1,\ldots,s\)</span>.</li>
+<li>Thus the solution is <span class="math display">\[
+X_t = \sum_{j=1}^s b_j e^{-2 \pi i j t/s}.
+\]</span></li>
+<li>If <span class="math inline">\(s\)</span> is even, then two roots
+(corresponding to <span class="math inline">\(j = s/2, s\)</span>) are
+real, and the rest are complex conjugate pairs.</li>
+<li>If <span class="math inline">\(s\)</span> is odd, then one root
+(corresponding to <span class="math inline">\(j=s\)</span>) is real, and
+the rest are complex conjugate pairs.</li>
+<li>The sequence <span class="math inline">\(X_t\)</span> is real, so
+<span class="math inline">\(b_j e^{-2 \pi i j t/s}\)</span> must be
+real, and hence <span class="math display">\[
+X_t = \sum_{j=1}^s {\mathcal R} [b_j] \cos (2 \pi j t/s) + {\mathcal I}
+[b_j]
+\sin (2 \pi j t/s).
 \]</span></li>
 </ul>
 </div>

@@ -1,0 +1,89 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 5-5: Invertibility of ARMA 
+
+- Some processes also have an infinite order *autoregressive* representation.
+
+## Definition 5.5.1.  
+
+- The ARMA process $\{ X_t \}$ is *invertible* with respect to its inputs $\{ Z_t \}$ if there exists a power series $\pi (z) = \sum_{j \geq 0} \pi_j z^j$ such that
+\[
+  Z_t = \pi (B) X_t = \sum_{j \geq 0 } \pi_j \, X_{t-j}.
+\]
+- This is called the AR($\infty$) representation, since it represents $\{ X_t \}$
+as an autoregressive process of infinite order.
+- Invertibility is crucial for prediction applications, because it guarantees the
+non-singularity of certain covariance matrices needed for prediction.
+
+## Theorem 5.5.3.
+
+- Let $\{ X_t \}$ be an ARMA($p$,$q$) where $\phi(z)$ and $\theta(z)$ have no common roots. Then $\{ X_t \}$ is invertible if and only if all the roots of $\theta (z)$ are outside the unit circle, i.e., $|z|>1$ when $\theta (z) = 0$. In this case,
+\[
+  \pi (z) = \sum_{j \geq 0} \pi_j z^j = \frac{ \phi (z) }{ \theta (z)}.
+\]
+- The coefficients $\pi_j$ can be computed by recursions, by partial fraction decomposition,
+or by the theory of ODE.
+
+## Example 5.5.7. ARMA(1,2) Process
+
+- Consider the ARMA(1,2) process
+\[
+   X_t - (1/2) X_{t-1} = Z_t + (5/6) Z_{t-1} + (1/6) Z_{t-2}.
+\]
+- So $\phi (z) = 1 - (1/2)z$ and $\theta (z) = (1 + (1/2)z) ( 1 + (1/3)z)$. 
+- Since the root of $\phi(z)$ is $z=2$, which has magnitude larger than one, the process is causal. Then 
+\[
+   \phi (z) \psi(z) = \theta (z).
+\]
+By matching coefficients,
+\[
+  \psi_k - (1/2) \psi_{k-1} = \theta_k
+\]
+ for $k \geq 0$, where $\psi_k = 0$ if $k < 0$. Also $\theta_k = 0$ if $k > 2$, while $\theta_0 = 1$, $\theta_1 = 5/6$, and $\theta_2 = 1/6$. Solving recursively, we get
+ \begin{align*}
+ \psi_0 & = 1 \\
+ \psi_1 & = 4/3 \\
+ \psi_2 & = 5/6 \\
+ \psi_k & = (1/2) \psi_{k-1} \qquad k \geq 3.
+\end{align*}
+
+```{r}
+psi <- c(1,4/3,5/6,(10/3)*(1/2)^seq(2,10))
+plot(ts(psi,start=0),type="h",xlab="Index",ylab=expression(psi))
+```
+
+- Since the roots of $\theta(z)$ are $z=-2,-3$, which have magnitude larger than one, the process is invertible. Then 
+\[
+   \theta (z) \pi(z) = \phi (z).
+\]
+By matching coefficients,
+\[
+  \pi_k + (5/6) \pi_{k-1} + (1/6) \pi_{k-2} = \begin{cases} 1 \qquad \mbox{if} \; k = 0 \\
+   -1/2 \quad \mbox{if} \; k = 1 \\ 0 \qquad \mbox{if} \; k \geq 2 \end{cases}
+\]
+ for $k \geq 0$, where $\pi_k = 0$ if $k < 0$. Solving recursively, we get
+ \begin{align*}
+ \pi_0 & = 1 \\
+ \pi_1 & = -4/3 \\
+ \pi_k & = -(5/6) \pi_{k-1} - (1/6) \pi_{k-2} \qquad k \geq 2.
+\end{align*}
+
+```{r}
+pi <- c(1,-4/3)
+for(j in 2:10)
+{
+  pi <- c(pi,(-5/6)*pi[j]+(-1/6)*pi[j-1])
+}
+plot(ts(pi,start=0),type="h",xlab="Index",ylab=expression(pi))
+```
+
+

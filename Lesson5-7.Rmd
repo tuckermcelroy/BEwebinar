@@ -1,0 +1,71 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 5-7: MA Representation
+
+- We know the autocovariances of an MA process, but how about an ARMA?
+- Given the ARMA polynomials $\theta (z)$ and $\phi (z) = 1 - \sum_{j=1}^p \phi_j z^j$,
+we need algorithms to compute the autocovariances. 
+
+## Paradigm 5.7.1. Method 1 for ARMA Autocovariances
+
+- First determine the coefficients of $\psi (z)$, the MA representation. Then compute 
+\[
+ \gamma (h) = \sum_{j \geq 0 } \psi_j \psi_{j+|h|} \sigma^2,
+\]
+ which follows from the AGF.
+- We get $\psi_j$ recursively by using $\psi (z) \phi (z) = \theta (z)$, so that
+the $\theta_j$ coefficients equal the convolution of $\psi_j$ and $\phi_j$.
+- Letting $\phi_j = 0$ for $j > p$ and $\theta_j =0$ for $j > q$, we obtain
+\[
+ \psi_j = \theta_j + \sum_{k=1}^j \phi_k \psi_{j-k}.
+\]
+- We can also obtain a direct formula using ODE theory. 
+
+## Example 5.7.2. Cyclic ARMA(2,1) Process
+
+- We define an ARMA(2,1) process with cyclic properties. 
+- For $\rho \in (0,1)$ and $\omega \in (0,\pi)$, let $\{ X_t \}$ satisfy
+\[
+ ( 1 - 2 \rho \cos (\omega) B + \rho^2 B^2) X_t = (1 - \rho \cos (\omega) B) Z_t.
+\]
+- The roots of $\phi (z) = 1  - 2 \rho \cos(\omega) z + \rho^2 z^2$ are $\rho^{-1} e^{\pm i \omega}$.
+- We use ODE theory with initial conditions $\psi_0 = 1$, 
+\[
+\psi_1 = \theta_1 + \psi_0 \phi_1 = \rho \cos (\omega),
+\]
+and eventually find $\psi_j = \rho^j \cos (\omega j)$ for $j \geq 0$.
+
+```{r}
+rho <- .95
+omega <- pi/5
+lag <- 60
+psi <- (rho^(seq(1,lag)-1))*cos((seq(1,lag)-1)*omega)
+plot(ts(psi,start=0),type="h",xlab="Index",ylab=expression(psi))
+```
+
+- From the MA($\infty$) representation, we obtain the autocovariance:
+\[
+ \gamma (k) = \frac{ \sigma^2}{2} \, \rho^k \,
+ \left( \frac{ \cos (\omega k) }{1 - \rho^2} + 
+ \frac{ \cos (\omega k) - \rho^2 \cos ( \omega (k-2)) }{ 1 - 2 \rho^2 \cos (2 \omega) + \rho^4 } \right).
+\]
+- We rewrite this formula slightly and implement in R.
+
+```{r}
+const1 <- 1/(1-rho^2) + (1 - rho^2*cos(2*omega))/(1 - 2*rho^2*cos(2*omega) + rho^4)
+const2 <- rho^2*sin(2*omega)/(1 - 2*rho^2*cos(2*omega) + rho^4)
+gamma <- .5*(rho^(seq(1,lag)-1))*(cos((seq(1,lag)-1)*omega)*const1 - sin((seq(1,lag)-1)*omega)*const2)
+gamma <- gamma/(const1/2)
+plot(ts(gamma,start=0),type="h",xlab="Autocovariance",ylab=expression(gamma))
+```
+
+

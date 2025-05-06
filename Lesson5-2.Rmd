@@ -1,0 +1,82 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 5-2: Difference Equations
+
+- To understand ARMA processes it is useful to study *difference* equations, 
+which are a discrete analogue of differential equations.
+
+## Definition 5.2.2. 
+
+- The equation $\phi (B) X_t = W_t$ is a *linear ordinary difference equation* (ODE)
+for $\{ X_t \}$ with input $\{ W_t \}$.
+- If $\phi (z)$ has degree $p$, then the ODE has order $p$.
+- If $W_t \equiv 0$, the ODE is *homogeneous*.
+
+## Paradigm 5.2.7. Solution of a Homogeneous ODE.
+
+- The key is to obtain the roots of $\phi (z)$. 
+- Why: let $\zeta$ be a root, so that $\phi (\zeta) = 0$. Then check that $X_t = \zeta^{-t}$
+solves the homogeneous ODE:
+\[
+ \phi (B) X_t = \sum_{j=0}^p \phi_j X_{t-j} = \sum_{j=0}^p \phi_j \zeta^{-t+j}
+ = \zeta^{-t} \, \sum_{j=0}^p \phi_j \zeta^j = \zeta^{-t} \, \phi (\zeta) = 0.
+\]
+- The polynomial has $p$ roots $\zeta_1, \ldots, \zeta_p$. These can be complex
+numbers, and might be repeated or distinct.
+- If the roots are distinct, the general solution has the format
+\[
+X_t = \sum_{j=1}^p b_j \zeta_j^{-t},
+\]
+ where $b_j$ are coefficients to be determined by the initial conditions.
+- Initial conditions are specified values for $X_1, \ldots, X_p$. If these are real,
+then the solution $X_t$ for $t > p$ will also be real. (Though the coefficients
+$b_j$ might be complex.)
+
+## Example 5.2.10. Fibonacci Sequence.
+
+- Consider the Fibonacci recursion $X_t = X_{t-1} + X_{t-2}$, which corresponds to
+an ODE with $\phi (z) = 1 - z - z^2$.
+- The roots are distinct and real: $\zeta_1 = -1/2 + \sqrt{5}/2$, $\zeta_2 = -1/2 - \sqrt{5}/2$.
+- With initial conditions $X_1 = X_0 = 1$, the coefficients are found to be 
+$b_1 = -\zeta_2/\sqrt{5}$ and $b_2 = \zeta_1/\sqrt{5}$.
+- Then $X_t = b_1 \zeta_1^{-t} + b_2 \zeta_2^{-t}$ is the homogeneous solution.
+- We plot the sequence (in log scale) with this initialization.
+
+```{r}
+n <- 10
+x <- rep(1,n)
+for(i in 3:n) { x[i] <- x[i-1] + x[i-2] }
+plot(ts(log(x)),xlab="Index",ylab="log Fibonnaci")
+```
+
+
+## Example 5.2.11. Seasonal Difference.
+
+- Any periodic function can be written as a sum of cosines and sines. Why?
+- If $X_t$ is periodic with integer period $s$, then it is annihilated by seasonal 
+differencing, and $(1-B^s) X_t = 0$.
+- So $\phi(z) = 1 - z^s$, which has roots $\zeta_j = e^{2 \pi i j/s}$ for $j=1,\ldots,s$.
+- Thus the solution is
+\[
+ X_t = \sum_{j=1}^s b_j e^{-2 \pi i j t/s}.
+\]
+- If $s$ is even, then two roots (corresponding to $j = s/2, s$) are real, and the rest
+are complex conjugate pairs. 
+- If $s$ is odd, then one root (corresponding to $j=s$) is real, and the rest are
+complex conjugate pairs.
+- The sequence $X_t$ is real, so $b_j e^{-2 \pi i j t/s}$ must be real, and hence
+\[
+X_t = \sum_{j=1}^s {\mathcal R} [b_j] \cos (2 \pi j t/s) + {\mathcal I} [b_j]
+\sin (2 \pi j t/s).
+\]
+
+
