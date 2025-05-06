@@ -1,0 +1,100 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 10-3: AR Identification
+
+## Remark 10.3.1. AR Model Identification
+
+- To identify an AR model, we must use the sample PACF rather than the true PACF.
+- Take as null hypothesis that the process is an AR(p), such that
+\[
+ H_0 :  \kappa (h) = 0 \quad \mbox{for all} \;  h > p.
+\]
+- We can use the estimate $\widehat{\kappa} (h)$ as test statistic, for any $h > p$.
+- We require an asymptotic distribution theory.
+   
+
+## Corollary 10.3.4.
+
+Suppose $\{ X_t \}$ is an AR($p$) process with mean $\mu$ and i.i.d. inputs of variance $\sigma^2$. Then
+\[
+  \sqrt{n}  (\widehat{\kappa} (h) - \kappa (h)) \Rightarrow \mathcal{N} (0, \sigma^2
+    \underline{e}_h^{\prime} \Gamma_h^{-1} \underline{e}_h ),
+\]
+ where $\underline{e}_h$ is the unit vector with one in last (index $h$) position.
+
+
+## Paradigm 10.3.6. AR Model Identification
+
+- Suppose the true model is AR(p), and we test $H_0$ with $h > p$.
+- Trick: the process is also an AR(h), where the last $h-p$ coefficients are zero!
+- So we can apply Corollary 10.3.4, and it can be shown that because $h > p$ the limiting variance is $1$, i.e.,
+\[
+   \sqrt{n} \, \widehat{\kappa} \Rightarrow \mathcal{N} (0,1)
+\]
+under $H_0$.  
+- So we can do sequential testing using the sample PACF, with the same cautions about multiple testing.
+- We also have an *Empirical Rule* for AR identification.
+- **Empirical Rule**: let $\widehat{p}$ be the smallest positive integer such that 
+\[
+ | \widehat{\kappa} (\widehat{p}+k)| < c \sqrt{n^{-1} \log n}
+\]
+ for all $k=1, \ldots, K_n$, where $c > 0$ is a fixed constant, and $K_n$ is a positive, non-decreasing integer-valued function of $n$ such that $K_n = o(\log n)$.
+ 
+HERE: maybe eliminate this example? 
+ 
+## Example of U.S. Population
+
+- For the U.S. Population time series, we difference once and then plot the sample ACF and PACF. Dotted blue lines are confidence limits (discussed below).
+- We should guess an AR(1) model.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+acf(diff(pop))
+pacf(diff(pop))
+```
+ 
+HERE: change to Example 10.3.7???
+
+## Example of Identifying AR Order for U.S. Population
+
+- For the U.S. Population time series, we difference once and compute sample PACF. 
+- Dotted blue lines are confidence limits, based on asymptotic variance of $1/n$, and quantiles from the normal at a 5% level.
+- The AR(1) specification seems reasonable, although the lag 8 test statistic is barely significant.
+
+```{r}
+n <- length(diff(pop))
+pop.pacf <- pacf(diff(pop))
+tstat <- sqrt(n)*pop.pacf$acf[1:8]
+round(rbind(tstat,rep(qnorm(1-.05/2),8)),digits=5)
+```
+
+- We also apply the *Empirical Rule*.
+ 
+```{r}
+alpha <- .05
+crit <- qnorm(1-alpha/2)
+K.n <- 1 + floor(3*sqrt(log(n,base=10)))
+kappa.test <- pop.pacf$acf/sqrt(log(n,base=10)/n)
+k <- 1
+while(k < (n-K.n))
+{
+	if(max(abs(kappa.test[k:(k+K.n-1)])) < crit) 
+	{ 
+		p.hat <- k-1
+		k <- n-K.n
+	} else { k <- k+1 }
+}
+```
+
+- This results in AR identification of order `r p.hat`.
+

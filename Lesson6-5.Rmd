@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 16: Partial Autocorrelation 
+# Lesson 6-5: Partial Autocorrelation 
 
 - Recall from linear models that partial correlation allows us to explore the relationship between a dependent variable and a covariate, while accounting for other covariates.
 - We apply this concept to stationary time series, where we look at the relationship between time present and time past, while accounting for the in-between times.
@@ -20,8 +20,8 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
  \[
   \kappa (h) = \mbox{Corr} [ X_h, X_0 \vert X_1,\ldots, X_{h-1}]
 \]
- when $h \geq 2$.  The conditioning stands for projection (of the demeaned time series) on the random variables.
-- What does this mean? Linearly predict $X_h$ from $X_1, \ldots, X_{h-1}$, and call that $\widehat{X}_h$.  Also linearly predict $X_0$ from $X_1, \ldots, X_{h-1}$, and call that $\widehat{X}_0$. Then $\kappa(h)$ is the correlation of the prediction errors:
+ when $h \geq 2$. The conditioning stands for projection (of the demeaned time series) on the random variables.
+- What does this mean? Linearly predict $X_h$ from $X_1, \ldots, X_{h-1}$, and call that $\widehat{X}_h$. Also linearly predict $X_0$ from $X_1, \ldots, X_{h-1}$, and call that $\widehat{X}_0$. Then $\kappa(h)$ is the correlation of the prediction errors:
 \[
  \kappa (h) = \mbox{Corr} [ X_h - \widehat{X}_h, X_0 - \widehat{X}_0].
 \]
@@ -45,8 +45,7 @@ for any $t$.
 
 ## Proposition 6.5.5. 
 
-If $\{ X_t \}$ has mean zero, the PACF at lag $h$ is given by solving the Yule-Walker equations of order $h$, and taking the last coefficient, i.e., letting $\underline{e}_h$
- denote the length $h$ unit vector with one in the last position, 
+If $\{ X_t \}$ has mean zero, the PACF at lag $h$ is given by solving the Yule-Walker equations of order $h$, and taking the last coefficient, i.e., letting $\underline{e}_h$ denote the length $h$ unit vector with one in the last position, 
 \[
   \kappa (h) = \underline{e}_h^{\prime} \, \Gamma_h^{-1} \, \underline{\gamma}_h.
 \]
@@ -54,6 +53,7 @@ If $\{ X_t \}$ has mean zero, the PACF at lag $h$ is given by solving the Yule-W
 ## Exercise 6.54. PACF of MA($q$)
 
 - We use the formula of Proposition 6.5.5 to compute the PACF for the MA(3) process with $\theta(z)  = 1 + .4z + .2 z^2 - .3 z^3$.
+- First we load the ARMAauto.r function from earlier notebooks.
 
 ```{r}
 polymult <- function(a,b) {
@@ -108,7 +108,11 @@ ARMAauto <- function(phi,theta,maxlag)
 	} }
 	return(gamARMA)
 }
+```
 
+- Then we implement Proposition 6.5.5.
+
+```{r}
 armapq.pacf <- function(ar.coefs,ma.coefs,max.lag)
 {
 	gamma <- ARMAauto(ar.coefs,ma.coefs,max.lag)
@@ -120,8 +124,11 @@ armapq.pacf <- function(ar.coefs,ma.coefs,max.lag)
 	}
 	return(kappa)
 }
+```
 
-# MA(3) process
+- Then we apply to the given MA(3) process.
+
+```{r}
 ma.coefs <- c(.4,.2,-.3)
 kappa <- armapq.pacf(NULL,ma.coefs,10)
 plot(ts(kappa,start=1),xlab="Lag",ylab="Partial Autocorrelation",
@@ -133,7 +140,6 @@ plot(ts(kappa,start=1),xlab="Lag",ylab="Partial Autocorrelation",
 - Compute the PACF of Example 5.5.7.
 
 ```{r}
-# Example 5.5.7
 phi1 <- .5
 theta1 <- 5/6
 theta2 <- 1/6

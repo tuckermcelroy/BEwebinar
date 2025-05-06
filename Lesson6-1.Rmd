@@ -1,0 +1,52 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 6-1: Spectral Density
+
+- We define the spectral density, which allows us to do time series analysis in
+the frequency (or Fourier) domain.
+
+## Definition 6.1.2.
+
+- The *spectral density* of a stationary time series is
+\[
+ f(\lambda) = \sum_{k = -\infty}^{\infty} \gamma (k) e^{-i \lambda k},
+\]
+for $\lambda \in [-\pi, \pi]$.
+- Also the spectral density is the restriction of the AGF to the unit circle: $f(\lambda) = G (e^{-i \lambda})$.
+- A sufficient condition for existence is absolute summability of the autocovariances. 
+This also guarantees $f(\lambda)$ is continuous.
+
+## Remark 6.1.6. Spectral Representation of the Autocovariance.
+
+- By Fourier inversion, we can recover the autocovariances from the spectral density:
+\[
+ \gamma (k) = \frac{1}{2 \pi} \int_{-\pi}^{\pi} f(\lambda) e^{i \lambda k} \, d\lambda.
+\]
+- So for $k=0$, we see the process' variance is the average integral of $f$.
+
+## Fact 6.1.8. Further Properties of the Spectral Density
+
+- Because $\gamma (k) = \gamma (-k)$, $f(\lambda)$ is real and even.
+- Also $f(\lambda) \geq 0$ follows from positive definite property.
+
+## Corollary 6.1.9.
+
+- Suppose we filter stationary $\{ X_t \}$ with some $\psi (B)$, yielding $Y_t = \psi (B) X_t$. 
+Then the spectral densities of input and output are related by
+\[
+   f_y (\lambda) = {| \psi (e^{-i \lambda}) |}^2  f_x (\lambda).
+\]
+- This follows from Theorem 5.6.6.
+- We call $\psi(e^{-i \lambda})$ the *frequency response function* of the filter $\psi(B)$.
+- We call ${|\psi(e^{-i \lambda}) |}^2$ the *squared gain function* of the filter $\psi(B)$.
+
+
