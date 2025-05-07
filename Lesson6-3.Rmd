@@ -10,3 +10,110 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 ```
 
 # Lesson 6-3: Inverse Autocovariance
+
+- Inverse autocovariances are related to whitening filters, and can be used for 
+model identification.
+
+## Paradigm 6.3.1. Whitening a Time Series
+
+- A *whitening filter* reduces a time series to white noise.
+- Suppose $\{ X_t \}$ is stationary with positive spectral density $f(\lambda)$. Then a 
+whitening filter $\psi (B)$ has squared gain function
+\[
+  {| \psi (e^{-i \lambda}) |}^2 \propto 1/ f(\lambda).
+\]
+- So $\psi (B)$ depends on the spectral density of the time series we are whitening. We
+can find $\psi (B)$ causal, i.e., $\psi (z)$ is a power series.
+
+## Definition 6.3.2
+
+- A weakly stationary process is *invertible* if its spectral density is positive.
+- By Corollary 6.1.17, the process has an AR($\infty$) representation, so we can 
+"invert" the time series into a white noise.
+- For prediction problems, a process should be invertible.
+
+## Example 6.3.3. Prediction of an MA(1) from an Infinite Past
+
+- Let $\{ X_t \}$ be an *invertible* MA(1) process with MA polynomial $1 + \theta_1 z$.
+- Suppose we want to forecast 1-step ahead: we seek 
+$\widehat{X}_{t+1} = P_{ \overline{\mbox{sp}} \{ X_s, s \leq t \} } [X_{t+1}]$. 
+- This forecast is a causal filter: $\widehat{X}_{t+1} = \sum_{j \geq 0} \psi_j X_{t-j}$,
+with $\psi_j$ to be determined from normal equations.
+- The normal equations give us, for any $h \geq 0$:
+\[
+ \gamma(h+1) = \mbox{Cov} [ X_{t+1}, X_{t-h}] =  \mbox{Cov} [ \widehat{X}_{t+1}, X_{t-h}]
+  = \sum_{j \geq 0} \psi_j  \mbox{Cov} [ X_{t-j}, X_{t-h}] = \sum_{j \geq 0} \psi_j \gamma (h-j).
+\]
+- To solve this, rewrite the right hand side using Fourier inversion:
+\[
+ \sum_{j \geq 0} \psi_j \gamma (h-j) = 
+ \sum_{j \geq 0} \psi_j  {(2 \pi)}^{-1} \int_{-\pi}^{\pi} e^{i \lambda (h-j)} f(\lambda) d\lambda = 
+    {(2 \pi)}^{-1} \int_{-\pi}^{\pi} e^{i \lambda h} \sum_{j \geq 0} \psi_j e^{-i\lambda j} f(\lambda) d\lambda 
+ =  {(2 \pi)}^{-1} \int_{-\pi}^{\pi} e^{i \lambda h} \psi ( e^{-i\lambda } ) f(\lambda) d\lambda. 
+\]
+- Recall that $f(\lambda) = \sigma^2 {|1 + \theta_1 e^{-i \lambda} |}^2$. The 
+invertibility assumption means that $1 + \theta_1 e^{-i \lambda}$ is non-zero for all $\lambda$.
+- Claim: the prediction filter has frequency response function 
+\[
+ \psi (e^{-i \lambda}) = \frac{\theta_1}{1 + \theta_1 e^{-i \lambda} },
+\]
+ which is well-defined by the invertibility assumption.
+- To prove this claim, we plug in and check! The right hand side becomes
+\[
+\sum_{j \geq 0} \psi_j \gamma (h-j) = 
+{(2 \pi)}^{-1} \int_{-\pi}^{\pi} e^{i \lambda h} \frac{\theta_1}{1 + \theta_1 e^{-i \lambda} }  f(\lambda) d\lambda
+=  {(2 \pi)}^{-1} \int_{-\pi}^{\pi} e^{i \lambda h}  \theta_1 (1+ \theta_1 e^{i \lambda}) \sigma^2 d\lambda
+ = 1_{ \{ h = 0 \} } \theta_1 \sigma^2.
+\]
+This is the same as $\gamma (h+1)$ for $h \geq 0$, so the claim is true!
+- To get the coefficients:
+\[
+ \psi (z) = \theta_1 {(1 + \theta_1 z)}^{-1} = \theta_1 \sum_{j \geq 0} {(-\theta_1 )}^j z^j.
+\]
+So $\psi_j = \theta_1^{j+1} {(-1)}^j$. 
+
+## Definition 6.3.4
+
+- Suppose $\{ X_t \}$ is an invertible weakly stationary time series with autocovariance
+$\gamma (h)$. Then the *inverse autocovariance* is the sequence $\xi (k)$ such that
+\[
+ \sum_{k = -\infty}^{\infty} \gamma (k) \xi (j -k) = 1_{ \{ j = 0 \} }.
+\]
+- The inverse autocorrelation is $\zeta (k) = \xi(k)/\xi(0)$.
+- We can compute the inverse autocovariance from the spectral density:
+\[
+ \xi (k)= \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} \frac{1}{ f (\lambda)} d\lambda.
+\]
+
+## Example 6.3.6. The Inverse Autocovariance of an MA(1)
+
+- Consider an MA(1) process with $\theta_1 \in (-1,1)$, which implies it is invertible.
+- So the inverse autocovariance is
+\[
+\xi (k)= \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} \sigma^{-2} {| 1 + \theta_1 e^{-i \lambda} |}^{-2} d\lambda.
+\]
+- This resembles the autocovariance of an AR(1), with parameter $\phi_1 = - \theta_1$, and
+input variance $\sigma^{-2}$.
+- So by using the formula for AR(1) autocovariance, we find
+\[
+ \xi (k) = \sigma^{-2} \frac{ {(-\theta_1)}^{|k|} }{ 1 - \theta_1^2}.
+\]
+
+## Example 6.3.8. Inverse ACF and Optimal Interpolation
+
+- Suppose $\{ X_t \}$ is stationary, mean zero, and invertible.
+- Suppose that $X_0$ is missing. What is the optimal estimator? 
+- We seek $\widehat{X_0} = P_{ \overline{\mbox{sp}} \{ X_j, j \neq 0 \} } [X_0]$,
+which is a linear filter $\psi (B)$ of the data, such that $\psi_0 = 0$.
+- Claim: $\psi_j = - \zeta (j)$ for $j \neq 0$, and $\psi_0 = 0$.
+- Proof: check the normal equations. First $X_0 - \widehat{X}_0 = \sum_j \zeta (j) X_{-j}$,
+since $\zeta (0) = 1$. The covariance of this with any $X_{-k}$ for $k \neq 0$ is
+\[
+ \mbox{Cov} [X_0 - \widehat{X}_0, X_{-k}] = \sum_j \zeta (j) \gamma (k-j),
+\]
+ which is zero (since $k \neq 0$) by definition of inverse autocovariance. This verifies
+ the normal equations!
+ 
+ 
+
+]

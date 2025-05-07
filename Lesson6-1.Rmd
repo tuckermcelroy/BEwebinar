@@ -33,10 +33,65 @@ This also guarantees $f(\lambda)$ is continuous.
 \]
 - So for $k=0$, we see the process' variance is the average integral of $f$.
 
+## Exercise 6.4. MA(1) Spectral Density.
+
+- For an MA(1), the spectral density is 
+\[
+f(\lambda) = \gamma (0) + 2 \gamma(1) \cos(\lambda) = \gamma (0) \,
+\left( 1 + 2 \rho(1) \cos (\lambda) \right).
+\]
+- We plot $f(\lambda)$ for $\rho(1) = .4$ and $\gamma(0) =1$.
+- The units are in $\pi$, called "Cycles".
+
+```{r}
+mesh <- 1000
+lambda <- pi*seq(-mesh,mesh)/mesh
+rho.1 <- .4
+spec <- 1 + 2*rho.1*cos(lambda)
+plot(ts(spec,start=-1,frequency=mesh),xlab="Cycles",ylab="")
+abline(h=0,col=2)
+```
+
 ## Fact 6.1.8. Further Properties of the Spectral Density
 
 - Because $\gamma (k) = \gamma (-k)$, $f(\lambda)$ is real and even.
 - Also $f(\lambda) \geq 0$ follows from positive definite property.
+
+## Exercise 6.7. MA($q$) Spectral Density Computation.
+
+- For an MA($q$), the spectral density is
+\[
+ f(\lambda) = \gamma (0) \,
+\left( 1 + 2 \sum_{k=1}^q \rho(k) \cos (\lambda k) \right).
+\]
+- Since it is even, we can just focus on $\lambda \in [0, \pi]$.
+
+```{r}
+maq.spec <- function(ma.acf,mesh)
+{
+	q <- length(ma.acf)-1
+	lambda <- pi*seq(0,mesh)/mesh
+	spec <- ma.acf[1]*cos(0*lambda)
+	if(q > 0)
+	{
+		for(k in 1:q)
+		{
+			spec <- spec + 2*ma.acf[k+1]*cos(k*lambda)
+		}
+	}
+	return(spec)
+}
+```
+
+- We plot $f(\lambda)$ with $q=2$, $\gamma(0)=1$, $\rho(1)= 0$, and $\rho(2) =.6$.
+- However, these values do not correspond to a positive definite autocovariance,
+and the resulting function takes negative values.
+
+```{r}
+spec <- maq.spec(c(1,0,.6),mesh)
+plot(ts(spec,start=0,frequency=mesh),xlab="Cycles",ylab="")
+abline(h=0,col=2)
+```
 
 ## Corollary 6.1.9.
 
@@ -49,4 +104,88 @@ Then the spectral densities of input and output are related by
 - We call $\psi(e^{-i \lambda})$ the *frequency response function* of the filter $\psi(B)$.
 - We call ${|\psi(e^{-i \lambda}) |}^2$ the *squared gain function* of the filter $\psi(B)$.
 
+## Theorem 6.1.12.
 
+Let $\{ X_t \}$ be a stationary ARMA($p$,$q$) process such that $\phi (B) X_t = \theta (B) Z_t$,
+for $Z_t \sim \mbox{WN} (0, \sigma^2)$. Suppose $\phi (z)$ has no roots on the unit
+circle. Then the spectral density exists:
+\[
+ f (\lambda) = \sigma^2 \, \frac{ {|\theta (e^{-i \lambda}) |}^2 }{ {|\phi (e^{-i \lambda}) |}^2  }
+\]
+
+## Exercise 6.12. ARMA($p$,$q$) Spectral Density. 
+
+- We write code for the ARMA spectral density, based on the formula of Theorem 6.1.12, 
+taking as input the $\theta (z)$ and $\phi (z)$ polynomials.
+
+```{r}
+armapq.spec <- function(ar.coef,ma.coef,sigma,mesh)
+{
+	p <- length(ar.coef)
+	q <- length(ma.coef)
+	lambda <- pi*seq(0,mesh)/mesh
+	spec.ar <- rep(1,mesh+1) 
+	if(p > 0)
+	{
+		for(k in 1:p)
+		{
+			spec.ar <- spec.ar - ar.coef[k]*exp(-1i*lambda*k)
+		}
+	}
+	spec.ma <- rep(1,mesh+1) 
+	if(q > 0)
+	{
+		for(k in 1:q)
+		{
+			spec.ma <- spec.ma + ma.coef[k]*exp(-1i*lambda*k)
+		}
+	}
+	spec <- sigma^2*Mod(spec.ma)^2/Mod(spec.ar)^2
+	return(spec)
+}
+```
+
+- We plot the spectral density of the cyclic ARMA(2,1) process of Example 5.7.2:
+for $\rho \in (0,1)$ and $\omega \in (0,\pi)$, let $\{ X_t \}$ satisfy
+\[
+ ( 1 - 2 \rho \cos (\omega) B + \rho^2 B^2) X_t = (1 - \rho \cos (\omega) B) Z_t.
+\]
+- We set $\rho = .8$ and $\omega = \pi /6$.
+
+```{r}
+spec <- NULL
+mesh <- 1000
+rho <- .8
+omega <- pi/6
+ar.coef <- c(2*rho*cos(omega),-1*rho^2)
+ma.coef <- -1*rho*cos(omega)
+spec <- armapq.spec(ar.coef,ma.coef,1,mesh)
+plot(ts(spec,start=0,frequency=mesh),xlab="Cycles",ylab="",main="")
+```
+   
+## Corollary 6.1.14. 
+
+- Let $\{ X_t \}$ be a weakly stationary, mean zero time series with strictly positive
+spectral density of form given in Theorem 6.1.12. Then there exists a white noise
+$\{ Z_t \}$ such that $\phi (B) X_t = \theta (B) Z_t$.
+- This is proved by defining $Z_t = \psi (B) X_t$ with $\psi (z) = \phi (z)/\theta (z)$,
+and checking that $\{ Z_t \}$ is white noise. 
+- This $\psi (B)$ is a *whitening filter*. It transforms a time series to white noise!
+
+## Theorem 6.1.16. MA($\infty$) Representation.
+
+Let $\{ X_t \}$ be a weakly stationary, mean zero time series with autocovariance
+function $\gamma (k)$ that is absolutely summable, and positive spectral density.
+Then $\{ X_t \}$ is an MA($\infty$) process with respect to some white noise $\{ Z_t \}$:
+\[
+ X_t = \sum_{j \geq 0} \psi_j Z_{t-j},
+\]
+and $\psi_0 =1$.
+
+## Corollary 6.1.17. AR($\infty$) Representation.
+
+Under the assumptions of Theorem 6.1.16, $\{ X_t \}$ is an AR($\infty$) process with
+respect to the same white noise $\{ Z_t \}$:
+\[
+ X_t = - \sum_{j \geq 1} \pi_j  X_{t-j} + Z_t.
+\]

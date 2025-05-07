@@ -25,10 +25,24 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 function.
 - To solve, we find the roots of $\phi (z)$ and determine the homogeneous solution, using initial 
 conditions for $\gamma_k$.
+- If the roots $\zeta_j$ of $\phi (z)$ are distinct, then
+\[
+ \gamma (k) = \sum_{j=1}^p b_j \zeta_j^{-k}
+\]
+for coefficients $b_j$.
 - These initial conditions can be recursively determined, using other expressions for
 ${\mathbb E} [ W_t X_{t-h}]$, where $W_t = \phi(B) X_t$ (this is the "moving average"
 portion of the ARMA process).
 
+## Proposition 5.8.3. Exponential Decay of ARMA ACF.
+
+Consider a stationary ARMA($p$,$q$) process such that $\phi (B) X_t = \theta (B) Z_t$,
+for $Z_t \sim \mbox{WN} (0, \sigma^2)$. Assume $\phi$ and $\theta$ have no common roots.
+Then there exists a constant $C>0$ and $r \in (0,1)$ such that
+\[
+ |\gamma (k) | \leq C r^{|k|}
+\]
+ for all $|k| \geq \max \{ p, q+1 \}$. Hence the ACF exists.
  
 ## Exercise 5.51. Direct Algorithm for Autocovariance Function for the ARMA($p$,$q$)
 

@@ -10,3 +10,216 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 ```
 
 # Lesson 6-2: Filtering in Frequency Domain
+
+- Filters extract (or suppress) features of interest from a time series.
+- Using Corollary 6.1.9, we can see in frequency domain how extraction and suppression occurs.
+
+## Example 6.2.1. Business Cycle in Housing Starts.
+
+- Example 3.6.13 decomposed West Housing Starts into Trend, Seasonal, and Irregular.
+
+```{r}
+hpsa <- function(n,period,q,r)
+{
+	# hpsa
+	#     gives an HP filter for seasonal data
+	#	presumes trend+seas+irreg structure
+	#		trend is integrated rw
+	#		seas is seasonal rw
+	#		irreg is wn
+	#	q is snr for trend to irreg
+	#	r is snr for seas to irreg
+
+# define trend differencing matrix
+
+delta.mat <- diag(n)
+temp.mat <- 0*diag(n)
+temp.mat[-1,-n] <- -2*diag(n-1)
+delta.mat <- delta.mat + temp.mat
+temp.mat <- 0*diag(n)
+temp.mat[c(-1,-2),c(-n,-n+1)] <- 1*diag(n-2)
+delta.mat <- delta.mat + temp.mat
+diff.mat <- delta.mat[3:n,]
+
+# define seasonal differencing matrix
+
+delta.mat <- diag(n)
+temp.mat <- 0*diag(n)
+inds <- 0
+for(t in 1:(period-1))
+{
+	temp.mat <- 0*diag(n)
+	temp.mat[-(1+inds),-(n-inds)] <- 1*diag(n-t)
+	delta.mat <- delta.mat + temp.mat
+	inds <- c(inds,t)
+}
+sum.mat <- delta.mat[period:n,]
+
+# define two-comp sig ex matrices
+
+#trend.mat <- solve(diag(n) + t(diff.mat) %*% diff.mat/q)
+#seas.mat <- solve(diag(n) + t(sum.mat) %*% sum.mat/r)
+trend.mat <- diag(n) - t(diff.mat) %*% solve(q*diag(n-2) + diff.mat %*% 
+	t(diff.mat)) %*% diff.mat
+seas.mat <- diag(n) - t(sum.mat) %*% solve(r*diag(n-period+1) + sum.mat %*% 
+	t(sum.mat)) %*% sum.mat
+
+# define three-comp sig ex matrices
+
+trend.filter <- solve(diag(n) - trend.mat %*% seas.mat) %*%
+	trend.mat %*% (diag(n) - seas.mat)
+seas.filter <- solve(diag(n) - seas.mat %*% trend.mat) %*%
+	seas.mat %*% (diag(n) - trend.mat)
+irreg.filter <- diag(n) - (trend.filter + seas.filter)
+
+filters <- list(trend.filter,seas.filter,irreg.filter)
+return(filters)
+}
+
+Wstarts <- read.table("Wstarts.b1",skip=2)[,2]
+Wstarts <- ts(Wstarts,start = 1964,frequency=12)
+n <- length(Wstarts)
+q <- .0001
+r <- 1
+hp.filters <- hpsa(n,12,q,r)
+
+wstarts.trend <- ts(hp.filters[[1]] %*% Wstarts,start=1964,frequency=12)
+wstarts.seas <- ts(hp.filters[[2]] %*% Wstarts,start=1964,frequency=12)
+wstarts.irreg <- ts(hp.filters[[3]] %*% Wstarts,start=1964,frequency=12)
+
+par(oma=c(2,0,0,0),mar=c(2,4,2,2)+0.1,mfrow=c(4,1),cex.lab=.8)
+plot(Wstarts, ylab="West Starts",xlab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(wstarts.trend,xlab="",ylab = "Trend",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(wstarts.seas,xlab="",ylab = "Seasonal",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(wstarts.irreg,xlab="",ylab = "Irregular",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+mtext(text="Year",side=1,line=1,outer=TRUE)
+```
+
+- We fit (e.g. via ordinary least squares) an AR(26) to the Irregular component, 
+and plot the log spectral density.
+- The units are in terms of $2 \pi/12$, so the x-axis numbers represent multiples 
+of $\pi/6$.
+- There are vertical bands for frequency between $.5$ and $.1$, corresponding to period
+between 2 and 10 years. This is the *business cycle* range.
+
+```{r}
+ar.fit <- spec.ar(ts(wstarts.irreg,frequency=12),plot=FALSE)
+plot(ts(log(ar.fit$spec),start=0,frequency=500/6),xlab="Frequency per Year",
+	ylab="Log Spectrum",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+abline(v=.5,lty=3)
+abline(v=.1,lty=3)
+```
+
+## Remark 6.2.2. Spectral Peaks and Oscillation Frequencies
+
+- Higher values of the spectral density correspond to frequencies with more variability.
+- A peak in the spectral density at a frequency $\lambda$ corresponds to an
+oscillation, or cyclical effect in the process.
+
+## Fact 6.2.5. Suppression and Extraction
+
+- Suppose $\{ X_t \}$ is filtered with $\psi (B)$, so that $Y_t = \psi (B) X_t$.
+- If $\psi (e^{-i \lambda}) = 0$, then $f_y (\lambda) = 0$, and $\lambda$ is *suppressed*. 
+The set of such frequencies is the *stop-band*.
+- If $\psi (e^{-i \lambda}) = 1$, then $f_y (\lambda) = f_x (\lambda)$, and $\lambda$ is *extracted*. 
+The set of such frequencies is the *pass-band*.
+
+## Exercise 6.22. The Ideal Low-Pass Filter
+
+- The Ideal Low-pass is defined with frequency response function
+\[
+ \psi (e^{-i \lambda}) = \begin{cases}
+ 1 \qquad \mbox{if} \; |\lambda | \leq \mu \\ 0 \qquad \mbox{else}.
+ \end{cases}
+\]
+- We plot with cut-off $\mu = \pi/5$.
+
+```{r}
+mu <- pi/5
+mesh <- 1000
+lambda <- pi*seq(0,mesh)/mesh
+psi.frf <- rep(0,mesh+1)
+psi.frf[lambda <= mu] <- 1
+plot(ts(psi.frf,start=0,frequency=mesh),ylab="",xlab="Cycles")
+```
+
+- It is hard to implement, since the filter coefficients decay slowly (and hence
+truncation is expensive).
+
+## Exercise 6.23. The Ideal Band-Pass Filter
+
+- The Ideal Band-pass is defined with frequency response function
+\[
+ \psi (e^{-i \lambda}) = \begin{cases}
+ 1 \qquad \mbox{if} \; \mu_1 < |\lambda | \leq \mu_2 \\ 0 \qquad \mbox{else}.
+ \end{cases}
+\]
+- We plot with cut-offs $\mu_1 = \pi/60$ and $\mu_2 = \pi/12$.
+
+```{r}
+mu1 <- pi/60
+mu2 <- pi/12
+mesh <- 1000
+lambda <- pi*seq(0,mesh)/mesh
+psi.frf <- rep(0,mesh+1)
+psi.frf[lambda <= mu2] <- 1
+psi.frf[lambda <= mu1] <- 0
+plot(ts(psi.frf,start=0,frequency=mesh),ylab="",xlab="Cycles")
+```
+
+## Example 6.2.7. The Hodrick-Prescott Filter
+
+- Proposed by Whitaker in 1927, but known as Hodrick-Prescott, the filter does trend
+extraction.
+- The frequency response function resembles an ideal low-pass.
+- For the decomposition of West Housing Starts, we used a modified Hodrick-Prescott
+that is adapted for finite samples, and accounts for seasonality.
+- The Hodrick-Prescott filter depends on a parameter $q > 0$:
+\[
+ \psi (e^{-i \lambda}) = \frac{q}{q + {| 1 - e^{-i \lambda} |}^4 }.
+\]
+- There is a formula for the coefficients. We plot the filter coefficients with $q=1/1600$.
+
+```{r}
+q <- 1/1600
+
+s <- (2*q + 2*q^(1/2)*(q+16)^(1/2))^(1/2)
+r <- (q^(1/2) + (q+16)^(1/2) + s)/4
+c <- q/r^2
+phi1 <- 2*(q^(1/2)-(q+16)^(1/2))/(4*r)
+phi2 <- (q^(1/2)+(q+16)^(1/2) - s)/(4*r)
+theta <- atan(s/4)
+
+lags <- seq(0,100)
+psi <- 2*c*r^(4-lags)*sin(theta)*(r^2*sin(theta*(1+lags)) - sin(theta*(lags-1)))
+psi <- psi/((1-2*r^2*cos(2*theta)+r^4)*(r^2-1)*(1-cos(2*theta)))
+psi <- c(rev(psi),psi[-1])
+
+plot(ts(psi,start=-101),xlab="Index",ylab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+```
+
+- Next, we show the squared gain function.
+
+```{r}
+grid <- 1000
+lambda <- pi*seq(0,grid+1)/grid
+gain <- q/(q + (2 -2*cos(lambda))^2)
+sq.gain <- gain^2
+
+plot(ts(sq.gain,start=0,frequency=grid),xlab="Frequency",ylab="Squared Gain",
+	yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+```

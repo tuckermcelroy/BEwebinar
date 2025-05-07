@@ -10,3 +10,107 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 ```
 
 # Lesson 6-4: Toeplitz Matrices
+
+- We discuss a decomposition of Toeplitz matrices, with connections to the spectral density.
+- This is useful for model fitting and prediction.
+
+## Fact 6.4.2. Spectral Representation of a Symmetric Matrix
+
+- Let $A^*$ denote the conjugate transpose of a matrix $A$.
+- A matrix $A$ is Hermitian if $A^* = A$.
+- A matrix $U$ is unitary if $U^{-1} = U^*$.
+- For any Hermitian $A$, there exists unitary $U$ such that $A = U D U^*$, where
+$D$ is diagonal with real entries. 
+- The columns of $U$ are the eigenvectors of $A$, and $D$ has the eigenvalues of $A$.
+
+## Definition 6.4.3. Fourier Frequencies
+
+- For any $n$, the *Fourier frequencies* are defined as $\lambda_{\ell} = 2 \pi \ell/n$,
+for $[n/2] - n+1 \leq \ell \leq [n/2]$.
+- When $n$ is even, this excludes the frequencies $\pi$ and $-\pi$ both being in the 
+set, since these are redundant.
+- We define an $n \times n$-dimensional matrix $Q$, whose entries are Fourier frequencies:
+\[
+ Q_{jk} = n^{-1/2} e^{i j \lambda_{[n/2] - n + k}}.
+\]
+- The matrix $Q$ is unitary, and can be used in an approximation result for Toeplitz matrices.
+
+## Theorem 6.4.5. Spectral Decomposition of Toeplitz Covariance Matrices
+
+- Let $\Gamma_n$ denote the autocovariance matrix of a sample of size $n$ from a 
+stationary time series. Suppose the autocovariances $\gamma (k)$ are absolutely
+summable. Then
+\[
+  \Gamma_n \approx Q \Lambda Q^*,
+\]
+ with $\Lambda$ diagonal with entries $f(\lambda_{[n/2] - n +k})$. The approximation 
+ $\approx$ means that the difference entry-by-entry tends to zero as $n$ tends to
+ $\infty$.
+- It can also be shown that $\Lambda \approx Q^* \Gamma_n Q$.
+- If the process is invertible, then $\Gamma_n^{-1} \approx Q \Lambda Q^*$ as well.
+
+## Remark 6.4.11. Positive Spectral Density
+
+Since the eigenvalues of a symmetric non-negative definite matrix $\Gamma_n$ are real 
+and non-negative, we can show that the spectral density of a stationary process 
+must be non-negative. 
+
+## Exercise 6.43. Eigenvalues of an MA(1) Toeplitz Matrix.
+
+- Consider an MA(1) with parameter $\theta = .8$.
+- Compute the eigenvalues of $\Gamma_n$ for various $n$, and compare to the spectral
+density evaluated at the Fourier frequencies.
+
+```{r}
+
+theta <- .8
+
+n <- 10
+lambda <- 2*pi*seq(0,n-1)/n
+Gamma <- toeplitz(c(1+theta^2, theta, rep(0,n-2)))
+eigen(Gamma)$values
+rev(sort(1+theta^2 + 2*theta*cos(lambda)))
+
+n <- 20
+lambda <- 2*pi*seq(0,n-1)/n
+Gamma <- toeplitz(c(1+theta^2, theta, rep(0,n-2)))
+eigen(Gamma)$values
+rev(sort(1+theta^2 + 2*theta*cos(lambda)))
+
+n <- 30
+lambda <- 2*pi*seq(0,n-1)/n
+Gamma <- toeplitz(c(1+theta^2, theta, rep(0,n-2)))
+eigen(Gamma)$values
+rev(sort(1+theta^2 + 2*theta*cos(lambda)))
+```
+
+## Exercise 6.45. Eigenvalues of an MA(1) Inverse Toeplitz Matrix.
+
+- Consider an MA(1) with parameter $\theta = .8$.
+- Compute the eigenvalues of $\Gamma_n^{-1}$ for various $n$, and compare to the 
+recipocal spectral density evaluated at the Fourier frequencies.
+
+```{r}
+theta <- .8
+
+n <- 10
+lambda <- 2*pi*seq(0,n-1)/n
+Gamma <- toeplitz(c(1+theta^2, theta, rep(0,n-2)))
+eigen(solve(Gamma))$values
+1/sort(1+theta^2 + 2*theta*cos(lambda))
+
+n <- 20
+lambda <- 2*pi*seq(0,n-1)/n
+Gamma <- toeplitz(c(1+theta^2, theta, rep(0,n-2)))
+eigen(solve(Gamma))$values
+1/sort(1+theta^2 + 2*theta*cos(lambda))
+
+n <- 30
+lambda <- 2*pi*seq(0,n-1)/n
+Gamma <- toeplitz(c(1+theta^2, theta, rep(0,n-2)))
+eigen(solve(Gamma))$values
+1/sort(1+theta^2 + 2*theta*cos(lambda))
+``` 
+
+
+
