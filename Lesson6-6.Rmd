@@ -16,12 +16,18 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 ## Paradigm 6.6.1. Characterizing AR and MA Processes
 
-- The autocorrelation function (ACF) and partial autocorrelation function (PACF) have distinctive behavior for AR and MA processes.
+- The autocorrelation function (ACF), inverse autocorrelation (IACF), and partial autocorrelation function (PACF) have distinctive behavior for AR and MA processes.
 
 ### ACF
 
 - For an MA($q$) process, the ACF truncates at lag $q$, i.e., $\gamma (h) = 0$ if $|h| >q$. However, it is possible for $\gamma (h) = 0$ for $0 < h <q$ as well.
 - For an AR($p$) process, or for an ARMA($p$,$q$) process (with $p > 0$), the ACF decays at geometric rate. The correlations can oscillate, but they are bounded by some $C r^{|h|}$ for $0 < r < 1$ and $C >0$.
+
+### IACF
+
+- Generalize Exercise 6.34 to get IACF behavior for AR($p$) processes.
+- For an AR($p$) process, the IACF truncates at lag $p$, i.e., $\zeta (h) = 0$ if $|h| > p$.
+- for an MA($q$) process, or for an ARMA($p$,$q$) process (with $q > 0$), the IACF decays at geometric rate.
 
 ### PACF
 
@@ -32,5 +38,244 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 We can plot estimates of the ACF and PACF, and see if there is a lag cut-off where one or the other seems to negligible.  
 
+## Example 6.6.2. MA(3) Identification
 
-HERE: add examples...
+- Suppose we observe the ACF, IACF, and PACF of a process.
+
+```{r}
+polymult <- function(a,b) {
+bb <- c(b,rep(0,length(a)-1))
+B <- toeplitz(bb)
+B[lower.tri(B)] <- 0
+aa <- rev(c(a,rep(0,length(b)-1)))
+prod <- B %*% matrix(aa,length(aa),1)
+return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymult(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+
+armapq.pacf <- function(ar.coefs,ma.coefs,max.lag)
+{
+	gamma <- ARMAauto(ar.coefs,ma.coefs,max.lag)
+	kappa <- NULL
+	for(k in 1:max.lag)
+	{
+		new.kappa <- solve(toeplitz(gamma[1:k]),gamma[2:(k+1)])[k]		
+		kappa <- c(kappa,new.kappa)
+	}
+	return(kappa)
+}
+```
+
+- We construct and plot these functions for an MA(3) process.
+
+```{r}
+ma.coefs <- c(.4,.2,-.3)
+gamma <- ARMAauto(NULL,ma.coefs,10)
+rho <- gamma/gamma[1]
+xi <- ARMAauto(-1*ma.coefs,NULL,10)
+zeta <- xi/xi[1]
+kappa <- armapq.pacf(NULL,ma.coefs,10)
+```
+
+- The ACF plot. We start at lag 1, since the lag 0 value is always zero.
+
+```{r}
+plot(ts(rho[-1],start=1),xlab="Lag",ylab="Autocorrelation",
+     ylim=c(-1,1),type="h")
+abline(h=0,col=2)
+```
+
+- The IACF plot. We start at lag 1, since the lag 0 value is always zero.
+
+```{r}
+plot(ts(zeta[-1],start=1),xlab="Lag",ylab="Inverse Autocorrelation",
+     ylim=c(-1,1),type="h")
+abline(h=0,col=2)
+```
+
+- The PACF plot. We start at lag 1, since the lag 0 value is not defined.
+
+```{r}
+plot(ts(kappa,start=1),xlab="Lag",ylab="Partial Autocorrelation",
+     ylim=c(-1,1),type="h")
+abline(h=0,col=2)
+```
+
+## Example 6.6.3. AR(4) Identification
+
+- Suppose we observe the ACF, IACF, and PACF of a process.
+- We construct and plot these functions for an AR(4) process.
+
+```{r}
+ar.coefs <- c(.8,-.3,.2,.1)
+gamma <- ARMAauto(ar.coefs,NULL,10)
+rho <- gamma/gamma[1]
+xi <- ARMAauto(NULL,-1*ar.coefs,10)
+zeta <- xi/xi[1]
+kappa <- armapq.pacf(ar.coefs,NULL,10)
+```
+
+- The ACF plot. We start at lag 1, since the lag 0 value is always zero.
+
+```{r}
+plot(ts(rho[-1],start=1),xlab="Lag",ylab="Autocorrelation",
+     ylim=c(-1,1),type="h")
+abline(h=0,col=2)
+```
+
+- The IACF plot. We start at lag 1, since the lag 0 value is always zero.
+
+```{r}
+plot(ts(zeta[-1],start=1),xlab="Lag",ylab="Inverse Autocorrelation",
+     ylim=c(-1,1),type="h")
+abline(h=0,col=2)
+```
+
+- The PACF plot. We start at lag 1, since the lag 0 value is not defined.
+
+```{r}
+plot(ts(kappa,start=1),xlab="Lag",ylab="Partial Autocorrelation",
+     ylim=c(-1,1),type="h")
+abline(h=0,col=2)
+```
+
+## Paradigm 6.6.7. Identification by Whitening
+
+- Suppose we apply some filter $\psi (B)$ to the data $\{ X_t \}$, and the output appears to 
+be white noise $\{ Z_t \}$ (e.g., we ran some statistical tests of serial independence).
+- $\psi (B)$ is called a *whitening filter*.
+- We infer that $X_t = {\psi (B)}^{-1} Z_t$, which gives a model for $\{ X_t \}$.
+- So we can try out classes of filters $\psi (B)$, attempt to whiten the data, and 
+deduce the original model.
+
+## Example 6.6.8. AR($p$) Whitening Models
+
+- Consider the class of filters $\psi (B) = 1 - \sum_{j=1}^p \psi_j B^j$, which 
+are AR polynomial filters.
+- We would apply these to the data, seeking $p$ and coefficient values such that
+the data is whitened.
+- We can estimate coefficients using ordinary least squares (or the Yule-Walker method,
+discussed later), for any $p$. These are fast to calculate, so we can just try 
+over many choices of $p$.
+
+## Exercise 6.61. Whitening an AR($p$) Process
+
+- We implement the method of Example 6.6.8, and apply to an AR($2$) simulation.
+
+```{r}
+arp.sim <- function(n,burn,ar.coefs,innovar)
+{
+	p <- length(ar.coefs)
+	z <- rnorm(n+burn+p,sd=sqrt(innovar))
+	x <- z[1:p]
+	for(t in (p+1):(p+n+burn))
+	{
+		next.x <- sum(ar.coefs*x[(t-1):(t-p)]) + z[t]
+		x <- c(x,next.x)
+	}	
+	x <- x[(p+burn+1):(p+burn+n)]
+	return(x)
+}
+
+diffsign.test <- function(x)
+{
+	dx <- diff(ts(x))
+	S <- length(dx[dx > 0])
+	test <- (S - length(dx)/2)/sqrt((length(dx)+1)/12)
+	return(c(test,pnorm(test),1-pnorm(test)))
+}
+
+```
+
+- First we generate a simulation of a cyclic AR(2).
+
+```{r}
+set.seed(777)
+n <- 100
+rho <- .8
+omega <- pi/6
+phi1 <- 2*rho*cos(omega)
+phi2 <- -rho^2
+ar.coef <- c(phi1,phi2)
+x.sim <- arp.sim(n,500,ar.coef,1)
+plot.ts(x.sim,ylab="")
+```
+
+- Then we obtain fitted autoregressive filters, for various $p$ up to $5$.
+- We use OLS to fit. Note that regression residuals are the filter output.
+
+```{r}
+covars <- as.matrix(x.sim[-n])
+coeffs <- list()
+resids <- list()
+for(p in 1:5)
+{
+  ar.fit <- lm(x.sim[-seq(1,p)] ~ covars - 1)
+  coeffs[[p]] <- ar.fit$coefficients
+  resids[[p]] <- ar.fit$residuals
+  covars <- cbind(covars[-1,],x.sim[-seq(n-p,n)])
+}
+```
+
+- We plot the filter outputs (the regression residuals) and estimates of the ACF.
+
+```{r}
+for(p in 1:5)
+{
+  plot.ts(resids[[p]],ylab="")  
+  acf(resids[[p]])
+}
+```
+
+- The correct filter is for $p=2$. We print the coefficients and their estimates.
+
+```{r}
+print(c(phi1,phi2))
+print(coeffs[[2]])
+```
+
+
+ 

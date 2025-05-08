@@ -99,6 +99,25 @@ input variance $\sigma^{-2}$.
  \xi (k) = \sigma^{-2} \frac{ {(-\theta_1)}^{|k|} }{ 1 - \theta_1^2}.
 \]
 
+## Exercise 6.34. Inverse Autocovariances of an AR(1)
+
+- Consider the AR(1) process with $\phi (z) = 1 - \phi_1 z$. What are the inverse
+autocovariances?
+- So the inverse autocovariance is
+\[
+\xi (k)= \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} \sigma^{2} {| 1 - \phi_1 e^{-i \lambda} |}^{2} d\lambda.
+\]
+- This resembles the autocovariance of an MA(1), with parameter $\theta_1 = - \phi_1$,
+and input variance $\sigma^2$.
+- So by using the formula for MA(1) autocovariance, we find
+\[
+ \xi (k) = \sigma^{2}  \begin{cases}
+ 1+ \phi_1^2 \qquad \mbox{if} \; k = 0 \\
+ -\phi_1 \qquad \mbox{if} \; k = \pm 1 \\
+ 0 \qquad \mbox{if} \; |k| > 1.
+ \end{cases}
+\]
+
 ## Example 6.3.8. Inverse ACF and Optimal Interpolation
 
 - Suppose $\{ X_t \}$ is stationary, mean zero, and invertible.
@@ -115,5 +134,3 @@ since $\zeta (0) = 1$. The covariance of this with any $X_{-k}$ for $k \neq 0$ i
  the normal equations!
  
  
-
-]

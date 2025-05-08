@@ -1742,6 +1742,26 @@ autocovariance</em> is the sequence <span class="math inline">\(\xi
 \]</span></li>
 </ul>
 </div>
+<div id="exercise-6.34.-inverse-autocovariances-of-an-ar1" class="section level2">
+<h2>Exercise 6.34. Inverse Autocovariances of an AR(1)</h2>
+<ul>
+<li>Consider the AR(1) process with <span class="math inline">\(\phi (z)
+= 1 - \phi_1 z\)</span>. What are the inverse autocovariances?</li>
+<li>So the inverse autocovariance is <span class="math display">\[
+\xi (k)= \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} \sigma^{2} {|
+1 - \phi_1 e^{-i \lambda} |}^{2} d\lambda.
+\]</span></li>
+<li>This resembles the autocovariance of an MA(1), with parameter <span class="math inline">\(\theta_1 = - \phi_1\)</span>, and input variance
+<span class="math inline">\(\sigma^2\)</span>.</li>
+<li>So by using the formula for MA(1) autocovariance, we find <span class="math display">\[
+\xi (k) = \sigma^{2}  \begin{cases}
+1+ \phi_1^2 \qquad \mbox{if} \; k = 0 \\
+-\phi_1 \qquad \mbox{if} \; k = \pm 1 \\
+0 \qquad \mbox{if} \; |k| &gt; 1.
+\end{cases}
+\]</span></li>
+</ul>
+</div>
 <div id="example-6.3.8.-inverse-acf-and-optimal-interpolation" class="section level2">
 <h2>Example 6.3.8. Inverse ACF and Optimal Interpolation</h2>
 <ul>
@@ -1765,7 +1785,6 @@ X_{-j}\)</span>, since <span class="math inline">\(\zeta (0) =
 0\)</span>) by definition of inverse autocovariance. This verifies the
 normal equations!</li>
 </ul>
-<p>]</p>
 </div>
 </div>
 

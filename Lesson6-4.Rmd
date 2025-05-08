@@ -88,7 +88,7 @@ rev(sort(1+theta^2 + 2*theta*cos(lambda)))
 
 - Consider an MA(1) with parameter $\theta = .8$.
 - Compute the eigenvalues of $\Gamma_n^{-1}$ for various $n$, and compare to the 
-recipocal spectral density evaluated at the Fourier frequencies.
+reciprocal spectral density evaluated at the Fourier frequencies.
 
 ```{r}
 theta <- .8
