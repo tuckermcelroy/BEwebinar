@@ -1,0 +1,155 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 7-1: Herglotz Theorem 
+
+We further study the relationship between autocovariance and spectral density.
+
+## Example 7.1.2. Absolutely Summable Autocovariance.
+
+- Suppose an ACVF $\{ \gamma (k) \}$ is absolutely summable, so that the spectral 
+density $f$ exists.
+- Define its anti-derivative, for $\lambda \in [-\pi,\pi]$:
+\[
+ F(\lambda) = \int_{-\pi}^{\lambda} f(\omega) d\omega.
+\]
+- So $F(-\pi) = 0$ and $F(\pi) = 2 \pi \gamma (0)$.
+- $F$ is a bounded, non-decreasing, absolutely-continuous function. It is called
+the *spectral distribution*. 
+- With $dF (\lambda) = f(\lambda) d\lambda$, we can write
+\[
+ \gamma (k) = \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} dF (\lambda).
+\]
+- This can be interpreted as a "Stieltjes integral" when $F$ is not differentiable.
+
+## Example 7.1.4. Stochastic Cosine.
+
+- Consider $X_t = A \cos (\vartheta t + \Phi)$, where $\Phi$ is uniformly distributed
+on $[0, 2 \pi]$, and $A$ has mean zero and variance $\sigma^2$. Also $\vartheta \in [0,\pi]$.
+- The ACVF is $\gamma (k) = \sigma^2 \cos (\vartheta k)/2$, which is not summable,
+so the spectral density does not exist.
+- However, we can choose $F$ such that the above relation still holds:
+\[
+ F(\lambda) = \frac{ \sigma^2 \pi}{2} \, \left( 1_{ \{ \lambda \in [-\vartheta, \pi] \} }
+  + 1_{ \{ \lambda \in [\vartheta, \pi ] \} } \right).
+\]
+
+```{r}
+theta <- pi/5
+sig2 <- 1/pi
+grid <- 1000
+lambda <- pi*rep(0,grid+1)/grid
+lambda <- c(rev(lambda),lambda[-1])
+j <- grid*theta/pi
+F.distr <- 0*cos(0*lambda)
+F.distr[(grid+1-j):(grid+j)] <- .5*pi*sig2
+F.distr[(grid+1+j):(2*grid+1)] <- pi*sig2
+par(mar=c(4,4,2,2)+0.1,cex.lab=.8)
+plot(ts(F.distr,start=-1,frequency=grid),xlab="Frequency",
+	ylab="Spectral Distribution",yaxt="n",xaxt="n",type="points",pch=".")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+```
+
+
+## Definition 7.1.7. 
+
+- A function $F(\lambda)$ for $\lambda \in [-\pi,\pi]$ that is bounded, non-decreasing, 
+and right continuous, and satisfies $F^{-} (\lambda) = F(\pi) - F(-\lambda)$ is
+called a **spectral distribution function.** 
+- F^{-} (\lambda)$ is the left-hand limit. 
+
+## Theorem 7.1.8. Herglotz Theorem
+
+A sequence $\{ \gamma (k) \}$ is an ACVF (non-negative definite with even symmetry) 
+if and only if it can be written as
+\[
+ \gamma (k) = \frac{1}{2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} dF (\lambda)
+\]
+for some spectral distibution function $F$.
+
+## Fact 7.1.9. Spectral Decomposition
+
+- We can decompose a spectral distribution function $F$ into a singular portion $F_s$
+and a absolutely continuous portion $F_c$:
+\[
+ F = F_s + F_c.
+\]
+- The absolutely continuous portion is differentiable almost everywhere, with derivative
+called the spectral density.
+- The singular part corresponds to a step function.
+
+## Exercise 7.5. Spectral Distribution of an ARMA Process.
+
+- We write code to compute the spectral distribution $F$ of an ARMA process.
+- We begin with the code for an ARMA spectral density.
+
+```{r}
+armapq.spec <- function(ar.coef,ma.coef,sigma,mesh)
+{
+	p <- length(ar.coef)
+	q <- length(ma.coef)
+	lambda <- pi*seq(0,mesh)/mesh
+	spec.ar <- rep(1,mesh+1) 
+	if(p > 0)
+	{
+		for(k in 1:p)
+		{
+			spec.ar <- spec.ar - ar.coef[k]*exp(-1i*lambda*k)
+		}
+	}
+	spec.ma <- rep(1,mesh+1) 
+	if(q > 0)
+	{
+		for(k in 1:q)
+		{
+			spec.ma <- spec.ma + ma.coef[k]*exp(-1i*lambda*k)
+		}
+	}
+	spec <- sigma^2*Mod(spec.ma)^2/Mod(spec.ar)^2
+	return(spec)
+}
+```
+
+- Then we get the spectral distribution by numerical integration, via trapezoidal rule.
+
+```{r}
+armapq.distr <- function(ar.coef,ma.coef,sigma,mesh)
+{
+
+	f.spec <- armapq.spec(ar.coef,ma.coef,sigma,mesh)
+	f.spec <- c(rev(f.spec),f.spec[-1])
+	f.distr <- rep(0,2*mesh+1)
+	for(i in 1:(2*mesh))
+	{	
+		f.distr[i+1] <- f.distr[i] + (f.spec[i]+f.spec[i+1])/2
+	}
+	f.distr <- pi*f.distr/mesh
+	return(f.distr)
+}
+```
+
+- Then we apply this in the case of the cycle ARMA(2,1). We plot the spectral density
+and the spectral distribution.
+
+```{r}
+mesh <- 1000
+rho <- .9
+omega <- pi/6
+ar.coef <- c(2*rho*cos(omega),-1*rho^2)
+ma.coef <- -1*rho*cos(omega)
+spec <- armapq.spec(ar.coef,ma.coef,1,mesh)
+plot(ts(c(rev(spec),spec[-1]),start=-1,frequency=mesh),xlab="Cycles",ylab="Spectral Density",main="")
+spec <- armapq.distr(ar.coef,ma.coef,1,mesh)
+plot(ts(spec,start=-1,frequency=mesh),xlab="Cycles",ylab="Spectral Distribution",main="")
+```
+
+
