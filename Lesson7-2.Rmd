@@ -1,0 +1,160 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 7-2: Discrete Fourier Transform
+
+We introduce the data analysis tool of Discrete Fourier Transform.
+
+## Definition 7.2.3.
+
+Given a sample $X_1, \ldots, X_n$, the **Discrete Fourier Transform** (DFT) at the
+Fourier frequency $\lambda_l = 2 \pi l/n$ (for $[n/2]-n+1 \leq l \leq [n/2]$) is
+\[
+ \widetilde{X} (\lambda_l) = n^{-1/2} \sum_{t=1}^n X_t e^{-i \lambda_l t}.
+\]
+
+## Definition 7.2.4.
+
+- The **periodogram** $I(\lambda)$ is a non-negative function of $\lambda \in [-\pi,\pi]$,
+constructed from the sample $X_1, \ldots, X_n$:
+\[
+ I(\lambda) = n^{-1} { \left| \sum_{t=1}^n (X_t - \overline{X}) e^{-i \lambda t} \right| }^2.
+\]
+- So $I(0) = 0$. Sometimes we consider an "uncentered" periodogram, where there is
+no centering by the sample mean. We denote this by $\widetilde{I} (\lambda)$, and
+\[
+  \widetilde{I} (\lambda_l) = {| \widetilde{X} (\lambda_l) |}^2.
+\]
+- The periodogram is an empirical version of the spectral density, and shares certain
+properties. Higher values correspond to cyclical effects in the data.
+
+## Proposition 7.2.7.
+
+- Let the vector of DFTs be denoted $\widetilde{\underline{X}}$, which has components
+$\widetilde{X} (\lambda_l)$. 
+- This is a linear function of the sample vector $\underline{X}$: 
+\[
+\widetilde{\underline{X}} =  Q^* \, \underline{X},
+\]
+where $Q$ was defined in Definition 6.4.3. 
+- Since $Q$ is unitary, $Q^{-1} = Q^*$, so we can recover the data from the DFT vector
+via
+\[
+  \underline{X} = Q \, \widetilde{\underline{X}}.
+\]
+
+## Exercise 7.14. DFT of an AR(1).
+
+- We simulate an AR(1).
+
+```{r}
+arp.sim <- function(n,burn,ar.coefs,innovar)
+{
+	p <- length(ar.coefs)
+	z <- rnorm(n+burn+p,sd=sqrt(innovar))
+	x <- z[1:p]
+	for(t in (p+1):(p+n+burn))
+	{
+		next.x <- sum(ar.coefs*x[(t-1):(t-p)]) + z[t]
+		x <- c(x,next.x)
+	}	
+	x <- x[(p+burn+1):(p+burn+n)]
+	return(x)
+}
+
+phi <- .8
+innovar <- 1
+n <- 200
+x.sim <- arp.sim(n,500,phi,innovar)
+```
+
+- We compute the DFT. We begin with code to compute $Q$.
+
+```{r}
+
+get.qmat <- function(mesh)
+{
+	mesh2 <- floor(mesh/2)
+	inds <- seq(mesh2-mesh+1,mesh2)
+	Q.mat <- exp(1i*2*pi*mesh^{-1}*t(t(seq(1,mesh)) %x% inds))*mesh^{-1/2}
+	return(Q.mat)
+}
+Q.mat <- get.qmat(n)
+```
+
+- Then we use Proposition 7.2.7 to get the DFT vector. We plot the real part, imaginary part,
+and the modulus.
+
+```{r}
+x.dft <- Conj(t(Q.mat)) %*% x.sim
+#par(mfrow=c(3,1))
+plot(ts(Re(x.dft),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Real Part")
+plot(ts(Im(x.dft),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Imaginary Part")
+plot(ts(Mod(x.dft)^2,start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Squared Modulus")
+```
+
+## Corollary 7.2.9. Decorrelation Property of the DFT.
+
+- Let $X_1, \ldots, X_n$ be a sample from a mean zero, covariance stationary time
+series with absolutely summable ACVF and spectral density $f$. Then 
+$\widetilde{\underline{X}}$ has approximate covariance matrix 
+$\mbox{diag} \{  f(\lambda_{[n/2]-n+k}) \}$.
+- This follows from Theorem 6.4.5:
+\[
+ \mbox{Cov} [ \widetilde{\underline{X}} ] = Q^* \, 
+ \mbox{Cov} [ \underline{X} ] \, Q  \approx \Lambda.
+\]
+
+## Exercise 7.18. DFT of Wolfer Sunspots.
+
+- We compute the DFT of the Wolfer sunspot data, and plot.
+
+```{r}
+wolfer <- read.table("wolfer.dat")
+wolfer <- ts(wolfer,start=1749,frequency=12)
+n <- length(wolfer)
+Q.mat <- get.qmat(n)
+x.dft <- Conj(t(Q.mat)) %*% wolfer
+plot(ts(Re(x.dft),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Real Part")
+plot(ts(Im(x.dft),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Imaginary Part")
+plot(ts(log(Mod(x.dft)^2),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Log Squared Modulus")
+```
+
+- We see higher values of the squared modulus (the uncentered periodogram) near
+frequency zero.
+
+## Exercise 7.20. DFT of Mauna Loa Growth Rate.
+
+- We compute the DFT of the Mauna Loa growth rate, and plot.
+
+```{r}
+mau <- read.table("mauna.dat",header=TRUE,sep="")
+mau <- ts(mau,start=1958,frequency=12)
+mau.gr <- diff(log(mau))
+n <- length(mau.gr)
+Q.mat <- get.qmat(n)
+x.dft <- Conj(t(Q.mat)) %*% mau.gr
+plot(ts(Re(x.dft),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Real Part")
+plot(ts(Im(x.dft),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Imaginary Part")
+plot(ts(log(Mod(x.dft)^2),start=-floor(n/2)+1,frequency=1),
+	xlab="Frequency Index",ylab="Log Squared Modulus")
+```
+
+- We see higher values of the uncentered periodogram in the shape of peaks, at four
+non-zero frequencies. These correspond to cyclical seasonal effects.
