@@ -1,0 +1,108 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 7-5: Kolmogorov's Formula
+
+- We discuss a formula for the one-step ahead prediction MSE.
+
+## Definition 7.5.2.
+
+- For a process $\{ X_t \}$, the **innovation** at time $t$ is the prediction error
+given the infinite past:
+\[
+ \epsilon_t^{(\infty)} = X_t - P_{ \overline{sp} \{ X_s, s < t \}} [X_t].
+\]
+- The one-step ahead prediction error based on the past $n$ observations is
+\[
+ \epsilon_t^{(n)} = X_t - P_{ \overline{sp} \{ X_s, t- n \leq s < t \}} [X_t].
+\]
+- It must be true that $\mbox{Var} [\epsilon_t^{(n)}] \geq \mbox{Var} [\epsilon_t^{(\infty)}]$.
+
+## Theorem 7.5.3.
+
+If $\{ X_t \}$ is a causal invertible ARMA with white noise inputs $\{ Z_t \}$
+of variance $\sigma^2$, then $Z_t$ is the innovation at time $t$, and as 
+$n \rightarrow \infty$
+\[
+\mbox{Var} [\epsilon_t^{(n)}] \rightarrow \mbox{Var} [\epsilon_t^{(\infty)}] = \sigma^2.
+\]
+
+## Example 7.5.4. MA(1) Prediction Variance
+
+- Consider 1-step ahead prediction of an invertible MA(1) process with parameter $\theta$,
+based on a finite past. Invertibiilty implies $| \theta | <1$.
+- From Example 4.6.4, 
+\[
+\mbox{Var} [\epsilon_t^{(n)}] = \gamma (0) - \underline{\gamma}^{\prime}_n \, 
+   \Gamma_n^{-1} \, \underline{\gamma}_n =
+   \sigma^2 (1 + \theta^2) - \sigma^2 \theta^2  \frac{1 + \theta^2 + \cdots + \theta^{2n-2}}{ 1 + \theta^2 + \cdots + \theta^{2n}}
+   = \sigma^2  \frac{1 + \theta^2 + \cdots + \theta^{2n+2}}{ 1 + \theta^2 + \cdots + \theta^{2n}},
+\]
+which is greater than $\sigma^2$ but tends to it (since $|\theta | < 1$) as $n \rightarrow \infty$.
+
+## Exercise 7.42. Prediction Error Variance Computation.
+
+- We numerically demonstrate the formulas of Example 7.5.4, for $2 \leq n \leq 8$.
+- Consider $\sigma = 1$ and $\theta = .5$:
+
+```{r}
+theta <- .5
+var.eps <- NULL
+for(n in 2:8)
+{
+	gamma <- c(1+theta^2,theta,rep(0,n-1))
+	var.eps <- c(var.eps,gamma[1] - t(gamma[-1]) %*% solve(toeplitz(gamma[-length(gamma)])) %*% gamma[-1])
+}
+plot(ts(var.eps,start=2),ylab="MSE",xlab="n")
+abline(h=1,col=2)
+```
+
+- Consider $\sigma = 1$ and $\theta = -.3$:
+
+```{r}
+theta <- -.3
+var.eps <- NULL
+for(n in 2:8)
+{
+	gamma <- c(1+theta^2,theta,rep(0,n-1))
+	var.eps <- c(var.eps,gamma[1] - t(gamma[-1]) %*% solve(toeplitz(gamma[-length(gamma)])) %*% gamma[-1])
+}
+plot(ts(var.eps,start=2),ylab="MSE",xlab="n")
+abline(h=1,col=2)
+```
+
+## Theorem 7.5.6. Kolmogorov's Formula
+
+Let $\{ X_t \}$ be a zero-mean stationary process with absolutely summable ACVF and
+spectral density $f$ that is positive. Then the innovation variance is
+\[
+\mbox{Var} [\epsilon_t^{(\infty)}] = \exp \left\{ \frac{1}{2 \pi} \int_{-\pi}^{\pi}
+ \log f(\lambda) \, d\lambda \right\}.
+\]
+
+### MA(1) Example
+
+- Consider an MA(1) with $\theta = .5$ and $\sigma = 1$. We numerically compute
+Kolmogorov's formula, and should obtain 1 (as a verification).
+
+```{r}
+theta <- .5
+kolg <- NULL
+grids <- 10^seq(1,4)
+for(grid in grids)
+{
+  lambda <- pi*seq(-grid,grid)/grid
+  spec.ma <- Mod(1 + theta*exp(-1i*lambda))^2
+  kolg <- c(kolg,exp(mean(log(spec.ma))))
+}
+plot(ts(kolg,start=1),ylab="MSE",xlab="Grid Scale")
+abline(h=1,col=2)
+```

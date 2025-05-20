@@ -1,0 +1,93 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 7-6: Wold Decomposition
+
+- We examine a decomposition of a stationary time series due to Wold.
+- We also take a look at spectral factorization.
+
+## Definition 7.6.1.
+
+- A covariance stationary time series with innovation variance equal zero is called
+**predictable**, since it can be forecasted without error.
+- Any stochastic sinusoid is predictable: it is perfectly periodic!
+
+## Theorem 7.6.4. Wold Decomposition.
+
+A weakly stationary mean zero time series $\{ X_t \}$ that is not predictable can be
+decomposed into a sum of processes $\{ U_t \}$ and $\{ Y_t \}$ such that:
+
+- $X_t = U_t + Y_t$.
+- $\{U_t \}$ and $\{ Y_t \}$ are uncorrelated with one another.
+- $\{ U_t \}$ is predictable.
+- $\{ Y_t \}$ has a MA($\infty$) representation $Y_t = \psi (B) Z_t$, 
+with $Z_t \sim \mbox{WN} (0, \sigma^2)$.
+- $\psi (z) = \sum_{j \geq 0} \psi_j z^j$ is causal with first coefficient $1$
+($\psi (0) = 1$).
+- $Z_t$ is the innovation at time $t$ of $\{ Y_t \}$ and $\{ X_t \}$
+- $\sigma^2$ is the prediction error variance
+- $\{ \psi_j \}$ are called the **Wold** coefficients
+
+## Theorem D.2.7. Spectral Factorization
+
+- Suppose $g(\lambda) = \sum_{k=0}^q g_k \cos (\lambda k)$ is a degree $q$ cosine polynomial
+that is positive. Then there exists a degree $q$ polynomial $\theta (z)$ with unit
+leading coefficient ($1 = \theta (0)$) and constant $\kappa >0$ such that
+\[
+ g(\lambda) = \kappa {| \theta (e^{-i \lambda}) |}^2.
+\]
+- This can be applied to the spectral density: suppose we know the autocovariances
+$\gamma_k$ of an MA($q$) process, but not the MA coefficients. Then the spectral density is
+a positive cosine polynomial of degree $q$, and we can find $\theta (z)$, the 
+corresponding MA polynomial.
+- For large $q$, these MA coefficients approximate the Wold coefficients.
+
+## Exercise 7.44. Spectral Factorization of an MA(2) via Root-Finding.
+
+- Use root-finding to do spectral factorization for an MA($2$) process.
+- First write code:
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+specfact.ma2 <- function(gamma)
+{
+	my.roots <-	polyroot(c(rev(gamma),gamma[-1]))
+	ind.inv <- which(Mod(my.roots)>1)	
+	theta.pol <- polymul(c(1,-1/my.roots[ind.inv[1]]),c(1,-1/my.roots[ind.inv[2]]))	
+	theta.pol <- Re(theta.pol)
+	kappa <- Re(gamma[3]*my.roots[ind.inv[1]]*my.roots[ind.inv[2]])
+	return(list(theta.pol,kappa))
+}
+```
+
+- Test this out on an MA(2) with $\gamma_0 = 1$, $\gamma_1 = .6$, and $\gamma_2 = .2$. 
+
+```{r}
+gamma <- c(1,.6,.2)
+out <- specfact.ma2(gamma)
+theta.pol <- out[[1]]
+kappa <- out[[2]]
+print(c(theta.pol))
+print(kappa)
+## check
+print(polymul(theta.pol,rev(theta.pol))*kappa)
+```
+
+
+

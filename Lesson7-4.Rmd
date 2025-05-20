@@ -1,0 +1,138 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 7-4: Optimal Filtering
+
+We consider applications of the spectral representation to prediction problems.
+
+## 7.4.3. Optimal $h$-Step-Ahead Forecasting
+
+- We seek an expression for $\widehat{X}_{t+h} = P_{ \overline{\mbox{sp}} \{ X_s, s \leq t \} } [ X_{t+h}]$.
+- The case of $h=1$ for an MA(1) was considered in Example 6.3.3.
+- We suppose that $\{ X_t \}$ is stationary and invertible, with absolutely summable ACVF.
+- So the optimal linear predictor is some "causal" filter $\psi (B)$, where $\psi_j = 0$ for $j < 0$,
+and $\widehat{X}_{t+h} = \psi (B) X_t$.
+- By the spectral representation,
+\[
+\widehat{X}_{t+h} = \int_{-\pi}^{\pi} e^{i \lambda t} \psi (e^{-i \lambda}) dZ(\lambda)
+\quad \mbox{and} \quad X_{t+h} = \int_{-\pi}^{\pi} e^{i \lambda (t+h)} dZ(\lambda).
+\]
+- Using the normal equations, we have the condition that for all $j \geq 0$,
+\[
+ 0 = \mbox{Cov} [ X_{t+h} - \widehat{X}_{t+h}, X_{t-j}]
+  = \frac{1}{2\pi} \int_{-\pi}^{\pi} e^{i \lambda j} [e^{i \lambda h} - \psi (e^{-i \lambda})] \, dF(\lambda).
+\]
+- Since the ACVF is absolutely summable, the spectral density exists, and $dF(\lambda) = f(\lambda) d\lambda$.
+- By Theorem 6.1.16, we have $f(\lambda ) = \sigma^2 {| \theta (e^{-i \lambda}) |}^2$
+for some $\theta (z) = \sum_{k \geq 0} \theta_k z^k$ (with $\theta_0 = 1$). Also $\theta(e^{-i \lambda})$
+is non-zero by the invertibility assumption.
+- Guess the following solution:
+\[
+ \psi (e^{-i \lambda}) = \sum_{k \geq 0} \theta_{k+h} e^{-i \lambda k}  / \theta (e^{-i \lambda}).
+\]
+- Check the normal equations:
+\begin{align}
+& \frac{1}{2\pi} \int_{-\pi}^{\pi} e^{i \lambda j} [e^{i \lambda h} - \psi (e^{-i \lambda})] \, f(\lambda) d\lambda \\
+& = \frac{1}{2\pi} \int_{-\pi}^{\pi} e^{i \lambda j} \left[ e^{i \lambda h} - 
+ \sum_{k \geq h} \theta_{k} e^{-i \lambda (k-h) }  / \theta (e^{-i \lambda})  \right] \, f(\lambda) d\lambda \\
+& = \frac{1}{2\pi} \int_{-\pi}^{\pi} e^{i \lambda (h+ j)} \left[ \theta (e^{-i \lambda}) - 
+ \sum_{k \geq h} \theta_{k} e^{-i \lambda k }   \right] \, \sigma^2 \theta (e^{i \lambda}) d\lambda \\
+& = \frac{1}{2\pi} \int_{-\pi}^{\pi} e^{i \lambda (h+ j)}  
+ \sum_{k < h} \theta_{k} e^{-i \lambda k } \, \sigma^2 \theta (e^{i \lambda}) d\lambda.
+\end{align}
+The integrand is a linear combination of strictly positive power of $e^{i \lambda}$, each of
+which integrates to zero! So the normal equations hold.
+
+### Example of an MA(1)
+
+- We specialize the above result to an MA(1), where $\theta (z)= 1 + \theta_1 z$:
+\[
+ \psi (e^{-i \lambda}) = \sum_{k \geq 0} \theta_{k+h} e^{-i \lambda k}  / \theta (e^{-i \lambda})
+  = 1_{ \{ h = 1 \} } \theta_1 / (1 + \theta_1 e^{-i \lambda}).   
+\]
+- So if $h > 1$, the forecast is zero!
+
+```{r}
+lambda <- pi*seq(-1000,1000)/1000
+theta1 <- .6
+forecast.frf <- theta1/(1 + theta1*exp(-1i*lambda))
+forecast.gain <- Mod(forecast.frf)
+forecast.phase <- atan(Im(forecast.frf)/Re(forecast.frf))
+forecast.delay <- -1*forecast.phase/lambda
+forecast.delay[1001] <- NA
+plot(ts(Re(forecast.frf),start=-1,frequency=1000),
+	xlab="Frequency",ylab="Real Part Frf")
+plot(ts(Im(forecast.frf),start=-1,frequency=1000),
+	xlab="Frequency",ylab="Imaginary Part Frf")
+plot(ts(forecast.gain,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Gain")
+plot(ts(forecast.phase,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Phase")
+plot(ts(forecast.delay,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Phase Delay")
+```
+
+
+### Example of an MA(2)
+
+- We specialize the above result to an MA(2), where $\theta (z)= 1 + \theta_1 z + \theta_2 z^2$:
+\[
+ \psi (e^{-i \lambda}) = \sum_{k \geq 0} \theta_{k+h} e^{-i \lambda k}  / \theta (e^{-i \lambda})
+  = 1_{ \{ h \leq 2 \} } (\theta_h + \theta_{h+1} e^{-i \lambda}) / (1 + \theta_1 e^{-i \lambda} + \theta_2 e^{- i 2 \lambda}).   
+\]
+- So if $h > 2$, the forecast is zero!
+- Plots for the $h=1$ case:
+
+```{r}
+lambda <- pi*seq(-1000,1000)/1000
+theta1 <- .6
+theta2 <- -.3
+h <- 1
+forecast.frf <- (theta1 + theta2*exp(-1i*lambda))/(1 + theta1*exp(-1i*lambda) + theta2*exp(-1i*2*lambda))
+forecast.gain <- Mod(forecast.frf)
+forecast.phase <- atan(Im(forecast.frf)/Re(forecast.frf))
+forecast.delay <- -1*forecast.phase/lambda
+forecast.delay[1001] <- NA
+plot(ts(Re(forecast.frf),start=-1,frequency=1000),
+	xlab="Frequency",ylab="Real Part Frf")
+plot(ts(Im(forecast.frf),start=-1,frequency=1000),
+	xlab="Frequency",ylab="Imaginary Part Frf")
+plot(ts(forecast.gain,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Gain")
+plot(ts(forecast.phase,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Phase")
+plot(ts(forecast.delay,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Phase Delay")
+```
+
+Plots for the $h=2$ case:
+
+```{r}
+lambda <- pi*seq(-1000,1000)/1000
+theta1 <- .6
+theta2 <- -.3
+h <- 2
+forecast.frf <- theta2/(1 + theta1*exp(-1i*lambda) + theta2*exp(-1i*2*lambda))
+forecast.gain <- Mod(forecast.frf)
+forecast.phase <- atan(Im(forecast.frf)/Re(forecast.frf))
+forecast.delay <- -1*forecast.phase/lambda
+forecast.delay[1001] <- NA
+plot(ts(Re(forecast.frf),start=-1,frequency=1000),
+	xlab="Frequency",ylab="Real Part Frf")
+plot(ts(Im(forecast.frf),start=-1,frequency=1000),
+	xlab="Frequency",ylab="Imaginary Part Frf")
+plot(ts(forecast.gain,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Gain")
+plot(ts(forecast.phase,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Phase")
+plot(ts(forecast.delay,start=-1,frequency=1000),
+	xlab="Frequency",ylab="Phase Delay")
+```

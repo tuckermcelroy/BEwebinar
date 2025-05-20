@@ -1,0 +1,158 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 7-7: Cepstrum
+
+- The AR and MA (and ARMA) processes are dense in the class of covariance stationary
+processes, in the sense that an arbitrary continuous spectral density can be 
+approximated by an MA($q$), AR($p$), or ARMA($p$,$q$) spectral density for sufficiently
+large $p$ and $q$.
+- Another class of spectral density is given by the "cepstrum".
+
+## Paradigm 7.7.5. The Cepstrum
+
+- We find the Fourier transform of the log of a positive spectral density:
+\[
+\log f(\lambda) = \sum_{k = - \infty}^{\infty} \tau_k e^{-i \lambda k}.
+\]
+- The Fourier coefficients $\{ \tau_k \}$ are called **cepstral** coefficients.
+- This representation of $\log f$ is called the **cepstrum**; the word "cepstrum" 
+is an anagram of "spectrum".
+- $\log f (\lambda)$ can be negative.
+- The cepstral coefficients are recovered via Fourier inversion:
+\[
+ \tau_k = \frac{1}{ 2 \pi} \int_{-\pi}^{\pi} e^{i \lambda k} \log f(\lambda) \, d\lambda.
+\]
+- Since $f$ is even, $\tau_{-k} = \tau_k$.
+- Kolmogorov: $\tau_0 = \log \sigma^2$.
+
+## Proposition 7.7.7. Cepstral Representation of Wold Coefficients
+
+- We can relate the cepstral coefficients to the Wold coefficients, since
+\[
+ f(\lambda) = \exp \left\{ \sum_{k = - \infty}^{\infty} \tau_k e^{-i \lambda k} \right\}
+  = e^{\tau_0} \cdot \exp \left\{ \sum_{k > 0} \tau_k e^{-i \lambda k} \right\}
+   \cdot \exp \left\{ \sum_{k > 0} \tau_k e^{i \lambda k} \right\},
+\]
+which suggests
+\[
+\exp \left\{ \sum_{k > 0} \tau_k z^k \right\} = \sum_{j \geq 0} \psi_j z^j,
+\]
+where $\{ \psi_j \}$ are Wold coefficients.
+- This relationship provides a recursive formula for Wold in terms of cepstral:
+\[
+ \psi_j = \frac{1}{j} \sum_{k=1}^j k \, \tau_k \, \psi_{j-k}
+\]
+for $j \geq 1$, which is initialized with $\psi_0 = 1$. 
+
+## Definition 7.7.9.
+
+- The **exponential process** or order $m$, or EXP($m$), is a causal time series $\{ X_t\}$
+with spectral density $f$ given by
+\[
+  f(\lambda) = \exp \left\{ \sum_{|k| \leq m} \tau_k e^{-i \lambda k} \right\}.
+\]
+- All EXP processes are invertible!
+- This defines a class of models, just like AR and MA models.
+- The EXP class is also dense.
+
+## Exercise 7.46. Moving Average Representation of Cepstral Process
+
+- We encode the cepstral to Wold mapping, and apply to an EXP(2) process.
+- Our function takes a sequence $\tau_1, \ldots, \tau_m$ as inputs, and generates
+$\psi_1, \ldots, \psi_q$ for given $q$.
+
+```{r}
+ceps2wold <- function(ceps,q)
+{
+	m <- length(ceps)
+	if(q > m) {	ceps <- c(ceps,rep(0,q-m)) }
+	wold <- 1
+	wolds <- wold
+	for(j in 1:q)
+	{
+		wold <- sum(seq(1,j)*ceps[1:j]*wolds[j:1])/j
+		wolds <- c(wolds,wold)
+	}
+	return(wolds)
+}
+```
+
+- We apply this with $\tau_1 = .5$ and $\tau_2 = -.2$.
+
+```{r}
+print(round(ceps2wold(c(.5,-.2),20),digits=4))
+```
+
+## Exercise 7.52. Spectral Factorization of an MA($q$) via Cepstrum
+
+- We can use the cepstrum to do a spectral factorization, as an alternative method
+to the root-finding approach of Exercise 7.44.
+- We take as inputs the autocovariances, numerically compute the cepstral coefficients,
+and then apply Proposition 7.7.7 to get the Wold coefficients.
+
+```{r}
+specceps.maq <- function(gamma,mesh)
+{
+	lambda <- pi*seq(0,mesh)/mesh
+	q <- length(gamma)-1
+	f.spec <- gamma[1]*cos(0*lambda) 
+	for(h in 1:q)
+	{
+		f.spec <- f.spec + 2*gamma[h+1]*cos(h*lambda)
+	}
+	theta.pol <- 1
+	kappa <- 1
+	if(min(f.spec)>0)
+	{
+		tau <- mean(log(f.spec))
+		taus <- tau
+		for(h in 1:q)
+		{
+			tau <- mean(log(f.spec)*cos(h*lambda))
+			taus <- c(taus,tau)
+		}
+		theta.pol <- ceps2wold(taus[-1],q)
+		kappa <- exp(taus[1])
+	}
+ 	return(list(theta.pol,kappa))
+}
+```
+
+- This function computes cepstral coefficients. 
+- We test on the MA(5) with $\theta (z) = 1 + .8z + .6 z^2 + .3z^3 + .5z^4 + .2z^5$
+with $\sigma^2 = 8$, and show that the MA coefficients are recovered.
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+theta.pol <- c(1,.8,.6,.3,.5,.2)
+sig2 <- 8
+gamma <- polymul(theta.pol,rev(theta.pol))*sig2
+gamma <- gamma[6:11]
+print(gamma)
+out <- specceps.maq(gamma,10000)
+theta.pol <- out[[1]]
+kappa <- out[[2]]
+print(theta.pol)
+print(kappa)
+```
+
+- We can repeat with a larger mesh size, to get a closer approximation.
+
+
