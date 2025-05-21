@@ -65,7 +65,7 @@ const1 <- 1/(1-rho^2) + (1 - rho^2*cos(2*omega))/(1 - 2*rho^2*cos(2*omega) + rho
 const2 <- rho^2*sin(2*omega)/(1 - 2*rho^2*cos(2*omega) + rho^4)
 gamma <- .5*(rho^(seq(1,lag)-1))*(cos((seq(1,lag)-1)*omega)*const1 - sin((seq(1,lag)-1)*omega)*const2)
 gamma <- gamma/(const1/2)
-plot(ts(gamma,start=0),type="h",xlab="Autocovariance",ylab=expression(gamma))
+plot(ts(gamma,start=0),type="h",xlab="Lag",ylab=expression(gamma))
 ```
 
 
