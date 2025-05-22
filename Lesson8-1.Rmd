@@ -1,0 +1,104 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-1: Introduction to Entropy
+
+- We introduce **entropy** as a measure of randomness and unpredictability.
+- Modeling time series involves increasing the entropy, to where we cannot predict
+anything.
+
+## Definition 8.1.8.
+
+- The **entropy** of a discrete random variable $X$ is denoted $H(X)$:
+\[
+ H(X) = - \sum_k {\mathbb P}[ X = k] \, \log ({\mathbb P}[ X = k]).
+\]
+- This is non-negative, with higher values corresponding to greater uncertainty.
+- A value of zero corresponds to $X$ being deterministic almost surely.
+
+## Example 8.1.10. Bernoulli Entropy
+
+- Let $X$ be a Bernoulli random variable with success probability $p$. The entropy
+is
+\[
+ -( p \log p + (1-p) \log (1-p)).
+\]
+- Entropy is highest for $p=1/2$, and lowest for $p=0,1$.
+
+```{r}
+pvals <- seq(0,1000)/1000
+ber.ent <- -pvals*log(pvals) - (1-pvals)*log(1-pvals)
+ber.ent[1] <- 0
+ber.ent[1001] <- 0
+plot(ts(ber.ent,start=0,frequency=1000),xlab="p",ylab="Entropy",
+	yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+```
+
+## Definition 8.1.12. 
+
+- The **differential entropy** of a continuous random variable $X$ is 
+\[
+ H(X) = - \int p(x) \, \log ( p(x)) \, dx,
+\]
+where $p$ is the probability density function.
+- We integrate over the support (where $p$ is positive).
+- Note that $H(X) = - {\mathbb E} [ \log p (X)]$.
+- Can take negative values, but interpretation is the same as discrete case.
+- Concepts extends to random vectors by taking the joint pdf.
+
+## Example 8.1.13. Gaussian Entropy
+
+- Suppose $\underline{X}$ is normal with mean zero and $n$-dimensional covariance matrix
+$\Sigma$, which is assumed to be non-singular. Then
+\[
+  \log p(X) = -\frac{n}{2} \log (2 \pi) - \frac{1}{2} \log \det \Sigma 
+    - \frac{1}{2} \underline{X}^{\prime} \Sigma^{-1} \underline{X}.
+\]
+- The entropy is the expectation of this times $-1$:
+\[
+ H(X) = \frac{n}{2} \log (2 \pi) + \frac{1}{2} \log \det \Sigma 
+    +  \frac{n}{2},
+\]
+since ${\mathbb E} [\underline{X}^{\prime} \Sigma^{-1} \underline{X}] = n$ (see Lesson 2-1).
+
+## Exercise 8.4. Poisson Entropy Computation
+
+- We compute the entropy of a Poisson random variable of parameter $\lambda$. The 
+probability mass function is
+\[
+ {\mathbb P}[ X = k] = \lambda^k e^{-\lambda}/k!.
+\]
+- The entropy is computed through the following function. This uses a truncation of
+the infinite summation.
+
+```{r}
+pois.ent <- function(lambda,trunc)
+{ 
+	ent <- exp(-lambda)*sum(lambda^(seq(0,trunc))*log(factorial(seq(0,trunc)))/factorial(seq(0,trunc)))
+	ent <- ent + lambda*(1 - log(lambda)) 
+	return(ent)
+}
+```
+
+- We plot the entropy for various $\lambda$, truncating at $50$.
+
+```{r}
+lambda <- seq(0,100)/10
+my.ents <- NULL
+for(i in 1:length(lambda))
+{
+	my.ents <- c(my.ents,pois.ent(lambda[i],50))
+}
+plot(ts(my.ents,start=0,frequency=10),xlab="Lambda",ylab="Entropy")
+```
+

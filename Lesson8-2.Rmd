@@ -1,0 +1,72 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-2: Entropy Mixing
+
+- We can measure how far apart two random variables are through entropy.
+- "Mixing" refers to a property of some time series, whereby random variables that
+are temporally far apart have less dependence.
+
+## Fact 8.3.9. Entropy of a Random Sample
+
+- If the components of $\underline{X}$ are independent then entropy is additive:
+$p( \underline{x}) = \prod_{k=1}^n p_k (x_k)$ implies
+\[
+ H(\underline{X}) = - {\mathbb E} [ \log \prod_{k=1}^n p_k (X_k)]
+ = - \sum_{k=1}^n {\mathbb E} [ \log p_k (X_k)] = \sum_{k=1}^n H (X_k).
+\]
+- So in general, we can measure dependence by comparing $H(\underline{X})$ to 
+$\sum_{k=1}^n H (X_k)$.
+
+## Paradigm 8.2.11. Entropy Mixing
+
+- For any two random variables $X$ and $Y$, the *entropy mixing coefficient* is
+\[
+ \beta (X,Y) = H(X) + H(Y) - H(X,Y).
+\]
+- This is always non-negative. 
+- If $\{ X_t \}$ is strictly stationary, $\beta (X_t, X_{t+h})$ does not depend on
+$t$, and we write $\beta_X (h)$.
+
+## Example 8.2.12. Entropy Mixing for Gaussian Time Series
+
+- Suppose $\{ X_t \}$ is mean zero stationary Gaussian with ACVF $\gamma (h)$. Then
+\[
+ \beta_X (h) =  1 + \log (2 \pi) +   \log \gamma (0) 
+ -(1+  \log (2 \pi)) - \frac{1}{2} \log \det \Sigma, 
+\]
+using the $n=1,2$ cases of Example 8.1.13. Here 
+\[
+ \Sigma = \left[ \begin{array}{ll} \gamma (0) & \gamma (h) \\ \gamma (h) & \gamma (0) 
+  \end{array} \right].
+\]
+- So we get
+\[
+\beta_X (h) = - \frac{1}{2} \log (1 - {\rho (h)}^2 ).
+\]
+- These mixing coefficients are non-negative, and zero only if $\rho(h) =0$ (which
+corresponds to no dependence at lag $h$).
+- Consider the case of a Gaussian AR(1), with $\phi_1 = .8$. We display the entropy
+mixing coefficients.
+
+```{r}
+phi1 <- .8
+lags <- 50
+beta <- -.5*log(1 - phi1^(2*seq(0,lags))) 
+plot(ts(beta,start=0),xlab="Lag",ylab="Beta")
+```
+
+
+## Exercise 8.11. Gaussian Information Mixing
+
+- 
+
+

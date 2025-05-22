@@ -1,0 +1,37 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-3: Maximum Entropy 
+
+- We discuss the maximum entropy principle.
+
+## Paradigm 8.3.1. Maximum Entropy Principle
+
+- If the parameters of a distribution are chosen so as to maximize entropy, we 
+guard against a worst-case scenario for the state of nature.
+- So we seek to maximize entropy subject to the observed data.
+
+## Example 8.3.2. Bernoulli Maximum Entropy
+
+- In Example 8.1.10 with a Bernoulli random variable, if we have no data the
+maximum entropy principle yields $p=1/2$. 
+- If we observed $X=1$, we would instead say $p=1$. 
+
+## Definition 8.3.5. 
+
+Given two continuous random variables $X$ and $Y$ with probability density functions
+$p$ and $q$ respectively, the **relative entropy** of $X$ to $Y$ is
+\[
+H(X; Y) = - \int p(x) \, \log \left( \frac{ q(x) }{p(x)} \right) \, dx
+ = - \int p(x) \log q(x) \, dx - H(X).
+\]
+- By Jensen's inequality, $H(X;Y) \geq 0$ and equals zero iff $X$ and $Y$ have 
+the same distribution. 
