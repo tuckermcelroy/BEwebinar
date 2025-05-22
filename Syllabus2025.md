@@ -129,7 +129,7 @@ students can follow along and modify the code, or rewrite it, and in real-time s
 ### Webinar 8
 
 1. *Introduction to Entropy*
-2. *Information Sets*
+2. *Entropy Mixing*
 3. Maximum Entropy
 4. *Time Series Entropy*
 5. Markov Time Series
