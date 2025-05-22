@@ -55,7 +55,13 @@ $b_1 = -\zeta_2/\sqrt{5}$ and $b_2 = \zeta_1/\sqrt{5}$.
 n <- 10
 x <- rep(1,n)
 for(i in 3:n) { x[i] <- x[i-1] + x[i-2] }
+zeta1 <- (-1 + 5^{1/2})/2
+zeta2 <- (-1 - 5^{1/2})/2
+b1 <- -zeta2/5^{1/2}
+b2 <- zeta1/5^{1/2}
+y <- b1*zeta1^{-seq(0,n-1)} + b2*zeta2^{-seq(0,n-1)}
 plot(ts(log(x)),xlab="Index",ylab="log Fibonnaci")
+lines(ts(log(y)),col=2)
 ```
 
 

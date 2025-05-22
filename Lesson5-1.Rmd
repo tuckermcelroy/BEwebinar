@@ -35,6 +35,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 \[
  \phi (B) X_t = \theta (B) Z_t.
 \]
+- Note that $\phi_0 = 1$ and $\theta_0 = 1$ in these polynomials.
 
 ## Example 5.1.4. MA(q) Autocovariance
 
