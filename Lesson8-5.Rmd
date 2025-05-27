@@ -1,0 +1,57 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-5: Markov Time Series 
+
+- We introduce the class of Markov processes, and show that they have a maximum
+entropy property. 
+
+## Definition 8.5.1.
+
+- A process $\{ X_t \}$ is **Markov** of order $p$ if
+\[
+  p_{X_t \vert X_{t-1}, \ldots, X_{t-m}} = p_{X_t \vert X_{t-1}, \ldots, X_{t-p}}
+\]
+for any $t$ and $m \geq p$. 
+- So the conditioning on the past only involve the past $p$ observations.
+
+## Example 8.5.2. Causal AR($p$)
+
+- Consider a causal AR(1) given by $X_t = \phi X_{t-1} + Z_t$. 
+- Conditional on $X_{t-1} = x$, we have $X_t$ given by $\phi x + Z_t$, so
+\[
+ p_{X_t \vert X_{t-1} = x} (y) = p_Z ( y - \phi x ).
+\]
+- Hence, $p_{X_t \vert X_{t-1}, \ldots, X_{t-m}} = p_{X_t \vert X_{t-1}}$ and the
+the process is Markov(1).
+- Generalizing, a causal AR($p$) is Markov($p$).
+- The converse is true for Gaussian processes: if it is Markov($p$), then it is causal AR($p$).
+
+## Proposition 8.5.5.
+
+- A Gaussian AR($p$) process has maximum entropy rate among strictly stationary
+processes with given $\gamma (0), \ldots, \gamma (p)$. 
+- Why: maximize the Gaussian entropy rate formula subject to the unknowns $\gamma (k)$
+for $k > p$. So differentiate $h_X$ with respect to $\gamma (k)$:
+\[
+\frac{\partial}{\partial \gamma (k)} h_X =  {(4 \pi)}^{-1} \int_{-\pi}^{\pi}
+\frac{\partial}{\partial \gamma (k)}  \log f(\lambda) \, d\lambda
+ = {(4 \pi)}^{-1} \int_{-\pi}^{\pi}   \frac{2 \cos (k \lambda)}{ f(\lambda)}
+ \, d\lambda = \xi_k,
+\]
+since $f(\lambda) = \gamma(0) + 2\sum_{k \geq 1} \gamma (k) \cos (k \lambda)$.
+- Setting these derivatives to zero, we see that the inverse autocovariances are
+zero for $k > p$. Hence the process must be an AR($p$).
+- So a Markov($p$) is maximum entropy among Gaussian processes with given 
+autocovariances up to lag $p$.
+
+
+

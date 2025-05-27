@@ -35,3 +35,83 @@ H(X; Y) = - \int p(x) \, \log \left( \frac{ q(x) }{p(x)} \right) \, dx
 \]
 - By Jensen's inequality, $H(X;Y) \geq 0$ and equals zero iff $X$ and $Y$ have 
 the same distribution. 
+
+## Example 8.3.8. Gaussian has Maximum Entropy given its Variance
+
+- Suppose that $X$ is a continuous random variable with pdf $p$, and has mean zero
+and variance $\sigma^2$. 
+- Let $Y \sim \mathcal{N} (0, \sigma^2)$, but with pdf $q$.
+- Then $\log q(x) = -.5 \log (2 \pi) - .5 x^2/\sigma^2$, and
+\[
+- \int p(x) \, \log q(x) \, dx = .5 \log (2 \pi) + .5 \sigma^{-2} \int x^2 p(x) dx
+ = .5 (1 + \log (2 \pi)).
+\]
+- The relative entropy is
+\[
+ H(X;Y) = - \int p(x) \, \log q(x) \, dx  - H(X) = 
+   .5 (1 + \log (2 \pi)) - H(X).
+\]
+- Since relative entropy is non-negative, we find that $H(X) \leq .5 (1 + \log (2 \pi))$.
+This is a bound on any such $X$, and the Gaussian attains this upper bound (since
+$H(Y) = .5 (1 + \log (2 \pi))$). Hence the Gaussian has maximum entropy.
+
+## Remark 8.3.10. Redundancy Lowers Entropy
+
+- By Fact 8.3.9, entropy increases linearly in sample size for a random sample.
+- When dependence is full, then $H(\underline{X}) = H(X_1)$ instead.
+- So redundancy (full dependence) lowers entropy.
+- By the maximum entropy principle, serial independence is favored over dependence
+on a priori grounds.
+
+## Definition 8.3.11.
+
+- A transformation $\Xi$ that maps $\underline{X}$ to $\Xi [ \underline{X}]$ is 
+*entropy-increasing* if 
+\[
+ H \left( \Xi [ \underline{X}] \right) > H (\underline{X}).
+\]
+- For instance: $\Xi$ decorrelates (reduces dependence), $\Xi$ preserves variance while 
+transforming marginal structure to Gaussian.
+
+## Example 8.3.12. Whitening as an Entropy-Increasing Transformation
+
+- Suppose $\underline{X} \sim \mathcal{N}(0, \Sigma)$. We want to decorrelate $\underline{X}$,
+and see how entropy changes.
+- Let $D$ denote the diagonal entries of $\Sigma$. Let $L L^{\prime} = \Sigma$ be 
+the Cholesky decomposition. Then $\underline{Y} = D^{1/2} L^{-1} \underline{X} \sim \mathcal{N}(0, D)$.
+- So $\underline{Y} = \Xi [ \underline{X}]$ has been decorrelated.
+- Comparing entropies:
+\[
+ H(\underline{X}) - H (\underline{Y}) = .5 \log \det \Sigma - .5 \log \det D
+ = .5 \log \det \left( D^{1/2} \Sigma D^{-1/2} \right).
+\]
+- The matrix $R = D^{-1/2} \Sigma D^{-1/2}$ is a correlation matrix, and has determinant
+between $0$ and $1$. Hence $H(\underline{X}) \leq H(\underline{Y})$, and inequality
+is strict unless $\det R = 1$.
+
+### Illustration of Example 8.3.12.
+
+- Consider the bivariate normal $\underline{X}$ with mean zero and variance
+\[
+ \Sigma = \left[ \begin{array}{cc}  2 & 3 \\ 3 & 5  \end{array} \right].
+\]
+- So $D = \mbox{diag} [ 2,5]$. 
+- We print the entropies of $\underline{X}$ and $\underline{Y} = D^{1/2} L^{-1} \underline{X}$.
+
+```{r}
+Sigma <- rbind(c(2,3),c(3,5))
+D <- diag(Sigma)
+L <- t(chol(Sigma))
+ents <- c(log(1 + 2*pi ) + .5*log(det(Sigma)), log(1 + 2*pi ) + .5*sum(log(D)))
+print(ents)
+```
+
+- We simulate 100 draws of $\underline{X}$, construct the decorrelated $\underline{Y}$,
+and generate both scatterplots.
+
+```{r}
+x <- L %*% matrix(rnorm(2*100),nrow=2)
+y <- diag(sqrt(D)) %*% solve(L) %*% x
+plot(x[1,],x[2,])
+plot(y[1,],y[2,])
+```

@@ -1,0 +1,92 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-6: Modeling via Entropy
+
+- We can attempt to model data so as to increase entropy.
+
+## Definition 8.6.2.
+
+Given a sample $\underline{X}$ with pdf $p_{\underline{X}}$, a **model** is the 
+composition $\Pi$ of successive entropy-increasing transformations, such that the
+**residuals** $\underline{Z} = \Pi [ \underline{X} ]$ has maximum entropy among
+the class of transformations. 
+
+## Example 8.6.7. Log Difference
+
+- The growth rate transformation (log differencing) can sometimes increase entropy
+for economic time series.
+- Consider $X_t = \exp Z_t$ where $\{ Z_t \}$ is a random walk. Log differencing is
+a model $\Pi$ that maps the process to white noise:
+\[
+  \log X_t - \log X_{t-1} = Z_t - Z_{t-1} = \epsilon_t.
+\]
+
+## Example 8.6.8. Entropy-Increasing Transformation for U.S. Population
+
+- The raw data of U.S. population has a lot of structure (low entropy).
+- We know that first differences remove much of the trend structure. So $1-B$ is
+a model for the data.
+- We can also consider the model ${(1-B)}^2$.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+diff.pop <- diff(pop*10e-6)
+diffdiff.pop <- diff(diff(pop*10e-6))
+plot(diff.pop,xlab="Year",ylab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+plot(diffdiff.pop,xlab="Year",ylab="",yaxt="n",xaxt="n")
+axis(1,cex.axis=.5)
+axis(2,cex.axis=.5)
+```
+
+## Exercise 8.40. Entropy-Increasing Transformation of Electronics and Appliance Stores
+
+- What is an entropy-increasing transformation (or model) for the dataset of Electronics
+and Appliance Stores?
+- First plot the data.
+
+```{r}
+ret <- read.table("retail443.b1",header=FALSE,skip=2)[,2]
+ret <- ts(ret,start=1992,frequency=12)
+plot(ret)
+```
+
+- Examine the log transformation.
+
+```{r}
+ret.ent <- ts(log(ret),start=start(ret),frequency=12)
+plot(ret.ent)
+```
+
+- Examine log differences.
+
+```{r}
+ret.ent <- ts(diff(log(ret)),start=start(ret),frequency=12)
+plot(ret.ent)
+```
+
+- Examine logs with seasonal differencing.
+
+```{r}
+ret.ent <- ts(diff(log(ret),lag=12),start=start(ret),frequency=12)
+plot(ret.ent)
+```
+
+- Examine logs with seasonal and nonseasonal differencing.
+
+```{r}
+ret.ent <- ts(diff(diff(log(ret),lag=12)),start=start(ret),frequency=12)
+plot(ret.ent)
+```
+

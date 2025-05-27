@@ -25,6 +25,7 @@ $p( \underline{x}) = \prod_{k=1}^n p_k (x_k)$ implies
 \]
 - So in general, we can measure dependence by comparing $H(\underline{X})$ to 
 $\sum_{k=1}^n H (X_k)$.
+- When the $X_k$ are identically distributed, $H(\underline{X}) = n H(X_1)$.
 
 ## Paradigm 8.2.11. Entropy Mixing
 
@@ -64,9 +65,5 @@ beta <- -.5*log(1 - phi1^(2*seq(0,lags)))
 plot(ts(beta,start=0),xlab="Lag",ylab="Beta")
 ```
 
-
-## Exercise 8.11. Gaussian Information Mixing
-
-- 
 
 

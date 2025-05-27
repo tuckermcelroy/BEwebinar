@@ -1,0 +1,74 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-7: Kullback-Leibler Discrepancy
+
+- We extend the idea of relative entropy, as a tool for modeling time series.
+
+## Example 8.7.2. Gaussian Relative Entropy
+
+- Suppose $\underline{X}$ and $\underline{Y}$ are each samples of size $n$ from
+stationary Gaussian time series, respectively with spectral densities $f_x$ and $f_y$.
+- It can be shown that their relative entropy, divided by $n$, is
+\[
+ n^{-1} H (\underline{X} ; \underline{Y}) \rightarrow
+ .5 \left(-1 +  {(2 \pi)}^{-1} \int_{-\pi}^{\pi} f_x(\lambda)/f_y(\lambda) d\lambda
+  -  {(2 \pi)}^{-1} \int_{-\pi}^{\pi} \log [f_x(\lambda)/f_y(\lambda) ] d\lambda
+ \right).
+\]
+- This is the analogue of entropy rate for relative entropy, for two time series.
+
+## Definition 8.7.3. 
+
+- The **Kullback-Leibler Discrepancy** between two stationary time series $\{ X_t \}$
+and $\{ Y_t \}$ with spectral densities $f_x$ and $f_y$ is
+\[
+ h(f_x ; f_y) =  {(2 \pi)}^{-1} \int_{-\pi}^{\pi} f_x(\lambda)/f_y(\lambda) d\lambda
+  + {(2 \pi)}^{-1} \int_{-\pi}^{\pi} \log [f_y(\lambda) ] d\lambda.
+\]
+- This looks like the relative entropy rate, but with the $\log f_x$ term omitted.
+- Small values of this discrepancy correspond to closely aligned $f_x$ and $f_y$.
+- Think of $\{ X_t \}$ as data process, and $\{ Y_t \}$ gives a model; we try to 
+describe given $f_x$ with $f_y$ drawn from a nice class (e.g., AR($p$) spectral densities).
+
+## Example 8.7.4. The KL Distance for AR and MA Models.
+
+- Suppose we try to model an MA(1) with an AR(1).
+- So $f_x (\lambda) = {|1 + \theta e^{-i \lambda}|}^2 \sigma^2_x$, and
+$f_y (\lambda) = {|1 - \phi e^{-i \lambda} |}^{-2} \sigma^2_y$.
+- Then 
+\[
+h(f_x ; f_y) =  \log \sigma^2_y + \frac{\sigma^2_x}{ \sigma^2_y} \,
+{(2 \pi)}^{-1} \int_{-\pi}^{\pi} {|1 + \theta e^{-i \lambda}|}^2 
+ {|1 - \phi e^{-i \lambda} |}^{2}  d\lambda.
+\]
+- The expression in the integral is the spectral density of the MA(2) with
+polynomial $(1 + \theta z)(1 - \phi z) = (1 + (\theta - \phi)z - \theta \phi z^2)$,
+and so we obtain
+\[
+h(f_x ; f_y) =  \log \sigma^2_y + \frac{\sigma^2_x}{ \sigma^2_y} \,
+(1 + {( \theta - \phi)}^2 + \theta^2 \phi^2).
+\]
+- By calculus, the minimum value is $\phi = \theta/(1 + \theta^2)$. That is the
+best AR(1) approximation (via KL) to a given MA(1).
+- Also the best $\sigma_y^2$ is $\sigma^2_x (1 + {( \theta - \phi)}^2 + \theta^2 \phi^2)$. 
+Plugging back in, the KL is then $\log \sigma^2_y + 1$.
+
+```{r}
+theta <- .5
+sigma2.x <- 1
+phi <- seq(-1,1,.01)
+sigma2.y <- sigma2.x * (1 + (theta - phi)^2 + theta^2*phi^2)
+my.kl <- log(sigma2.y) + 1
+plot(ts(my.kl,start=-1,frequency=100),xlab="phi",ylab="KL")
+phi.opt <- theta/(1 + theta^2)
+abline(v = phi.opt,col=2)
+```

@@ -1,0 +1,83 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 8-4: Time Series Entropy 
+
+- We now extend the concept of entropy to time series.
+- We also define conditional entropy.
+
+## Definition 8.4.1.
+
+The **entropy rate** of a strictly stationary time series $\{ X_t \}$ is
+\[
+ h_X = \lim_{n \rightarrow \infty} n^{-1} H (\underline{X}),
+\]
+where $\underline{X} = [ X_1, \ldots, X_n]$.
+
+## Example 8.4.2. Gaussian Entropy Rate
+
+- We determine the entropy rate for a stationary Gaussian time series with mean
+zero and spectral density $f$. 
+- Using Theorem 6.4.5,
+\[
+ \det \Gamma_n \approx \det \Lambda = \prod_{\ell = [n/2]-n+1}^{[n/2]} f(\lambda_{\ell}).
+\]
+- Taking logs and using Riemann sums, we obtain
+\[
+ h_X = .5 \left( 1 + \log (2 \pi) + {(2 \pi)}^{-1} \int_{-\pi}^{\pi} \log f(\lambda) \, d\lambda \right).
+\]
+
+## Definition 8.4.5. Conditional Entropy
+
+- The conditional entropy of $X$ given $\underline{Z}$ is
+\[
+ H(X \vert \underline{Z}) = - {\mathbb E} [ \log p_{X \vert \underline{Z}} (X \vert \underline{Z}) ].
+\]
+- Conditioning always lowers entropy: $H(X \vert \underline{Z}) \leq H (X)$.
+- More information means that future outcomes are less uncertain.
+
+## Proposition 8.4.8.
+
+- The entropy rate of a strictly stationary time series $\{ X_t \}$ is
+\[
+  h_X = H ( X_0 \vert X_{-1}, X_{-2}, \ldots).
+\]
+- This is the entropy of $X_0$ conditional on its infinite past. 
+
+## Exercise 8.29. Entropy of a Gaussian AR(1).
+
+- We compute the entropy for a sample of an AR(1), and compare to the entropy rate.
+
+```{r}
+gauss.ent.ar1 <- function(phi,sig2,n)
+{
+	Sigma <- toeplitz(phi^(seq(0,n-1,length=n))*sig2/(1-phi^2))
+	ent <- n/2*(1 + log(2*pi)) + log(det(Sigma))/2
+	return(ent)
+}
+```
+
+- We consider an AR(1) with $\phi = .9$ and variance $1$. So $\sigma^2 = 1- \phi^2$,
+and the entropy rate is $.5 ( 1 + \log (2 \pi) + \log \sigma^2)$.
+- We plot the entropy divided by $n$.
+
+```{r}
+phi <- .9
+sig2 <- 1-phi^2
+ent.rate <- .5*(1 + log(2*pi) + log(sig2))
+ents <- NULL
+for(n in 1:100)
+{
+	ents <- c(ents,gauss.ent.ar1(phi,sig2,n))
+}
+plot(ts(ents/seq(1,100)),xlab="Sample Size",ylab="Entropy Rate") 
+abline(h = ent.rate,col=2)
+```
