@@ -1771,7 +1771,8 @@ plot(ts(kappa,start=1),xlab=&quot;Lag&quot;,ylab=&quot;Partial Autocorrelation&q
 <div id="exercise-6.55.-pacf-pf-armapq" class="section level2">
 <h2>Exercise 6.55. PACF pf ARMA(<span class="math inline">\(p\)</span>,<span class="math inline">\(q\)</span>)</h2>
 <ul>
-<li>Compute the PACF of Example 5.5.7.</li>
+<li>Compute the PACF of Example 5.5.7, which is an ARMA(1,2) with <span class="math inline">\(\phi (z) = 1-.5z\)</span> and <span class="math inline">\(\theta (z) = 1 + (5/6) z + (1/6)
+z^2\)</span>.</li>
 </ul>
 <pre class="r"><code>phi1 &lt;- .5
 theta1 &lt;- 5/6

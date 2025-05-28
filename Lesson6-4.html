@@ -1681,8 +1681,8 @@ entry-by-entry tends to zero as <span class="math inline">\(n\)</span>
 tends to <span class="math inline">\(\infty\)</span>.</li>
 <li>It can also be shown that <span class="math inline">\(\Lambda
 \approx Q^* \Gamma_n Q\)</span>.</li>
-<li>If the process is invertible, then <span class="math inline">\(\Gamma_n^{-1} \approx Q \Lambda Q^*\)</span> as
-well.</li>
+<li>If the process is invertible, then <span class="math inline">\(\Gamma_n^{-1} \approx Q \Lambda^{-1} Q^*\)</span>
+as well.</li>
 </ul>
 </div>
 <div id="remark-6.4.11.-positive-spectral-density" class="section level2">
@@ -1744,7 +1744,7 @@ eigen(Gamma)$values</code></pre>
 <ul>
 <li>Consider an MA(1) with parameter <span class="math inline">\(\theta
 = .8\)</span>.</li>
-<li>Compute the eigenvalues of <span class="math inline">\(\Gamma_n^{-1}\)</span> for various <span class="math inline">\(n\)</span>, and compare to the recipocal spectral
+<li>Compute the eigenvalues of <span class="math inline">\(\Gamma_n^{-1}\)</span> for various <span class="math inline">\(n\)</span>, and compare to the reciprocal spectral
 density evaluated at the Fourier frequencies.</li>
 </ul>
 <pre class="r"><code>theta &lt;- .8

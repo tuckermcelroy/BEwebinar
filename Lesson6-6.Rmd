@@ -219,15 +219,6 @@ arp.sim <- function(n,burn,ar.coefs,innovar)
 	x <- x[(p+burn+1):(p+burn+n)]
 	return(x)
 }
-
-diffsign.test <- function(x)
-{
-	dx <- diff(ts(x))
-	S <- length(dx[dx > 0])
-	test <- (S - length(dx)/2)/sqrt((length(dx)+1)/12)
-	return(c(test,pnorm(test),1-pnorm(test)))
-}
-
 ```
 
 - First we generate a simulation of a cyclic AR(2).

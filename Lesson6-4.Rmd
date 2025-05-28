@@ -47,7 +47,7 @@ summable. Then
  $\approx$ means that the difference entry-by-entry tends to zero as $n$ tends to
  $\infty$.
 - It can also be shown that $\Lambda \approx Q^* \Gamma_n Q$.
-- If the process is invertible, then $\Gamma_n^{-1} \approx Q \Lambda Q^*$ as well.
+- If the process is invertible, then $\Gamma_n^{-1} \approx Q \Lambda^{-1} Q^*$ as well.
 
 ## Remark 6.4.11. Positive Spectral Density
 

@@ -1867,14 +1867,6 @@ just try over many choices of <span class="math inline">\(p\)</span>.</li>
     }   
     x &lt;- x[(p+burn+1):(p+burn+n)]
     return(x)
-}
-
-diffsign.test &lt;- function(x)
-{
-    dx &lt;- diff(ts(x))
-    S &lt;- length(dx[dx &gt; 0])
-    test &lt;- (S - length(dx)/2)/sqrt((length(dx)+1)/12)
-    return(c(test,pnorm(test),1-pnorm(test)))
 }</code></pre>
 <ul>
 <li>First we generate a simulation of a cyclic AR(2).</li>
