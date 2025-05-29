@@ -29,7 +29,8 @@ $D$ is diagonal with real entries.
 for $[n/2] - n+1 \leq \ell \leq [n/2]$.
 - When $n$ is even, this excludes the frequencies $\pi$ and $-\pi$ both being in the 
 set, since these are redundant.
-- We define an $n \times n$-dimensional matrix $Q$, whose entries are Fourier frequencies:
+- We define an $n \times n$-dimensional matrix $Q$, whose entries are complex exponentials
+evaluated at Fourier frequencies:
 \[
  Q_{jk} = n^{-1/2} e^{i j \lambda_{[n/2] - n + k}}.
 \]
