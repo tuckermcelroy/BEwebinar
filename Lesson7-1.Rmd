@@ -65,7 +65,7 @@ axis(2,cex.axis=.5)
 - A function $F(\lambda)$ for $\lambda \in [-\pi,\pi]$ that is bounded, non-decreasing, 
 and right continuous, and satisfies $F^{-} (\lambda) = F(\pi) - F(-\lambda)$ is
 called a **spectral distribution function.** 
-- F^{-} (\lambda)$ is the left-hand limit. 
+- $F^{-} (\lambda)$ is the left-hand limit. 
 
 ## Theorem 7.1.8. Herglotz Theorem
 

@@ -101,7 +101,7 @@ just plot them over $[0,\pi]$ instead of $[-\pi, \pi]$.
 
 - From Corollary 7.3.8, 
 \[
- Y_t = \int_{-\pi}^{\pi}  e^{i (\lambda t + \mbox{Arg} \psi(e^{-i \lambda}) } |\psi(e^{-i \lambda})| dZ (\lambda)
+ Y_t = \int_{-\pi}^{\pi}  e^{i (\lambda t + \mbox{Arg} \psi(e^{-i \lambda}) ) } |\psi(e^{-i \lambda})| dZ (\lambda)
  = \int_{-\pi}^{\pi}  e^{i \lambda (t - \Upsilon (\lambda) ) } |\psi(e^{-i \lambda})| dZ (\lambda).
 \]
 - So at frequency $\lambda$, time $t$ is delayed by $\Upsilon (\lambda)$ time units.
@@ -142,8 +142,8 @@ is a "low-pass."
 \]
 - The squared gain function is $2 - 2 \cos (\lambda)$. 
 - The phase function is $(\pi - \lambda)/2$. 
-- Away from $\lambda = 0$, the phase delay is $\Upsilon (\lambda) = 1/2 (1 - \pi/\lambda)$.
-This is negative for $\lambda \in (0,\pi]$, so differencing causes and advance.
+- Away from $\lambda = 0$, the phase delay is $\Upsilon (\lambda) = .5 (1 - \pi/\lambda)$.
+This is negative for $\lambda \in (0,\pi]$, so differencing causes an advance.
 - The gain function attenuates lower frequencies, so the filter is a "high-pass."
 
 ## Exercise 7.29. Phase and Gain for Simple Moving Average. 
@@ -163,7 +163,6 @@ simplema.frf <- sin((p+1/2)*lambda)/((2*p+1)*sin(lambda/2))
 simplema.gain <- Mod(simplema.frf)
 simplema.phase <- atan(Im(simplema.frf)/Re(simplema.frf))
 simplema.delay <- -1*simplema.phase/lambda
-#simplema.delay[1001] <- NA
 plot(ts(Re(simplema.frf),start=-1,frequency=1000),
 	xlab="Frequency",ylab="Real Part Frf")
 plot(ts(Im(simplema.frf),start=-1,frequency=1000),
