@@ -33,7 +33,7 @@ $p$ and $q$ respectively, the **relative entropy** of $X$ to $Y$ is
 H(X; Y) = - \int p(x) \, \log \left( \frac{ q(x) }{p(x)} \right) \, dx
  = - \int p(x) \log q(x) \, dx - H(X).
 \]
-- By Jensen's inequality, $H(X;Y) \geq 0$ and equals zero iff $X$ and $Y$ have 
+By Jensen's inequality, $H(X;Y) \geq 0$ and equals zero iff $X$ and $Y$ have 
 the same distribution. 
 
 ## Example 8.3.8. Gaussian has Maximum Entropy given its Variance
@@ -43,7 +43,7 @@ and variance $\sigma^2$.
 - Let $Y \sim \mathcal{N} (0, \sigma^2)$, but with pdf $q$.
 - Then $\log q(x) = -.5 \log (2 \pi) - .5 x^2/\sigma^2$, and
 \[
-- \int p(x) \, \log q(x) \, dx = .5 \log (2 \pi) + .5 \sigma^{-2} \int x^2 p(x) dx
+-\int p(x) \, \log q(x) \, dx = .5 \log (2 \pi) + .5 \sigma^{-2} \int x^2 p(x) dx
  = .5 (1 + \log (2 \pi)).
 \]
 - The relative entropy is
