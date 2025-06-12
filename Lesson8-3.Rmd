@@ -83,7 +83,7 @@ the Cholesky decomposition. Then $\underline{Y} = D^{1/2} L^{-1} \underline{X} \
 - Comparing entropies:
 \[
  H(\underline{X}) - H (\underline{Y}) = .5 \log \det \Sigma - .5 \log \det D
- = .5 \log \det \left( D^{1/2} \Sigma D^{-1/2} \right).
+ = .5 \log \det \left( D^{-1/2} \Sigma D^{-1/2} \right).
 \]
 - The matrix $R = D^{-1/2} \Sigma D^{-1/2}$ is a correlation matrix, and has determinant
 between $0$ and $1$. Hence $H(\underline{X}) \leq H(\underline{Y})$, and inequality
