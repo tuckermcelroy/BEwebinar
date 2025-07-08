@@ -1,15 +1,17 @@
 ---
 title: 'Time Series: A First Course with Bootstrap Starter'
+o---
+title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
     df_print: paged
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 17: Sample Mean
+# Lesson 9-2: Sample Mean
 
 - We need to know the statistical properties of common time series estimators.
 - We here focus on the sample mean, which estimates the population mean of a stationary time series.
