@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 9-2: Sample Mean
@@ -98,6 +98,7 @@ for(i in 1:10000)
 }
 y <- sqrt(n)*x.means
 var(y)
+# long-run variance for an AR(1)
 (1-phi)^{-2}
 ```
 
@@ -112,6 +113,7 @@ for(i in 1:10000)
 }
 y <- sqrt(n)*x.means
 var(y)
+# long-run variance for an AR(1)
 (1-phi)^{-2}
 ```
 
@@ -126,6 +128,7 @@ for(i in 1:10000)
 }
 y <- sqrt(n)*x.means
 var(y)
+# long-run variance for an AR(1)
 (1-phi)^{-2}
 ``` 
 

@@ -1625,141 +1625,70 @@ Starter</h1>
 </div>
 
 
-<div id="lesson-9-2-sample-mean" class="section level1">
-<h1>Lesson 9-2: Sample Mean</h1>
+<div id="lesson-9-1-weak-dependence" class="section level1">
+<h1>Lesson 9-1: Weak Dependence</h1>
 <ul>
-<li>We need to know the statistical properties of common time series
-estimators.</li>
-<li>We here focus on the sample mean, which estimates the population
-mean of a stationary time series.</li>
-<li>The sample mean is <span class="math display">\[
-\overline{X} = n^{-1} \sum_{t=1}^n X_t.
-\]</span></li>
+<li>We can quantify serial dependence through the ACVF.</li>
+<li>Recall entropy mixing (Paradigm 8.2.11) as another measure of serial
+dependence.</li>
 </ul>
-<div id="remark-9.2.1.-the-long-run-variance" class="section level2">
-<h2>Remark 9.2.1. The Long-Run Variance</h2>
+<div id="example-9.1.1.-slow-polynomial-decay-long-memory" class="section level2">
+<h2>Example 9.1.1. Slow Polynomial Decay – Long Memory</h2>
 <ul>
-<li>Suppose <span class="math inline">\(\{X_t\}\)</span> is stationary
-and the autocovariance function (ACVF) is absolutely summable: <span class="math display">\[
-\sum_{h = - \infty}^{\infty} | \gamma (h) | &lt; \infty.
-\]</span></li>
-<li>Then the <em>long-run variance</em> is defined as <span class="math display">\[
-\sum_{h = - \infty}^{\infty}  \gamma (h).
-\]</span></li>
-<li>This is denoted by <span class="math inline">\(\sigma^2_{\infty}\)</span>. Observe this is equal
-to <span class="math inline">\(G(1)\)</span>, i.e., setting <span class="math inline">\(z=1\)</span> in the AGF.</li>
-<li>The long-run variance can be zero: suppose <span class="math inline">\(\{ X_t \}\)</span> has a MA representation <span class="math inline">\(X_t = \psi (B) Z_t\)</span>, so that <span class="math display">\[
-\sigma^2_{\infty} = G(1) = {\psi (1) }^2 \sigma^2.
-\]</span> Then if <span class="math inline">\(\psi(1) = 0\)</span>, the
-long-run variance is zero. For example, consider an MA(1) process with
-<span class="math inline">\(\theta (z) = 1 -z\)</span>.</li>
+<li>Suppose that a time series has ACVF <span class="math inline">\(\gamma (h) = O({|h|}^{-a})\)</span> for <span class="math inline">\(0 &lt; a \leq 1\)</span>.</li>
+<li>The notation means the ACVF is bounded by a constant times that
+rate.</li>
+<li>There is fairly slow decay in lag when <span class="math inline">\(a\)</span> is small: this means persistence, or
+high association, across large time lags. This is called <em>long-range
+dependence</em> or <em>long memory</em>.</li>
 </ul>
 </div>
-<div id="proposition-9.2.2." class="section level2">
-<h2>Proposition 9.2.2.</h2>
-<p>Suppose <span class="math inline">\(\{ X_t \}\)</span> is stationary
-with mean <span class="math inline">\(\mu\)</span>, and ACVF that is
-absolutely summable. Then <span class="math inline">\(\overline{X}\)</span> is unbiased for <span class="math inline">\(\mu\)</span>, and its scaled variance tends to the
-long-run variance: <span class="math display">\[
-   \mbox{Var} [ \sqrt{n} \overline{X} ]  \rightarrow \sigma^2_{\infty}.
-\]</span></p>
-</div>
-<div id="theorem-9.2.7." class="section level2">
-<h2>Theorem 9.2.7.</h2>
+<div id="exercise-9.2.-long-range-dependence" class="section level2">
+<h2>Exercise 9.2. Long-Range Dependence</h2>
 <ul>
-<li>So long as the long-run variance is non-zero, we can establish a
-central limit theorem for the sample mean under the condition that the
-inputs (in the MA representation) are i.i.d.</li>
-<li>Suppose <span class="math inline">\(\{ X_t \}\)</span> has causal MA
-representation <span class="math display">\[
-X_t = \mu + \psi (B) Z_t,
-\]</span> where <span class="math inline">\(Z_t \sim i.i.d. (0,
-\sigma^2)\)</span>. Suppose <span class="math inline">\(\sum_{j \geq 0}
-j | \psi_j| &lt; \infty\)</span> and <span class="math inline">\(\psi
-(1) \neq 0\)</span>. Then <span class="math display">\[
-\sqrt{n} ( \overline{X} - \mu) \Rightarrow \mathcal{N} (0,
-\sigma^2_{\infty}).
-\]</span></li>
+<li>An example of long-range dependence is given by the ACVF recursively
+defined via <span class="math display">\[
+\gamma (h+1) = \frac{h+d}{h+1-d} \, \gamma (h)
+\]</span> for <span class="math inline">\(d \in (0,1/2)\)</span>, where
+<span class="math inline">\(\Gamma\)</span> denotes the gamma function,
+and <span class="math inline">\(\gamma (0) = \Gamma (1-2d)/{\Gamma
+(1-d)}^2\)</span>.</li>
+<li>This corresponds to <span class="math inline">\(\gamma (h) =
+O({|h|}^{1-2d})\)</span>, or the case of long memory with decay rate
+<span class="math inline">\(a = 2d-1\)</span>.</li>
+<li>We plot with <span class="math inline">\(d = .4\)</span>.</li>
+</ul>
+<pre class="r"><code>lags &lt;- seq(1,100)
+d &lt;- .4
+gamma.lm &lt;- gamma(1-2*d)/(gamma(1-d))^2
+for(i in 1:length(lags))
+{
+  gamma.new &lt;- gamma.lm[i] * (i-1+d)/(i-d)
+  gamma.lm &lt;- c(gamma.lm,gamma.new)
+}
+plot(ts(gamma.lm,start=0),type=&quot;h&quot;,xlab=&quot;Lag&quot;,ylab=&quot;&quot;)</code></pre>
+<p><img src="data:image/png;base64,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WQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmQJaJqAAlkCmiagQJaApgkokCWgaQIKZAlomoACWQKaJqBAloCmCSiQJaBpAgpkCWiagAJZApomoECWgKYJKJAloGkCCmRVGtBVX/rQh7/4m96vJ6BAcyoK6LJlP+isbjtmkxi18Hk39noOAQWaU1FAIx7VXnxlp+jY9rwezyGgQHMqDOiK+0dstN9LX/PcXUYT2uPuBRRoToUBfV7E4743tlhz9uax9c09nUNAgebUF9D/iXjgys6h90S8qadzCCjQnPoC+tGIiUc+1+4Wj+/pHAIKNKe+gJ4W8eOJY8+L+/Z0DgEFmlNfQM+J+N3EsVfGJj2dQ0CB5tQX0C9HXDdx7AXxoJ7OIaBAc+oL6Kr7xTu7h+54QDy5p3MIKNCcqgK6xTNPef9lN54e213fOXRCxFk9nUNAgeZUFdC2xREPvXPswDefHrFjb0+IF1CgORUFdOmhSxZ1I7pi9P1vjL5d8JneziGgQHMqCuioNdd+6ZyTDttrs/GA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" width="672" /></p>
+</div>
+<div id="example-9.1.3.-geometric-decay" class="section level2">
+<h2>Example 9.1.3. Geometric Decay</h2>
+<ul>
+<li>Suppose that a time series has ACVF <span class="math inline">\(\gamma (h) = O(r^{|h|})\)</span> for <span class="math inline">\(0 &lt; r &lt; 1\)</span>.</li>
+<li>The notation means the ACVF is bounded by a constant times that
+rate.</li>
+<li>So there is a <em>geometric</em>, or <em>exponential</em>, rate of
+decay for the ACVF.</li>
+<li>This holds for ARMA processes by Proposition 5.8.3.</li>
 </ul>
 </div>
-<div id="remark-9.2.8.-inference-for-the-mean" class="section level2">
-<h2>Remark 9.2.8. Inference for the Mean</h2>
-<p>As an application, suppose we want to construct a confidence interval
-for the mean based on our estimator <span class="math inline">\(\overline{X}\)</span>. To get the standard error,
-we need to know the long-run variance. This suggests the need to
-estimate all the autocovariances (however, that is not possible).</p>
-</div>
-<div id="exercise-9.13.-simulating-an-ar1-limiting-variance" class="section level2">
-<h2>Exercise 9.13. Simulating an AR(1) Limiting Variance</h2>
+<div id="example-9.1.4.-maq-correlation" class="section level2">
+<h2>Example 9.1.4. MA(<span class="math inline">\(q\)</span>)
+Correlation</h2>
 <ul>
-<li>We simulate a Gaussian AR(1) process with parameter <span class="math inline">\(\phi_1 = .8\)</span> and <span class="math inline">\(\sigma^2 = 1\)</span>.</li>
+<li>Suppose the a time series has ACVF <span class="math inline">\(\gamma (h)\)</span> that is zero if <span class="math inline">\(|h| &gt; q\)</span>.</li>
+<li>Then this can be represented as an MA(<span class="math inline">\(q\)</span>) process.</li>
+<li>This is an example of a <em>q-dependent</em> process: <span class="math inline">\(X_t\)</span> and <span class="math inline">\(X_{t-h}\)</span> are independent for any <span class="math inline">\(t\)</span> when <span class="math inline">\(|h|
+&gt; q\)</span>.</li>
 </ul>
-<pre class="r"><code>armapq.sim &lt;- function(n,burn,ar.coefs,ma.coefs,innovar)
-{
-    p &lt;- length(ar.coefs)
-    q &lt;- length(ma.coefs)
-    z &lt;- rnorm(n+burn+p+q,sd=sqrt(innovar))
-    x &lt;- filter(z,c(1,ma.coefs),method=&quot;convolution&quot;,sides=1)
-    x &lt;- x[(q+1):(q+n+burn+p)]
-    y &lt;- x[1:p]
-    for(t in (p+1):(p+n+burn))
-    {
-        next.y &lt;- sum(ar.coefs*y[(t-1):(t-p)]) + x[t]
-        y &lt;- c(y,next.y)
-    }   
-    y &lt;- y[(p+burn+1):(p+burn+n)]
-    return(y)
-}
-phi &lt;- .8</code></pre>
-<ul>
-<li>Based on sample sizes <span class="math inline">\(n = 50, 100,
-200\)</span>, we compute the sample mean.</li>
-<li>Repeating over <span class="math inline">\(10,000\)</span>
-simulations, we approximate the scaled variance of the sample mean, and
-see how close this is to the long-run variance.</li>
-</ul>
-<pre class="r"><code># small sample
-n &lt;- 50
-x.means &lt;- NULL
-for(i in 1:10000)
-{
-    x.sim &lt;- armapq.sim(n,500,phi,NULL,1)
-    x.means &lt;- c(x.means,mean(x.sim))
-}
-y &lt;- sqrt(n)*x.means
-var(y)</code></pre>
-<pre><code>## [1] 22.5156</code></pre>
-<pre class="r"><code># long-run variance for an AR(1)
-(1-phi)^{-2}</code></pre>
-<pre><code>## [1] 25</code></pre>
-<pre class="r"><code># moderate sample
-n &lt;- 100
-x.means &lt;- NULL
-for(i in 1:10000)
-{
-    x.sim &lt;- armapq.sim(n,500,phi,NULL,1)
-    x.means &lt;- c(x.means,mean(x.sim))
-}
-y &lt;- sqrt(n)*x.means
-var(y)</code></pre>
-<pre><code>## [1] 24.03958</code></pre>
-<pre class="r"><code># long-run variance for an AR(1)
-(1-phi)^{-2}</code></pre>
-<pre><code>## [1] 25</code></pre>
-<pre class="r"><code># large sample
-n &lt;- 200
-x.means &lt;- NULL
-for(i in 1:10000)
-{
-    x.sim &lt;- armapq.sim(n,500,phi,NULL,1)
-    x.means &lt;- c(x.means,mean(x.sim))
-}
-y &lt;- sqrt(n)*x.means
-var(y)</code></pre>
-<pre><code>## [1] 24.54957</code></pre>
-<pre class="r"><code># long-run variance for an AR(1)
-(1-phi)^{-2}</code></pre>
-<pre><code>## [1] 25</code></pre>
 </div>
 </div>
 
