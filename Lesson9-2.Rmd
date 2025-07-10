@@ -1,7 +1,5 @@
 ---
 title: 'Time Series: A First Course with Bootstrap Starter'
-o---
-title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
     df_print: paged

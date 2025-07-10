@@ -11,6 +11,27 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 # Lesson 9-1: Weak Dependence
 
+- We can quantify serial dependence through the ACVF.
+- Recall entropy mixing (Paradigm 8.2.11) as another measure of serial dependence.
 
+## Example 9.1.1. Slow Polynomial Decay -- Long Memory
 
+- Suppose that a time series has ACVF $\gamma (h) = O({|h|}^{-a})$ for $0 < a \leq 1$.
+- The notation means the ACVF is bounded by a constant times that rate.
+- There is fairly slow decay in lag when $a$ is small: this means persistence, or
+high association, across large time lags. This is called *long-range dependence* or
+*long memory*.
+- For example, suppose $\gamma (h) = {|h|}^{-a}$ for $h \neq 0$ and 
+$\gamma (0) = 2 \sum_{h =1}^{\infty} h^{-a}$ (which is twice the Riemann zeta function
+at $a$). This value of $\gamma (0)$ ensures the ACVF is positive definite; however,
+the ACVF is not summable, so the spectral density does not exist.
 
+```{r}
+#library(pracma)
+lags <- seq(1,100)
+a <- .4
+gamma.lm <- c(2,lags^{-a})
+plot(ts(gamma.lm,start=0),type="h",xlab="Lag",ylab="")
+```
+
+## Example 9.1.2. 
