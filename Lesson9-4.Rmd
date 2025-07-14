@@ -1,3 +1,4 @@
+---
 title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
@@ -25,13 +26,13 @@ We want to estimate the ACVF: they are used in prediction, and are helpful in un
    \frac{1}{n-h} \sum_{t=1}^{n-h} Y_t =
    \frac{1}{n-h} \sum_{t=1}^{n-h} (X_{t+h} - \mu)(X_t - \mu).
 \]
- This has expectation $\gamma (h)$.
+This has expectation $\gamma (h)$.
 - The long-run variance of this sample mean is based on the ACVF of $\{ Y_t \}$, and has a complicated expression known as *Bartlett's Formula*.
 - This suggests an estimator
 \[
   \overline{\gamma} (h) = \frac{1}{n-h} \sum_{t=1}^{n-h} (X_{t+h} - \mu)(X_t - \mu),
 \]
- which is unbiased for $\gamma (h)$.
+which is unbiased for $\gamma (h)$.
 
 ## Proposition 9.4.3. Bartlett's Formula
 
@@ -41,8 +42,32 @@ Suppose $\{ X_t \}$ is a causal linear time series with i.i.d. inputs $\{ Z_t \}
     + { \gamma (h)}^2 (\eta - 3).
 \]
 
+## Remark 9.4.4. Limiting Variance of the ACVF Estimator
+
+- Recall that the Fourier coefficients of a spectral density are denoted
+\[
+ { \langle f \rangle }_k = \frac{1}{2 \pi} \int_{-\pi}^{\pi} f(\lambda) e^{i \lambda k} \, d\lambda.
+\]
+- For a stationary Gaussian process with spectral density $f$, then Bartlett's Formula is
+\[
+ \tau^2_{\infty} = { \langle f^2  \rangle }_{2k} + { \langle f^2 \rangle }_0.
+\]
+- Example 1: suppose $k=1$ and the process is a white noise (with variance $\sigma^2$). Then
+\[
+ \tau^2_{\infty} = { \langle \sigma^4  \rangle }_{2} + { \langle \sigma^4  \rangle }_0 = \sigma^4.
+\]
+- Example 2: suppose $k=1$ and the process is a MA(1). So
+$f(\lambda) = \sigma^2 {| 1 + \theta e^{-i \lambda} |}^2$, and
+\[
+ \tau^2_{\infty} = \sigma^4 { \langle {| 1 + \theta e^{-i \lambda} |}^4  \rangle }_{2} + 
+  \sigma^4 { \langle {| 1 + \theta e^{-i \lambda} |}^2  \rangle }_0 = 
+  \sigma^4 \left(  1 + 5 \theta^2 + \theta^4  \right).
+\]
+
+
 ## Remark 9.4.6. ACVF Estimator for Unknown Mean
 
 - Since $\mu$ is usually unknown, we can replace it by the sample mean $\overline{X}$.
-- The resulting estimator is asymptotically normal when the process $\{ X_t \}$ is $m$-dependent (i.e., random variables of at least lag $m$ between them are independent).
+- The resulting estimator is denoted $\widetilde{\gamma} (h)$. 
+- This estimator is asymptotically normal when the process $\{ X_t \}$ is $m$-dependent (i.e., random variables of at least lag $m$ between them are independent).
 

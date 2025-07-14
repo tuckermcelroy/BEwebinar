@@ -1,3 +1,4 @@
+---
 title: 'Time Series: A First Course with Bootstrap Starter'
 output:
   html_document:
@@ -10,16 +11,31 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 
 # Lesson 9-5: Sample Autocovariance
 
+- We renormalize the ACVF estimator via tapering.
 
+## Remark 9.5.2. Tapering the ACVF to Reduce Variability in High Lags
 
-## Remark 9.5.5. The Sample ACVF
+- The estimator $\widetilde{\gamma} (h)$ is approximately unbiased, but has high variance
+for large $h$.
+- We can replace the $n-h$ divisor by $n$, in order to decrease variance for larger $h$.
+- This is like multiplying $\widetilde{\gamma} (h)$ by $1 - h/n$, which is an example
+of a taper.
 
-- The so-called *sample autocovariance function* (sample ACVF) is obtained by replacing $\mu$ by $\overline{X}$ in $\overline{\gamma} (h)$, and rescaling to guarantee a positive definite sequence:
+## Definition 9.5.3.
+
+- An autocovariance *taper* is a bounded, even real-valued function $\Lambda$ on $[-1,1]$,
+such that $\Lambda (0) = 1$ and $\Lambda (x) \leq 1$. 
+- We multiply the ACVF estimator at lag $h$ by $\Lambda (h/n)$.
+
+## Example 9.5.4. Bartlett Taper
+
+- The Bartlett taper is $\Lambda (x) = 1 - |x|$. 
+- The resulting estimator is
 \[
- \widehat{\gamma} (h) = \frac{1}{n} \sum_{t=1}^{n-h} (X_{t+h} - \overline{X})
-  (X_t - \overline{X})
+ \widehat{\gamma} (h) = \Lambda (h/n) \widetilde{\gamma} (h) = 
+ \frac{1}{n} \sum_{t=1}^{n-|h|} (X_{t+|h|} - \overline{X})(X_t - \overline{X}).
 \]
- for $h \geq 0$. 
+- This is called the *sample autocovariance function* (sample ACVF) 
 - Under $m$-dependence, Corollary 9.5.8 establishes a central limit theorem for the sample ACVF:
   \[
    \sqrt{n} ( \widehat{\gamma} (h)  - \gamma (h)) \Rightarrow \mathcal{N} (0, \tau^2_{\infty}).

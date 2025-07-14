@@ -1,0 +1,88 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 9-6: Spectral Means
+
+- We investigate statistics that are weighted sums of the periodogram.
+
+## Proposition 9.6.1.
+
+- The Fourier coefficients of the periodogram are the sample ACVF:
+\[
+ I (\lambda) = \sum_{k = -\infty}^{\infty} \widehat{\gamma} (k) e^{-i \lambda k},
+\]
+and ${ \langle I \rangle }_k = \widehat{\gamma} (k)$.
+- So the sample ACVF is positive definite.
+
+## Definition 9.6.2.
+
+A *spectral mean* is a functional of the spectral density $f$, of the form
+\[
+ \langle g f \rangle_0 = \frac{1}{2 \pi} \int_{-\pi}^{\pi} g(\lambda) f(\lambda) \, d\lambda,
+\]
+where $g$ is a real-valued weighting function. 
+
+## Remark 9.6.3. Spectral Mean Estimation
+
+A spectral mean can be estimated by substituting the periodogram:
+\[
+ \langle g I \rangle_0 = \sum_{|h| < n} { \langle g \rangle }_h \widehat{\gamma}(h).
+\]
+
+## Theorem 9.6.6.
+
+Suppose $\{ X_t \}$ is a linear time series with mean $\mu$ and causal moving average
+representation, with inputs that have variance $\sigma^2$ and kurtosis $\eta$ (fourth moment divided by the square of the second moment). For sufficiently smooth $g$,
+\[
+ \sqrt{n} \, \left( \langle g I \rangle_0 - \langle g f \rangle_0 \right)
+ \Rightarrow \mathcal{N} \left( 0,  \langle g (g + g^{\sharp}) f^2 \rangle_0
+  + (\eta - 3) { \langle g f \rangle }_0^2 \right),
+\]
+ where $g^{\sharp} (\lambda) = g (- \lambda)$. 
+
+## Remark 9.6.7. Autocovariance Limiting Variance
+
+- If $g(\lambda ) = \cos (\lambda k)$, then the spectral mean is $\gamma (k)$,
+and the estimate is $\widehat{\gamma} (k)$.
+- The Bartlett Formula (Proposition 9.4.3) follows from Theorem 9.6.6.
+
+## Corollary 9.6.9. Ratio Statistics
+
+Under same assumptions as Theorem 9.6.6, with smooth weighting functions $a$ and $b$,
+\[
+ \sqrt{n} \, \left( \frac{ \langle b I \rangle_0 }{ \langle a I \rangle_0 }
+ - \frac{ \langle b f \rangle_0 }{ \langle a f \rangle_0 } \right)
+ \Rightarrow \mathcal{N} \left( 0,  \frac{ \langle g (g + g^{\sharp}) f^2 \rangle_0 }{ { \langle a f \rangle }_0^2 }   \right),
+\]
+where $g = b - a { \langle b f \rangle}_0 / { \langle a f \rangle}_0$.
+
+## Remark 9.6.10. Bartlett's Formula for the Autocorrelations
+
+- The sample autocorrelation is defined as $\widehat{\rho} (k) = \widehat{\gamma} (k)/ \widehat{\gamma} (0)$.
+- Applying Corollary 9.6.9 with $b(\lambda) = \cos (\lambda k)$ and $a \equiv 1$, we
+find the asymptotic variance for the sample autocorrelation is
+\[
+ \frac{ { \langle f^2 \rangle }_{2k} }{ { \langle f \rangle }_0^2 } + (1 + 2 { \rho (k) }^2 ) \,
+ \frac{ { \langle f^2 \rangle }_{0} }{ { \langle f \rangle }_0^2 } - 4 \rho (k) \, \frac{ { \langle f^2 \rangle }_{k} }{ { \langle f \rangle }_0^2 }.
+\]
+- For white noise, this equals $1$.
+
+## Remark 9.6.12. Autocorrelations of Reduced Population Data
+
+- Consider second differences of U.S. population data.
+- We compute the sample autocorrelations, and test the hypothesis of zero serial correlation (i.e., white noise).
+- For each lag $k \geq 1$ (treated separately, ignoring multiple testing...) the 
+asymptotic $95 \%$ critical values are $\pm 1.96/\sqrt{n}$.
+
+HERE
+
+
+

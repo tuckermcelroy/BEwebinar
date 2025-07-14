@@ -1625,86 +1625,104 @@ Starter</h1>
 </div>
 
 
-<div id="lesson-9-4-serial-correlation" class="section level1">
-<h1>Lesson 9-4: Serial Correlation</h1>
-<p>We want to estimate the ACVF: they are used in prediction, and are
-helpful in understanding serial dependence in the time series.</p>
-<div id="remark-9.4.1.-acvf-estimator-for-known-mean" class="section level2">
-<h2>Remark 9.4.1. ACVF Estimator for Known Mean</h2>
+<div id="lesson-9-6-spectral-means" class="section level1">
+<h1>Lesson 9-6: Spectral Means</h1>
 <ul>
-<li>Suppose that the mean <span class="math inline">\(\mu\)</span> of
-the stationary time series <span class="math inline">\(\{ X_t
-\}\)</span> was known, and we want to estimate <span class="math inline">\(\gamma (h)\)</span>.</li>
-<li>This is the expectation of <span class="math inline">\(Y_t\)</span>,
-where <span class="math display">\[
-Y_t = (X_{t+h} - \mu)(X_t - \mu).
-\]</span></li>
-<li>We can compute <span class="math inline">\(Y_1,\ldots,
-Y_{n-h}\)</span> for any <span class="math inline">\(0 \leq h &lt;
-n\)</span>, because <span class="math inline">\(\mu\)</span> is
-known.</li>
-<li>The sample mean of these would be <span class="math display">\[
-\frac{1}{n-h} \sum_{t=1}^{n-h} Y_t =
-\frac{1}{n-h} \sum_{t=1}^{n-h} (X_{t+h} - \mu)(X_t - \mu).
-\]</span> This has expectation <span class="math inline">\(\gamma
-(h)\)</span>.</li>
-<li>The long-run variance of this sample mean is based on the ACVF of
-<span class="math inline">\(\{ Y_t \}\)</span>, and has a complicated
-expression known as <em>Bartlett’s Formula</em>.</li>
-<li>This suggests an estimator <span class="math display">\[
-\overline{\gamma} (h) = \frac{1}{n-h} \sum_{t=1}^{n-h} (X_{t+h} -
-\mu)(X_t - \mu),
-\]</span> which is unbiased for <span class="math inline">\(\gamma
-(h)\)</span>.</li>
+<li>We investigate statistics that are weighted sums of the
+periodogram.</li>
+</ul>
+<div id="proposition-9.6.1." class="section level2">
+<h2>Proposition 9.6.1.</h2>
+<ul>
+<li>The Fourier coefficients of the periodogram are the sample ACVF:
+<span class="math display">\[
+I (\lambda) = \sum_{k = -\infty}^{\infty} \widehat{\gamma} (k) e^{-i
+\lambda k},
+\]</span> and <span class="math inline">\({ \langle I \rangle }_k =
+\widehat{\gamma} (k)\)</span>.</li>
+<li>So the sample ACVF is positive definite.</li>
 </ul>
 </div>
-<div id="proposition-9.4.3.-bartletts-formula" class="section level2">
-<h2>Proposition 9.4.3. Bartlett’s Formula</h2>
-<p>Suppose <span class="math inline">\(\{ X_t \}\)</span> is a causal
-linear time series with i.i.d. inputs <span class="math inline">\(\{ Z_t
-\}\)</span>, which have variance <span class="math inline">\(\sigma^2\)</span> and kurtosis <span class="math inline">\(\eta\)</span>. Then the long-run variance of <span class="math inline">\(\overline{\gamma}(h)\)</span> is <span class="math display">\[
-  \tau^2_{\infty} = \sum_{k = -\infty}^{\infty} \left(  \gamma (k+h)
-\gamma (k-h) + { \gamma (k)}^2 \right)
-    + { \gamma (h)}^2 (\eta - 3).
+<div id="definition-9.6.2." class="section level2">
+<h2>Definition 9.6.2.</h2>
+<p>A <em>spectral mean</em> is a functional of the spectral density
+<span class="math inline">\(f\)</span>, of the form <span class="math display">\[
+\langle g f \rangle_0 = \frac{1}{2 \pi} \int_{-\pi}^{\pi} g(\lambda)
+f(\lambda) \, d\lambda,
+\]</span> where <span class="math inline">\(g\)</span> is a real-valued
+weighting function.</p>
+</div>
+<div id="remark-9.6.3.-spectral-mean-estimation" class="section level2">
+<h2>Remark 9.6.3. Spectral Mean Estimation</h2>
+<p>A spectral mean can be estimated by substituting the periodogram:
+<span class="math display">\[
+\langle g I \rangle_0 = \sum_{|h| &lt; n} { \langle g \rangle }_h
+\widehat{\gamma}(h).
 \]</span></p>
 </div>
-<div id="remark-9.4.4.-limiting-variance-of-the-acvf-estimator" class="section level2">
-<h2>Remark 9.4.4. Limiting Variance of the ACVF Estimator</h2>
+<div id="theorem-9.6.6." class="section level2">
+<h2>Theorem 9.6.6.</h2>
+<p>Suppose <span class="math inline">\(\{ X_t \}\)</span> is a linear
+time series with mean <span class="math inline">\(\mu\)</span> and
+causal moving average representation, with inputs that have variance
+<span class="math inline">\(\sigma^2\)</span> and kurtosis <span class="math inline">\(\eta\)</span> (fourth moment divided by the square
+of the second moment). For sufficiently smooth <span class="math inline">\(g\)</span>, <span class="math display">\[
+\sqrt{n} \, \left( \langle g I \rangle_0 - \langle g f \rangle_0 \right)
+\Rightarrow \mathcal{N} \left( 0,  \langle g (g + g^{\sharp}) f^2
+\rangle_0
+  + (\eta - 3) { \langle g f \rangle }_0^2 \right),
+\]</span> where <span class="math inline">\(g^{\sharp} (\lambda) = g (-
+\lambda)\)</span>.</p>
+</div>
+<div id="remark-9.6.7.-autocovariance-limiting-variance" class="section level2">
+<h2>Remark 9.6.7. Autocovariance Limiting Variance</h2>
 <ul>
-<li>Recall that the Fourier coefficients of a spectral density are
-denoted <span class="math display">\[
-{ \langle f \rangle }_k = \frac{1}{2 \pi} \int_{-\pi}^{\pi} f(\lambda)
-e^{i \lambda k} \, d\lambda.
-\]</span></li>
-<li>For a stationary Gaussian process with spectral density <span class="math inline">\(f\)</span>, then Bartlett’s Formula is <span class="math display">\[
-\tau^2_{\infty} = { \langle f^2  \rangle }_{2k} + { \langle f^2 \rangle
-}_0.
-\]</span></li>
-<li>Example 1: suppose <span class="math inline">\(k=1\)</span> and the
-process is a white noise (with variance <span class="math inline">\(\sigma^2\)</span>). Then <span class="math display">\[
-\tau^2_{\infty} = { \langle \sigma^4  \rangle }_{2} + { \langle
-\sigma^4  \rangle }_0 = \sigma^4.
-\]</span></li>
-<li>Example 2: suppose <span class="math inline">\(k=1\)</span> and the
-process is a MA(1). So <span class="math inline">\(f(\lambda) = \sigma^2
-{| 1 + \theta e^{-i \lambda} |}^2\)</span>, and <span class="math display">\[
-\tau^2_{\infty} = \sigma^4 { \langle {| 1 + \theta e^{-i \lambda}
-|}^4  \rangle }_{2} +
-\sigma^4 { \langle {| 1 + \theta e^{-i \lambda} |}^2  \rangle }_0 =
-\sigma^4 \left(  1 + 5 \theta^2 + \theta^4  \right).
-\]</span></li>
+<li>If <span class="math inline">\(g(\lambda ) = \cos (\lambda
+k)\)</span>, then the spectral mean is <span class="math inline">\(\gamma (k)\)</span>, and the estimate is <span class="math inline">\(\widehat{\gamma} (k)\)</span>.</li>
+<li>The Bartlett Formula (Proposition 9.4.3) follows from Theorem
+9.6.6.</li>
 </ul>
 </div>
-<div id="remark-9.4.6.-acvf-estimator-for-unknown-mean" class="section level2">
-<h2>Remark 9.4.6. ACVF Estimator for Unknown Mean</h2>
+<div id="corollary-9.6.9.-ratio-statistics" class="section level2">
+<h2>Corollary 9.6.9. Ratio Statistics</h2>
+<p>Under same assumptions as Theorem 9.6.6, with smooth weighting
+functions <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>, <span class="math display">\[
+\sqrt{n} \, \left( \frac{ \langle b I \rangle_0 }{ \langle a I \rangle_0
+}
+- \frac{ \langle b f \rangle_0 }{ \langle a f \rangle_0 } \right)
+\Rightarrow \mathcal{N} \left( 0,  \frac{ \langle g (g + g^{\sharp}) f^2
+\rangle_0 }{ { \langle a f \rangle }_0^2 }   \right),
+\]</span> where <span class="math inline">\(g = b - a { \langle b f
+\rangle}_0 / { \langle a f \rangle}_0\)</span>.</p>
+</div>
+<div id="remark-9.6.10.-bartletts-formula-for-the-autocorrelations" class="section level2">
+<h2>Remark 9.6.10. Bartlett’s Formula for the Autocorrelations</h2>
 <ul>
-<li>Since <span class="math inline">\(\mu\)</span> is usually unknown,
-we can replace it by the sample mean <span class="math inline">\(\overline{X}\)</span>.</li>
-<li>The resulting estimator is denoted <span class="math inline">\(\widetilde{\gamma} (h)\)</span>.</li>
-<li>This estimator is asymptotically normal when the process <span class="math inline">\(\{ X_t \}\)</span> is <span class="math inline">\(m\)</span>-dependent (i.e., random variables of at
-least lag <span class="math inline">\(m\)</span> between them are
-independent).</li>
+<li>The sample autocorrelation is defined as <span class="math inline">\(\widehat{\rho} (k) = \widehat{\gamma} (k)/
+\widehat{\gamma} (0)\)</span>.</li>
+<li>Applying Corollary 9.6.9 with <span class="math inline">\(b(\lambda)
+= \cos (\lambda k)\)</span> and <span class="math inline">\(a \equiv
+1\)</span>, we find the asymptotic variance for the sample
+autocorrelation is <span class="math display">\[
+\frac{ { \langle f^2 \rangle }_{2k} }{ { \langle f \rangle }_0^2 } + (1
++ 2 { \rho (k) }^2 ) \,
+\frac{ { \langle f^2 \rangle }_{0} }{ { \langle f \rangle }_0^2 } - 4
+\rho (k) \, \frac{ { \langle f^2 \rangle }_{k} }{ { \langle f \rangle
+}_0^2 }.
+\]</span></li>
+<li>For white noise, this equals <span class="math inline">\(1\)</span>.</li>
 </ul>
+</div>
+<div id="remark-9.6.12.-autocorrelations-of-reduced-population-data" class="section level2">
+<h2>Remark 9.6.12. Autocorrelations of Reduced Population Data</h2>
+<ul>
+<li>Consider second differences of U.S. population data.</li>
+<li>We compute the sample autocorrelations, and test the hypothesis of
+zero serial correlation (i.e., white noise).</li>
+<li>For each lag <span class="math inline">\(k \geq 1\)</span> (treated
+separately, ignoring multiple testing…) the asymptotic <span class="math inline">\(95 \%\)</span> critical values are <span class="math inline">\(\pm 1.96/\sqrt{n}\)</span>.</li>
+</ul>
+<p>HERE</p>
 </div>
 </div>
 
