@@ -6,79 +6,42 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 10-1: MA Identification
 
+- We can test for truncation of the sample ACVF to identify the order of an MA model.
+
 ## Paradigm 10.1.2. Sequential Testing for the MA Order
 
-- To identify an MA model, we must use the sample ACF rather than the true ACF
+- To identify an MA model, we must use the sample ACF rather than the true ACF.
 - Take as null hypothesis that the process is an MA(q), such that
 \[
- H_0 :  \gamma (h) = 0 \quad \mbox{for all} \;  h > q.
+ H_0 :  \gamma (k) = 0 \quad \mbox{for all} \;  k > q.
 \]
-- We can use the estimate $\widehat{\gamma} (h)$ as test statistic, for any $h > q$.
-- Under $H_0$, the asymptotic variance is $n^{-1}$ times
+- We can use the estimate $\widehat{\rho} (k)$ as test statistic, for any $k > q$.
+- Under $H_0$, the asymptotic variance (using Bartlett's Formula, Remark 9.6.10) is $n^{-1}$ times
 \[
-   \tau^2_{\infty} =  \sum_{k = -\infty}^{\infty} { \gamma (k) }^2.
+ \frac{ { \langle f^2 \rangle }_0 }{ { \langle f \rangle }_0^2 } = \sum_{|h| \leq q} { \rho (h) }^2.
 \]
-- We utilize an estimator of $\tau^2_{\infty}$ based on concepts of the so-called *frequency domain*. We form the *periodogram* $I$ by computing
+- Plugging in sample estimates, we obtain the test statistic
 \[
-  I(\lambda_{\ell}) = \sum_{k= -n+1}^{n-1} \widehat{\gamma} (k) \cos (\lambda_{\ell} k),
+ \sqrt{n} \, \frac{ \widehat{\rho} (k) }{ \sqrt{ \sum_{|h| \leq q } { \widehat{\rho} (h) }^2 } }
 \]
- where $\lambda_{\ell} = 2 \pi \ell/n$ for some integer $-[n/2]-n+1 \leq \ell \leq [n/2]$.
-- Then our estimator is
-\[
- \widehat{\tau^2_{\infty}} = \frac{1}{2n} \, \sum_{\ell = -[n/2]-n+1}^{[n/2]}
-  { I (\lambda_{\ell} )  }^2. 
-\]
-- Our normalized test statistic is 
-\[
-   \sqrt{n} \frac{ \widehat{\gamma} (h) }{ \widehat{\tau_{\infty} }},
-\]
- which is asymptotically standard normal.
-- Note that we have not addressed the multiple testing problem of multiple lags $h$!
-
-## Example 10.1.3. Sequential Identification of Non-Defense Capitalization.
- 
-- We examine the Non-Defense Capitalization (New Orders) series.
-- We take first differences because of non-stationarity.
-- We plot the ACF and PACF.
-
-```{r}
-ndc <- read.table("Nondefcap.dat")
-ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
-ndc.diff <- diff(ndc)
-n <- length(ndc.diff)
-acf(ndc.diff)
-gamma.hat <- acf(ndc.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
-kappa.hat <- pacf(ndc.diff,lag=n-1)$acf[,,1]
-```
-
-- These plots indicate that an MA model may be appropriate, because the ACF seems to truncate whereas the PACF has geometric decay.
-- We do sequential testing, examining lags 1 through 8. 
-- Individual tests get rejected at lags 1 and 6. The lag 6 result is barely significant at the 5% level, and may be spurious due to multiple testing. 
-- We tentatively conclude with an MA(1) model specification.
-
-```{r}
-lambda <- seq(-n/2+1,n/2)*2*pi/n
-pgram <- cos(0*lambda)*gamma.hat[1]
-for(h in 1:(n-1))
-{
-	pgram <- pgram + 2*cos(h*lambda)*gamma.hat[h+1]
-}
-pgram <- ts(pgram,start=0,frequency=n)
-tau.hat <- sqrt(.5*sum(pgram^2)/n)
-tstat <- sqrt(n)*gamma.hat[2:9]/tau.hat
-round(rbind(tstat,rep(qnorm(1-.05/2),8)),digits=5)
-```
+for each $k > q$.
+- How to use this: choose a $q$ to test, and compute the test statistics for various $k > q$. If they fail
+to reject, keep that value of $q$; otherwise, increment $q$ and repeat the procedure.
+- However, this procedure does not account for multiple testing!
 
 ## Paradigm 10.1.4. Joint Testing for the MA Order
 
 - We want to test at multiple lags.
-- $H_0$ is equivalent to $0 = \mbox{max} \{ | \rho (h) |, h > q \}$.
-- **Empirical Rule**: let $\widehat{q}$ be the smallest positive integer such that 
+- $H_0$ is equivalent to $0 = \mbox{max} \{ | \rho (k) |, k > q \}$.
+
+### **Empirical Rule**
+
+- Let $\widehat{q}$ be the smallest positive integer such that 
 \[
  |\widehat{\rho} (\widehat{q}+k) | < c \sqrt{n^{-1} \log n} 
 \]
@@ -88,10 +51,24 @@ round(rbind(tstat,rep(qnorm(1-.05/2),8)),digits=5)
 
 ## Example 10.1.5. Joint Testing Identification of Non-Defense Capitalization
 
-- We now apply the Empirical Rule.
-- $n =292$ implies $K_n = 5$.
-- The first $5$ sample autocorrelations are given below.
+- We now apply the Empirical Rule to the Non-defense capitalization data.
+- We take first differences because of non-stationarity.
+- The first $20$ sample autocorrelations and partial autocorrelations are plotted.
 
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+ndc.diff <- diff(ndc)
+n <- length(ndc.diff)
+gamma.hat <- acf(ndc.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+kappa.hat <- pacf(ndc.diff,lag=n-1,plot=FALSE)$acf[,,1]
+plot(ts(gamma.hat[1:20]/gamma.hat[1],start=0),xlab="",ylab="Acf",type="h")
+plot(ts(c(NA,kappa.hat[1:20]),start=0),xlab="",ylab="Pacf",type="h")
+```
+
+- From visual inspection, we might guess that $q=1$.
+- Then we apply the Empirical Rule, where $n =292$ implies $K_n = 5$.
+- We print $K_n$ values of the sample autocorrelations.
 
 ```{r}
 alpha <- .05
@@ -111,5 +88,5 @@ while(k < (n-K.n))
 }
 ```
 
-- The selected model order is `r q.hat`, which agrees with our results above.
+- The selected model order is `r q.hat`, which agrees with the ACF and PACF plots.
 

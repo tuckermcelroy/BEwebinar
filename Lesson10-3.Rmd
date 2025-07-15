@@ -6,85 +6,83 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 10-3: AR Identification
+
+- We can determine AR model order by examining truncation of the PACF.
 
 ## Remark 10.3.1. AR Model Identification
 
 - To identify an AR model, we must use the sample PACF rather than the true PACF.
 - Take as null hypothesis that the process is an AR(p), such that
 \[
- H_0 :  \kappa (h) = 0 \quad \mbox{for all} \;  h > p.
+ H_0 :  \kappa (k) = 0 \quad \mbox{for all} \;  k > p.
 \]
-- We can use the estimate $\widehat{\kappa} (h)$ as test statistic, for any $h > p$.
+- We can use the estimate $\widehat{\kappa} (k)$ as test statistic, for any $k > p$.
 - We require an asymptotic distribution theory.
-   
 
 ## Corollary 10.3.4.
 
-Suppose $\{ X_t \}$ is an AR($p$) process with mean $\mu$ and i.i.d. inputs of variance $\sigma^2$. Then
+- Suppose $\{ X_t \}$ is an AR($p$) process with mean $\mu$ and i.i.d. inputs of variance $\sigma^2$. Then
 \[
-  \sqrt{n}  (\widehat{\kappa} (h) - \kappa (h)) \Rightarrow \mathcal{N} (0, \sigma^2
-    \underline{e}_h^{\prime} \Gamma_h^{-1} \underline{e}_h ),
+  \sqrt{n}  (\widehat{\kappa} (k) - \kappa (k)) \Rightarrow \mathcal{N} (0, \sigma^2
+    \underline{e}_k^{\prime} \Gamma_k^{-1} \underline{e}_k ),
 \]
- where $\underline{e}_h$ is the unit vector with one in last (index $h$) position.
-
+ where $\underline{e}_k$ is the unit vector with one in last (index $k$) position.
+- So the asymptotic variance is the bottom right entry of $\Gamma_k^{-1}$ times $\sigma^2$.
 
 ## Paradigm 10.3.6. AR Model Identification
 
-- Suppose the true model is AR(p), and we test $H_0$ with $h > p$.
-- Trick: the process is also an AR(h), where the last $h-p$ coefficients are zero!
-- So we can apply Corollary 10.3.4, and it can be shown that because $h > p$ the limiting variance is $1$, i.e.,
+- Suppose the true model is AR(p), and we test $H_0$ with $k > p$.
+- Trick: the process is also an AR(k), where the last $k-p$ coefficients are zero!
+- So we can apply Corollary 10.3.4, and it can be shown that because $k > p$ the limiting variance is $1$, i.e.,
 \[
-   \sqrt{n} \, \widehat{\kappa} \Rightarrow \mathcal{N} (0,1)
+   \sqrt{n} \, \widehat{\kappa} (k) \Rightarrow \mathcal{N} (0,1)
 \]
 under $H_0$.  
 - So we can do sequential testing using the sample PACF, with the same cautions about multiple testing.
 - We also have an *Empirical Rule* for AR identification.
-- **Empirical Rule**: let $\widehat{p}$ be the smallest positive integer such that 
+
+### **Empirical Rule**
+
+- Let $\widehat{p}$ be the smallest positive integer such that 
 \[
  | \widehat{\kappa} (\widehat{p}+k)| < c \sqrt{n^{-1} \log n}
 \]
- for all $k=1, \ldots, K_n$, where $c > 0$ is a fixed constant, and $K_n$ is a positive, non-decreasing integer-valued function of $n$ such that $K_n = o(\log n)$.
- 
-HERE: maybe eliminate this example? 
- 
-## Example of U.S. Population
+for all $k=1, \ldots, K_n$, where $c > 0$ is a fixed constant, and $K_n$ is a positive, non-decreasing integer-valued function of $n$ such that $K_n = o(\log n)$.
+- Choose $c = 1.96$ and $K_n = 1 + [3 \sqrt{ \log n}]$
 
-- For the U.S. Population time series, we difference once and then plot the sample ACF and PACF. Dotted blue lines are confidence limits (discussed below).
-- We should guess an AR(1) model.
 
-```{r}
-pop <- read.table("USpop.dat")
-pop <- ts(pop, start = 1901)
-acf(diff(pop))
-pacf(diff(pop))
-```
- 
-HERE: change to Example 10.3.7???
+## Example 10.3.7. Identification of Urban World Population
 
-## Example of Identifying AR Order for U.S. Population
-
-- For the U.S. Population time series, we difference once and compute sample PACF. 
-- Dotted blue lines are confidence limits, based on asymptotic variance of $1/n$, and quantiles from the normal at a 5% level.
-- The AR(1) specification seems reasonable, although the lag 8 test statistic is barely significant.
+- We now apply the Empirical Rule to the Urban World Population time series.
+- We take second differences because of non-stationarity.
+- The first $20$ sample autocorrelations and partial autocorrelations are plotted.
 
 ```{r}
-n <- length(diff(pop))
-pop.pacf <- pacf(diff(pop))
-tstat <- sqrt(n)*pop.pacf$acf[1:8]
-round(rbind(tstat,rep(qnorm(1-.05/2),8)),digits=5)
+urban <- read.table("urbanpop.dat")
+urban <- ts(urban[67:1,], start = 1951)
+urban.diff <- diff(diff(urban))
+n <- length(urban.diff)
+gamma.hat <- acf(urban.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+kappa.hat <- pacf(urban.diff,lag=n-1,plot=FALSE)$acf[,,1]
+plot(ts(gamma.hat[1:20]/gamma.hat[1],start=0),xlab="",ylab="Acf",type="h")
+plot(ts(c(NA,kappa.hat[1:20]),start=0),xlab="",ylab="Pacf",type="h")
 ```
 
-- We also apply the *Empirical Rule*.
- 
+- From visual inspection, we might guess that $p=0$, thought there seems to be non-trivial
+correlation at lags 11 and 13.
+- Then we apply the Empirical Rule, where $n = 65$ implies $K_n = 5$.
+- We print $K_n$ values of the sample autocorrelations, and $\widehat{q}$.
+
 ```{r}
 alpha <- .05
 crit <- qnorm(1-alpha/2)
 K.n <- 1 + floor(3*sqrt(log(n,base=10)))
-kappa.test <- pop.pacf$acf/sqrt(log(n,base=10)/n)
+print(kappa.hat[1:K.n])
+kappa.test <- kappa.hat/sqrt(log(n,base=10)/n)
 k <- 1
 while(k < (n-K.n))
 {
