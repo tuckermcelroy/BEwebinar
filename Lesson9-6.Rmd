@@ -82,7 +82,23 @@ find the asymptotic variance for the sample autocorrelation is
 - For each lag $k \geq 1$ (treated separately, ignoring multiple testing...) the 
 asymptotic $95 \%$ critical values are $\pm 1.96/\sqrt{n}$.
 
-HERE
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+diffdiff.pop <- diff(diff(pop*10e-6))
+data <- diffdiff.pop
+n <- length(data)
+acfs.sample <- NULL
+mu.hat <- sum(data)/n
+for(k in 0:(n-1))
+{
+	acf.sample <- sum((data[1:(n-k)]-mu.hat)*(data[(k+1):n]-mu.hat))/n
+	acfs.sample <- c(acfs.sample,acf.sample)
+}
+plot(ts(acfs.sample/acfs.sample[1],start=0),xlab="Lag",ylab="Autocorrelations",ylim=c(-.5,1.5),type="h")
+abline(h= 1.96/sqrt(n),lty=3)
+abline(h= -1.96/sqrt(n),lty=3)
+```
 
 
 

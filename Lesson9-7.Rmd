@@ -1,0 +1,79 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 9-7: Periodogram
+
+- We further investigate the periodogram.
+- It can be viewed as a crude estimator of the spectral density.
+
+## Definition 9.7.2
+
+- Given a sample of size $n$ from a time series $\{ X_t \}$, the centered DFT is
+\[
+ \widehat{X} (\lambda) = n^{-1/2} \sum_{t=1}^n (X_t - \overline{X}) e^{-i \lambda t}
+\]
+for $\lambda \in [-\pi, \pi]$.  
+- So ${| \widehat{X} (\lambda) |}^2 = I(\lambda)$.
+
+## Corollary 9.7.5
+
+Suppose $\{ X_t \}$ is either $m$-dependent or is a linear time series with mean $\mu$ and causal moving average
+representation. If $\mu = 0$ then 
+\[
+ \frac{ \widetilde{I} (\lambda) }{ f(\lambda) } \Rightarrow \begin{cases}
+  \chi^2_1 \quad \mbox{if} \; |\lambda| = 0, \pi \\  .5 \chi^2_2 \quad \mbox{if} \; |\lambda| \in (0, \pi).
+  \end{cases}
+\]
+If $\mu \neq 0$, we use the uncentered DFT and $I(\lambda)/f(\lambda)$ has the same limit if
+$\lambda \neq 0$.
+
+## Remark 9.7.6. The Periodogram is Inconsistent
+
+- Corollary 9.7.5 implies the periodogram is not consistent as an estimator of the spectral density. 
+- In contrast, Theorem 9.6.6 shows that weighted averages of the periodogram are consistent for spectral means.
+
+## Fact 9.7.7. Independence of Periodogram Ordinates over Fourier Frequencies
+
+- From Corollary 7.2.9, DFT ordinates are approximately uncorrelated.
+- Because they are also asymptotically complex Gaussian (see book), the DFT ordinates are asymptotically
+independent.
+- Hence $I(\lambda_j)$ is asymptotically independent of $I(\lambda_k)$ for $j \neq k$.
+
+## Example 9.7.9. Periodogram of the Wolfer Sunspots
+
+- We can plot the periodogram to identify cycles in a time series. 
+- We plot the periodogram of the Wolfer sunspots (recall Exercise 7.18).
+- We omit the value $I(0) = 0$ so that we can plot in logs.
+- The maximum occurs at $\lambda = .047$, corresponding to a period of $133.33$ months, or $11.08$ years.
+
+```{r}
+wolfer <- read.table("wolfer.dat")
+wolfer <- ts(wolfer[,1],start=1749,frequency=12)
+data <- wolfer
+n <- length(data)
+acfs.sample <- NULL
+mu.hat <- sum(data)/n
+for(k in 0:(n-1))
+{
+	acf.sample <- sum((data[1:(n-k)]-mu.hat)*(data[(k+1):n]-mu.hat))/n
+	acfs.sample <- c(acfs.sample,acf.sample)
+}
+grid <- 10000
+lambda <- seq(0,grid)*pi/grid
+pgram <- cos(0*lambda)*acfs.sample[1]
+for(h in 1:(n-1))
+{
+	pgram <- pgram + 2*cos(h*lambda)*acfs.sample[h+1]
+}
+pgram <- ts(pgram[-1],start=0,frequency=grid)
+plot(log(pgram),xlab="Cycles",ylab="Log Periodogram")
+print(pi*which.max(pgram)/grid)
+```
