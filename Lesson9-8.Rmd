@@ -1,0 +1,69 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 9-8: Spectral Density Estimation
+
+- We estimate the spectral density by modifying the periodogram.
+
+## Paradigm 9.8.1. Smoothing the Periodogram
+
+- We can average the periodogram over nearby Fourier frequencies: for integer $m$,
+\[
+ \widehat{f} (\omega) = \frac{1}{2 m +1} \sum_{j = -m}^m I (\omega + \lambda_j).
+\]
+- Recall nonparametric smoothing: higher $m$ to reduce variance, but bias increases.
+- More general smoothing of the periodogram:
+\[
+ \widehat{f} (\omega) = \frac{ \sum_{\ell} W_n ((\lambda_{\ell} - \omega)/m) \, I (\lambda_{\ell} )}{ \sum_{\ell} W_n ((\lambda_{\ell} - \omega)/m) },
+\]
+where $W_n (x)$ is a kernel function, or *spectral window*, depending on $n$. The estimator also depends on the
+*bandwidth* $m$.
+
+## Paradigm 9.8.3. Tapering the ACVF
+
+- Recall from Remark 9.5.2 that tapering reduces variability in ACVF estimation. We can insert tapered sample ACVF into the periodogram formula:
+\[
+ \widetilde{f} (\lambda) = \sum_{|h| \leq d} \Lambda (h/d) \widehat{\gamma} (h) e^{-i \lambda h},
+\]
+where $\Lambda (x)$ is a taper (cf. Definition 9.5.3), and $d$ is the *bandwidth*.
+- We can rewrite $\widetilde{f}$ as a spectral window estimator as well, where the spectral window is proportional to $\sum_{|h| \leq d} \Lambda (h/d) e^{-i \lambda h}$.
+
+## Example 9.8.6. Bartlett Tapered Spectral Estimator
+
+- We apply the tapered acvf spectral estimator of Paradigm 9.8.3, using the Bartlett taper (Example 9.5.4),
+to the Wolfer sunspot data.
+- We choose the bandwidth $d = 3 n^{1/3} = 42$, based on some asymptotic theory.
+- We plot in logs, and so remove the frequency zero value. 
+
+```{r}
+wolfer <- read.table("wolfer.dat")
+wolfer <- ts(wolfer[,1],start=1749,frequency=12)
+data <- wolfer
+n <- length(data)
+d <- 3*floor(n^{1/3})
+acfs.sample <- NULL
+mu.hat <- sum(data)/n
+for(k in 0:(n-1))
+{
+	acf.sample <- sum((data[1:(n-k)]-mu.hat)*(data[(k+1):n]-mu.hat))/n
+	acfs.sample <- c(acfs.sample,acf.sample)
+}
+grid <- 10000
+lambda <- seq(0,grid)*pi/grid
+pgram <- cos(0*lambda)*acfs.sample[1]
+for(h in 1:(n-1))
+{
+	pgram <- pgram + 2*(max(1-h/d,0))*cos(h*lambda)*acfs.sample[h+1]
+}
+pgram <- ts(pgram[-1],start=0,frequency=grid)
+plot(log(pgram),xlab="Cycles",ylab="Log Spectrum")
+```
+
