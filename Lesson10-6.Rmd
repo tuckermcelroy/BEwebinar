@@ -1,0 +1,36 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 10-6: Computation of Optimal Predictors
+
+
+## Remark 10.6.1. Computational Efficiency in R
+
+## Remark 10.6.3. Predictors and Permutations
+
+## Definition 10.6.4. 
+
+- The $k$-fold *predictors* are minimizers of the linear prediction MSE of $X_{k+1}$ from $\underline{X}_k = {[X_1, \ldots, X_k]}^{\prime}$. They are given by
+\[
+ \underline{\varphi}_k = \Pi_k \, \Gamma_k^{-1} \, \underline{\gamma}_k,
+\]
+ where $\Pi_k$ is a permutation matrix that reverses a vector (top to bottom).
+- Recall $\underline{\gamma}_k = {[\gamma (1), \ldots, \gamma (k)]}^{\prime}$.
+- So $\widehat{X}_{k+1} = \underline{\varphi}_k^{\prime} \underline{X}_k$.
+ 
+## Proposition 10.6.9
+
+## Exercise 10.39
+
+## Example 10.6.11. Predictors for Non-Defense Capitalization
+
+ 
+ 
