@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 We consider applications of the spectral representation to prediction problems.
 
-## 7.4.3. Optimal $h$-Step-Ahead Forecasting
+## Paradigm 7.4.3. Optimal $h$-Step-Ahead Forecasting
 
 - We seek an expression for $\widehat{X}_{t+h} = P_{ \overline{\mbox{sp}} \{ X_s, s \leq t \} } [ X_{t+h}]$.
 - The case of $h=1$ for an MA(1) was considered in Example 6.3.3.
