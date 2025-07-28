@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 - The filtering of time series uses some concepts from nonparametric smoothing.
 
-## Nonparametric Regression
+## Paradigm 3.1.1. Nonparametric Regression
 
 - We might think of the time series mean $\mu_t = {\mathbb E} [X_t]$ as an arbitary, smoothly
 varying function.
@@ -35,7 +35,7 @@ and the first term is approximately equal to $\mu_t$ if $m$ is small and the mea
 zero as $m$ increases to $\infty$.
 - So bias is lower for small $m$, but variance is lower for large $m$, creating a tension.
 
-## Kernel and Bandwidth
+## Remark 3.1.4. Kernel and Bandwidth
 
 - Above, we have equal weights on the observations. We can have unequal weights,
 through the device of a *kernel*, which is a function that weights the data.
@@ -44,7 +44,7 @@ we use the kernel's weights.
 - Large bandwidth yields more smoothing, with suppression of local features.
 - Small bandwidth yields less smoothing, with higher variability.
 
-## Edge Effects
+## Remark 3.1.7. Edge Effects
 
 - We can only compute $\widehat{\mu}_t$ for $t = m+1, \ldots, n-m$. So the values
 for $t = 1, \ldots, m$ and $t = n-m+1, \ldots, n$ are "missing".
@@ -53,7 +53,7 @@ at the boundaries.
 - Often the edge effects are ignored, when we are interested in the interior of the 
 time series sample.
 
-### Nonparametric Regression for Population
+## Exercise 3.3. Nonparametric Regression for Population
 
 - Apply the nonparametric regression technique with $m=20$ to U.S. population data.
 - First, we write a function to do local averaging.
