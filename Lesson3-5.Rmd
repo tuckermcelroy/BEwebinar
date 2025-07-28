@@ -33,7 +33,7 @@ mau.diff <- diff(mau)
 plot(mau.diff,xlab="Year",ylab="Mauna Loa")
 ```
 
-## Seasonal Regression
+## Paradigm 3.5.3. Seasonal Regression
 
 - An exactly periodic effect would be $X_t = X_{t-s}$ for seasonal period $s$ (e.g., $s=12$ for monthly time series), and any $t$.
 - If this were true, we could use dummy regressors. Usually this works poorly; if the series were periodic, then the filter $1 - B^s$ would annihilate it.
@@ -44,7 +44,7 @@ mau.diffs <- diff(mau.diff,lag=12)
 plot(mau.diffs,xlab="Year",ylab="Mauna Loa")
 ```
 
-## Seasonal Moving Average
+## Definition 3.5.6. Seasonal Moving Average
 
 - A better way is to estimate seasonality using a *seasonal moving average*. This is a moving average filter where only coefficients with indices that are a multiple of $s$ are non-zero.
 - This means 
