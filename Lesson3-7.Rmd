@@ -33,7 +33,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 \]
 - This is a cumulation, hence an *integrated process*.
 
-## Integrated Process
+## Definition 3.7.2. Integrated Process
 
 - Suppose that $\{ X_t \}$ is a non-stationary stochastic process such that 
 \[
