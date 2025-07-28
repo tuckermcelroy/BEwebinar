@@ -13,19 +13,19 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 - We want to generalize the concept of *identical distribution* to a stochastic process.
 
-## Marginal Distributions
+## Definition 2.3.1. Marginal Distributions
 
 - First marginals are just the $X_t$ random variables' distributions.
 - Second marginals are joint distributions for all pairs $(X_t,X_s)$.
 - Third marginals are joint distributions for all triplets, etc.
 
-### Same First Marginals
+## Fact 2.3.4. The First Marginal
 
 - Saying $\{ X_t \}$ has same first marginal is same as saying they are identically distributed.
 - Sometimes called *First Order Stationary*.
 - In particular, all means are the same: ${\mathbf E} [X_t] = {\mathbf E} [X_s]$ for all $t,s$.
 
-### Second Marginals Under Shift
+## Remark 2.3.7. Second Marginals Under Shift
 
 - Suppose all pairs have the same distribution when shifted: 
 \[
@@ -39,7 +39,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 \]
 It does not depend on $t$.  
  
-## Example: Visualizing Stationarity
+## Exercise 2.28. Visualizing Stationarity
 
 - We generate 100 simulations of a Gaussian AR(1), and generate a scatterplot of $(X_1, X_2)$ 
 - We repeat with $(X_3, X_4)$
