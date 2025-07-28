@@ -25,7 +25,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 \]
 This weights the past $m$ and the future $m$ observations equally, and is an example of a linear filter. It also called a *moving average*, because the observations are averaged (over a window of $2m+1$ time points) in a way that moves over the time series. A *simple moving average* has equal weights (a general moving average could have unequal weights).
  
-## Linear Time Series
+## Definition 3.2.6. Linear Time Series
 
 - A time series $\{ Y_t \}$ is said to be *linear* if it is defined as the output of a linear filter 
 (with coefficients $\{ \psi_k \}$) applied to $\{ X_t \}$, and $X_t \sim i.i.d.(\mu, \sigma^2)$.
@@ -41,7 +41,7 @@ This weights the past $m$ and the future $m$ observations equally, and is an exa
 This calculation is obtained by seeing that $\mbox{Cov} [X_{t-j}, X_{t-h-k}]$ is zero unless $j=k+h$,
 in which case it equals $\sigma^2$. 
 
-## Smoothing of Population
+## Exercise 3.7. Smoothing of Population
 
 - We apply a simple moving average to U.S. Population, using the R *filter* function.
 - Overlay different choices of $m$.
