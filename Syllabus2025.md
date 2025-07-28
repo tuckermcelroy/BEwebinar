@@ -156,18 +156,18 @@ students can follow along and modify the code, or rewrite it, and in real-time s
 5. *Computation of Optimal Predictors*
 6. The Gaussian Likelihood
 7. Model Assessment
-8. Information Criteria
-9. Model Comparisons
-10. *Iterative Forecasting*
-11. *Imputation and Signal Extraction*
 
 ### Webinar 11
 
-1. *Nonlinear Processes*
-2. ARCH Process
-3. GARCH Process
-4. *Bi-spectral Density*
-5. *Volatility Filtering*
+1. Information Criteria
+2. Model Comparisons
+3. *Iterative Forecasting*
+4. *Imputation and Signal Extraction*
+5. *Nonlinear Processes*
+6. ARCH Process
+7. GARCH Process
+8. *Bi-spectral Density*
+9. *Volatility Filtering*
 
 ### Webinar 12
 
