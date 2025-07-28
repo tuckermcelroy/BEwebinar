@@ -14,7 +14,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 - A time series sample is a finite stretch of realizations, i.e., a vector.
 - A vector of random variables is called a random vector: $\underline{X} = {[X_1, \ldots, X_n]}^{\prime}$.
 
-## Mean and Covariance
+## Fact 2.1.2. Mean and Covariance
 
 - The mean of $\underline{X}$ is a vector, each of whose components is the expectation
 of the corresponding random variable: ${\mathbf E} [ X_i]$.
@@ -23,14 +23,14 @@ the corresponding components of the random vector: $\mbox{Cov} [X_j, X_k]$.
 - The covariance matrix $\mbox{Cov} [\underline{X}]$ of a random vector is non-negative definite
 and symmetric. Its eigenvalues are real and non-negative.
 
-## Affine Transforms
+## Definition 2.1.3. Affine Transforms
 
 - $\underline{Y} = A \underline{X} + \underline{b}$ is an affine transform of $\underline{X}$.
 - If ${\mathbf E} \underline{X} = \underline{\mu}$ and $\mbox{Cov} [\underline{X}] = \Sigma$,
 then ${\mathbf E} \underline{Y} = A \underline{\mu} + \underline{b}$ and
 $\mbox{Cov} [\underline{Y}] = A \Sigma A^{\prime}$.
 
-## Covariance Decomposition
+## Fact 2.1.7. Covariance Decomposition
 
 - We can decompose a symmetric matrix $\Sigma$ as
 \[
@@ -44,7 +44,7 @@ and $B$ is called a square root (it is not unique). One such square root is the 
 $\underline{X} = B \underline{Z} + \underline{\mu}$ is a random vector with mean $\underline{\mu}$
 and covariance matrix $B B^{\prime}$. 
 
-### Simulation Example
+## Exercise 2.5. Simulating Random Vectors
 
 - Simulate a bivariate random vector with mean $[1,2]$ and covariance matrix
 \[
@@ -61,7 +61,7 @@ print(colMeans(t(x)))
 print(var(t(x)))
 ```
 
-## Gaussian Random Vectors
+## Definition 2.1.11. Gaussian Random Vector
 
 - A random vector $\underline{Y}$ is Gaussian with mean $\underline{\mu}$ and 
 non-singular covariance matrix $\Sigma$ if its joint pdf is
