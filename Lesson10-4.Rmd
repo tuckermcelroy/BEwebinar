@@ -1,0 +1,81 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 10-4: Optimal Prediction Estimators
+
+- We provide some initial results for fitting models, based on optimal prediction.
+
+## Fact 10.4.1. Asymptotic Prediction Error Variance
+
+- Suppose $\{ X_t \}$ is a linear time series with spectral density $f$.
+- Consider the $1$-step ahead forecast based on moving average representation $\psi (z) = \sum_{k \geq 0} \psi_k z^k$. The predictor (by Paradigm 7.4.3) is
+\[
+ \widehat{X}_{n+1} = \sum_{k \geq 0} \psi_{k+1} { \psi (B)}^{-1} X_{n-k}.
+\]
+- Letting $g(\lambda) = {| \psi (e^{-i \lambda}) |}^{-2}$, the *prediction error variance* is
+\[
+ \mathcal{V}_{\infty} = \frac{1}{2 \pi} \int_{-\pi}^{\pi} g(\lambda) f(\lambda) \, d\lambda =
+  {\langle g \, f \rangle}_0.
+\]
+- This is estimated via
+\[
+ \widehat{\mathcal{V}_{\infty}} = { \langle g \, I \rangle }_0.
+\]
+- Note that we need not have $f(\lambda) = g (\lambda) \, \sigma^2$, because the model
+($\psi (z)$) might differ from the true process ($f$).
+- We can fit models by finding $\psi (z)$ so as to minimize $\widehat{\mathcal{V}_{\infty}}$. 
+
+## Paradigm 10.4.2. Fitting an AR($p$) Model
+
+- Suppose the model is an AR($p$), so that $\psi (z) = {(1 - \sum_{j=1}^p \phi_j z^j )}^{-1}$ and
+\[
+g(\lambda) = {| 1 - \sum_{j=1}^p \phi_j e^{-i \lambda j} |}^{2}.
+\]
+- The prediction error variance is
+\[
+\mathcal{V}_{\infty} = \gamma (0) - 2 \underline{\phi}^{\prime} \underline{\gamma}_p + \underline{\phi}^{\prime} \, \Gamma_p \, \underline{\phi},
+\]
+where $\underline{\phi}^{\prime} = [\phi_1, \ldots, \phi_p]$.
+- The estimated prediction error variance is
+\[
+\widehat{\mathcal{V}_{\infty}} = \widehat{\gamma} (0) - 2 \underline{\phi}^{\prime} \widehat{\underline{\gamma}}_p +  \underline{\phi}^{\prime} \, \widehat{\Gamma}_p \, \underline{\phi},
+\]
+ which we can minimize with respect to $\underline{\phi}$. This yields the Yule-Walker estimator:
+\[
+ \widehat{\underline{\phi}} = \widehat{\Gamma}_p^{-1} \, \widehat{\underline{\gamma}}_p.
+\]
+ 
+## Paradigm 10.4.3. Fitting an MA($q$) Model 
+ 
+- Suppose the model is an MA($q$), so that $\psi (z) = 1 + \sum_{j=1}^q \theta_j z^j$ and
+\[
+g(\lambda) = {| 1 + \sum_{j=1}^q \theta_j z^j  |}^{-2}.
+\]
+- The prediction error variance is a complicated function of the MA coefficients. We can minimize
+the estimated prediction error variance to fit the model.
+
+## Example 10.4.6. Fitting an AR($p$) to Wolfer Sunspots
+
+- Consider the Wolfer sunspot time series.
+- Applying Paradigm 10.3.6, we arrive at $\widehat{p} = 4$ by the Empirical Rule.
+- We fit this AR(4) model using Paradigm 10.4.2.
+
+```{r}
+wolfer <- read.table("wolfer.dat")
+wolfer <- ts(wolfer,start=1749,frequency=12)
+n <- length(wolfer)
+gamma.hat <- acf(wolfer,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+p.order <- 4
+phi.ar <- solve(toeplitz(gamma.hat[1:p.order])) %*% gamma.hat[2:(p.order+1)]
+print(phi.ar)
+```
+
+

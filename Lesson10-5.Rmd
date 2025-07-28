@@ -9,7 +9,7 @@ output:
 knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 20: The Gaussian Likelihood
+# Lesson 10-5: Relative Entropy Minimization
 
 - We can fit AR(p) models using the sample Yule-Walker equations, or using OLS.
 - We can fit MA(q) models using a *spectral factorization*, which is akin to Yule-Walker in that it is a method-of-moments approach.
