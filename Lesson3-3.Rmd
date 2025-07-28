@@ -80,7 +80,7 @@ axis(2,cex.axis=.5)
 mtext(text="Year",side=1,line=1,outer=TRUE)
 ```
 
-## The Backward Shift
+## Definition 3.3.6. The Backward Shift
 
 - We define the *backward shift* (or *lag*) operator $B$, which shifts a time series back one time unit. This is a linear filter that lags time by one unit:
 \[
@@ -88,7 +88,7 @@ mtext(text="Year",side=1,line=1,outer=TRUE)
 \]
  So the filter weights are $\psi_1 = 1$ and zero otherwise. Informally we write $B X_t = X_{t-1}$.
  
-## Powers of Backward Shift
+## Paradigm 3.3.7. Powers of Backward Shift
 
 - Then $X_{t-k} = B^k X_t$, and a general filter is expressed as
 \[
@@ -101,7 +101,7 @@ mtext(text="Year",side=1,line=1,outer=TRUE)
 
 - Expressed as $\Psi (B) = {(2m+1)}^{-1} \sum_{k = -m}^m B^k$.
 
-## Differencing Filter
+### Differencing Filter
 
 - Expressed as $\Psi (B) = 1 -B$.
   
