@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/OneDrive/Documents/GitHub/BEwebi
 
 - Now we study the autocovariance function.
 
-## Strict and Weak Stationarity
+## Fact 2.4.8. Strict and Weak Stationarity
 
 - Strict stationarity: all marginals (of all orders) are time shift invariant.
 - Weak stationarity: the time series has finite variance, constant mean $\mu$, and covariance only depends on lag $h$:
@@ -38,13 +38,13 @@ rho <- phi^seq(0,20)
 plot(ts(rho,start=0),xlab="Lag",ylab="Rho",type ="h")
 ```
 
-## White Noise
+## Definition 2.4.15.
 
 - A key example is a *white noise* stochastic process.
 - This is any weakly stationary process $\{ Z_t \}$ with mean zero such that $\gamma (h) = 0$ for $h \neq 0$.
 - Written compactly as $Z_t \sim \mbox{WN} (0, \sigma^2)$, where $\sigma^2 = \gamma (0)$ is the variance, and the mean is $\mu = 0$.
 
-## Covariance Matrix of Sample Vector
+## Proposition2.4.16. Covariance Matrix of Sample Vector
 
 - The time series variables corresponding to a sample are $X_1, \ldots, X_n$, which can be put into a random vector $\underline{X}$.
 - The covariance matrix of $\underline{X}$ is denoted by $\Gamma_n$ when the stochastic process is weakly (or strictly) stationary. The entry in row $j$ and column $k$ is
@@ -60,7 +60,7 @@ gamma_mat <- toeplitz(gamma)
 gamma_mat
 ```
 
-## Properties of Autocovariance
+## Proposition 2.4.18. Properties of Autocovariance
 
 1. $\gamma (0) \geq 0$
 2. $\gamma (h) = \gamma (-h)$
