@@ -1,0 +1,69 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 10-10: Model Comparisons
+
+- We can also compare two models using test statistics.
+- Commonly, we consider the likelihood ratio, or equivalently the difference of divergences.
+
+## Corollary 10.10.5.
+
+- Suppose $\{ X_t \}$ is a linear time series with i.i.d. inputs.
+- Suppose two models are fitted, which are nested.
+- The nested model parameter vector is denote $\underline{\omega}^0$ (with dimension $r$).
+- The nesting model parameter vector is denote $\underline{\omega}$ (with dimension $s$).
+- We assume some other technical conditions. 
+- If the nested model is correct (it is the model of the process), then the likelihood ratio statistic
+\[
+ \mathcal{L} (\widehat{\underline{\omega}^0}, \widehat{\sigma}^2 ) -  \mathcal{L} (\widehat{\underline{\omega}}, \widehat{\sigma}^2 )
+\]
+is asymptotically $\chi^2_{r-s}$.
+- We can use the profile likelihood, and compute the above statistic by taking the difference
+of logged innovation variance estimates, multiplied by sample size.
+
+## Exercise 10.58. Nested Model Comparisons
+
+- We fit an AR(1) and AR(2) model to the growth rate of the U.S. population data. Which model is better?
+- The MLEs have the same asymptotic behavior as the Yule-Walker estimates, when
+fitting AR models.
+- So we load up code for Yule-Walker estimation.
+
+```{r}
+arp.fityw <- function(data,p)
+{
+	gamma.hat <- acf(data,lag=p,type="covariance",plot=FALSE)$acf[,,1]
+	phi <- solve(toeplitz(gamma.hat[1:p]),gamma.hat[2:(p+1)])
+	sigma2 <- gamma.hat[1] - sum(phi*gamma.hat[2:(p+1)])
+	hess <- sigma2*diag(solve(toeplitz(gamma.hat[1:p])))
+	return(list(phi,sigma2,hess))
+}
+```
+
+- Then we fit both models to the growth rate.
+
+```{r}
+pop <- read.table("USpop.dat")
+pop <- ts(pop, start = 1901)
+pop.gr <- diff(pop)
+n <- length(pop.gr)
+```
+
+- We compute the likelihood ratio test statistic by $n$ times the difference of
+$\log \widehat{\sigma}^2$ for each model.
+
+```{r}
+sig2.ar1 <- arp.fityw(pop.gr,1)[[2]]
+sig2.ar2 <- arp.fityw(pop.gr,2)[[2]]
+glr <- n*(log(sig2.ar1) - log(sig2.ar2))
+print(c(glr,1-pchisq(glr,df=1)))
+```
+
+- The large p-value indicates that we fail to reject, and hence the AR(1) model is best.
