@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 22: Iterative Forecasting 
+# Lesson 10-11: Iterative Forecasting
 
 - With a fitted model we can compute forecasts, backcasts, and missing values using the normal equations.
 - The fitted model provides us with estimated autocovariances, which are needed in the normal equations.
@@ -24,8 +24,6 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
      \left[ \begin{array}{c} \underline{X}_n \\  \widehat{X}_{n+1} \end{array} \right].
 \end{align*}
 - Continue on iteratively to get the $h$-step-ahead: append the forecast and apply the next one-step-ahead predictor.
-
-
 
 ## Remark 10.11.4.  Iterative Forecasting is Efficient
 
@@ -46,10 +44,10 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 \]
 - This works when $X_n, \ldots, X_{n+1-d}$ are observed.
  
-## Example 10.11.8.  Forecasting Gasoline Sales
+## Exercise 10.61. Recursive Forecasting of Mauna Loa
 
-- We forecast the Gasoline sales time series of Example 3.3.4.  
-- Recall that this series is seasonally adjusted.  We use $\delta (B) = 1-B$ to reduce it to stationarity, after taking logs.
+- We will forecast the Mauna Loa time series.
+- We first fit an AR(p) model to the annual differences of the logged data.
 
 ```{r}
 polymul <- function(a,b) 
@@ -105,9 +103,24 @@ ARMAauto <- function(phi,theta,maxlag)
 	} }
 	return(gamARMA)
 }
+
+mau <- read.table("mauna.dat",header=TRUE,sep="")
+mau <- ts(mau,start=1958,frequency=12)
+mau.gr <- diff(log(mau),lag=12)
+plot(mau,ylab="",xlab="Year")
+plot(mau.gr,ylab="",xlab="Year")
 ```
 
-- We fit an AR(12) model to $Y_t = X_t - X_{t-1}$ via the Yule-Walker equations.  
+- We also examine the pacf.
+
+```{r}
+delta <- c(1,rep(0,11),-1)
+d <- length(delta)-1
+n <- length(mau.gr) 
+mau.pacf <- pacf(mau.gr,lag.max=120)
+```
+
+- By inspection of the pacf plot, we choose $p=49$. We fit an AR(49) model using Yule-Walker.
 
 ```{r}
 arp.fityw <- function(data,p)
@@ -119,15 +132,12 @@ arp.fityw <- function(data,p)
 	return(list(phi,sigma2,hess))
 }
 
-gassa <- read.table("GasSA_2-11-13.dat")
-gassa <- ts(log(gassa),start=1992,frequency=12)
-gas.diff <- diff(gassa)
-n <- length(gas.diff)
-ar.coef <- arp.fityw(gas.diff,12)[[1]]
-sigma2 <- arp.fityw(gas.diff,12)[[2]]
+p.hat <- 49
+ar.coef <- arp.fityw(mau.gr,p.hat)[[1]]
+sigma2 <- arp.fityw(mau.gr,p.hat)[[2]]
 ```
 
-- We generate $50$ forecasts iteratively, withholding the last $50$ data points for comparison.
+- Then we forecast $50$ steps ahead.  The basic pattern gets extended.
 
 ```{r}
 pred.k <- function(gamma,max.lag)
@@ -149,62 +159,6 @@ pred.k <- function(gamma,max.lag)
 }
 
 H <- 50
-lag <- n
-gamma <- ARMAauto(ar.coef,NULL,lag)*sigma2
-x <- gas.diff[1:(n-H)]
-for(k in 1:H)
-{
-	varphi.vec <- pred.k(gamma,n-H+k-1)
-	cast <- sum(varphi.vec * x)
-	x <- c(x,cast)
-}
-gassa.fore <- c(gassa[1],filter(x,1,method="recursive",init=gassa[1]))
-gassa.fore <- ts(c(rep(NA,n-H),gassa.fore[(n-H+1):n]),start=1992,frequency=12)
-``` 
-
-- The forecasts are plotted beside the true observed values (in log scale).  
-- There is a discrepancy, which is because we generate forecasts from before the onset of the Great Recession.
-
-```{r}
-plot(gassa,xlab="Year",ylab="",lwd=1)
-lines(gassa.fore,col=4,lwd=2)
-```
-
-
-## Exercise 10.61. Recursive Forecasting of Mauna Loa
-
-- We will forecast the Mauna Loa time series.
-- We first fit an AR(p) model to the annual differences of the logged data.
-
-```{r}
-mau <- read.table("mauna.dat",header=TRUE,sep="")
-mau <- ts(mau,start=1958,frequency=12)
-mau.gr <- diff(log(mau),lag=12)
-plot(mau,ylab="",xlab="Year")
-plot(mau.gr,ylab="",xlab="Year")
-```
-
-- We also examine the pacf.
-
-```{r}
-delta <- c(1,rep(0,11),-1)
-d <- length(delta)-1
-n <- length(mau.gr) 
-mau.pacf <- pacf(mau.gr,lag.max=120)
-```
-
-- By inspection of the pacf plot, we choose $p=49$. We fit an AR(49) model using Yule-Walker.
-
-```{r}
-p.hat <- 49
-ar.coef <- arp.fityw(mau.gr,p.hat)[[1]]
-sigma2 <- arp.fityw(mau.gr,p.hat)[[2]]
-```
-
-- Then we forecast $50$ steps ahead.  The basic pattern gets extended.
-
-```{r}
-H <- 50
 gamma <- ARMAauto(ar.coef,NULL,n+H)*sigma2
 x <- mau.gr
 for(k in 1:H)
@@ -219,4 +173,6 @@ mau.fore <- ts(exp(mau.fore),start=1958,frequency=12)
 plot(mau.fore,col=2)
 lines(mau)
 ```
+
+
 
