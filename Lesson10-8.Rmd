@@ -6,11 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-
-# Lesson 21: Model Assessment
+# Lesson 10-8: Model Assessment
 
 - Once we have fitted a model, we need to assess the fit.
 - We should also compare to competing models.
@@ -210,7 +209,6 @@ acf(resid.mle)
 - We can combine into a single measure by taking a sum of squared autocorrelations.
 - This is an aggregate measure, like a *portmanteau* (suitcase) of statistics.
 
-
 ## Definition 10.8.7.
 
 - The *total variation* of a stationary time series with absolutely summable acvf is
@@ -238,7 +236,6 @@ acf(resid.mle)
 - We perform an upper one-sided test; large values indicate that serial correlation is present.
 - We can apply this to the time series residuals.
 
-
 ## Example 10.8.10.  Total Variation White Noise Testing of Non-Defense Capitalization
 
 - We apply the total variation test statistic to the time series residuals from the fit of an MA(1) to Non-Defense Capitalization.
@@ -261,61 +258,3 @@ pval <- 1-pnorm(tstat)
 - The test statistic is `r tot.var`, and the studentized statistic is `r tstat`, with asymptotic p-value `r pval`.
 - So there is no evidence for rejecting $H_0$, and we conclude that no serial correlation remains.
 
-## Remark 10.9.1. Underfitting and Overfitting
-
-- Underfitting is specifying a wrong model, such that the model order is too low. Then the parameter estimates are not consistent, and there is bias.
-- Overfitting is specifying a model with too high of a model order. However, the true model is still nested within the specified model. In this case the parameter estimates are inefficient (their variance is higher than it would be if the model were correctly specified).
-- Whenever we add model complexity, the Gaussian divergence decreases, and hence overfitting may arise.
-
-## Definition 10.9.6.
-
-- The *Akaike Information Criterion* (AIC) for a linear model with $r$ parameters (not including the input variance $\sigma^2$) is given by the Gaussian divergence plus $2r$:
-\[
-  \mbox{AIC} (\underline{\omega}, \sigma^2) = 
-   \mathcal{L} (\underline{\omega}, \sigma^2) + 2r.
-\]
-- This adds a penalty for models with many parameters.
-- Hence, minimizing AIC protects against overfitting.
-- Using the profile likelihood, minimizing AIC is equivalent to minimizing
-\[
-   n \log \widehat{\sigma}^2 + 2r.
-\]
-- Note that $\widehat{\sigma}^2$ depends on $r$.
-- Other penalties can be used. For example, the *Bayesian Information Criterion* (BIC) has penalty of $2r \log n$ instead of $2r$.
-- AIC has a tendency towards a slight over-parameterization. This can be a good thing, as a safeguard against model mis-specification.
-
-## Exercise 10.59. Information Criteria Model Comparison 
-
-- We fit an AR(2) model to the Non-Defense Capitalization series.
-
-```{r}
-n <- length(ndc.diff)
-gamma.hat <- acf(ndc.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
-phi.init <- solve(toeplitz(gamma.hat[1:2]),gamma.hat[2:3])
-```
-
-- First get Yule-Walker estimates (`r phi.init`) to initialize the MLE optimization.
-
-```{r}
-psi.init <- phi2psi(phi.init)
-fit.ar2 <- optim(psi.init,likprof.arma,q=0,data=ndc.diff,method="BFGS")
-psi.mle <- fit.ar2$par
-phi.mle <- psi2phi(psi.mle)
-gamma <- ARMAauto(phi.mle,NULL,n)
-sig2.mle <- dl.alg(gamma,ndc.diff)[[3]]
-```
-
-- We compute the AIC and BIC values next.
-
-```{r}
-lik.ar2 <- fit.ar2$value
-lik.ma1 <- fit.ma1$value
-aic.ar2 <- lik.ar2 + 2*2
-bic.ar2 <- lik.ar2 + 2*2*log(n)
-aic.ma1 <- lik.ma1 + 2*1
-bic.ma1 <- lik.ma1 + 2*1*log(n)
-```
-
-- The AIC for the MA(1) and AR(2) models is `r aic.ma1` and `r aic.ar2` respectively.
-- The BIC for the MA(1) and AR(2) models is `r bic.ma1` and `r bic.ar2` respectively.
-- So according to AIC the AR(2) model is preferred, but by BIC the MA(1) model is preferred!
