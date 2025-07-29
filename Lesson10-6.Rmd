@@ -6,15 +6,22 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 10-6: Computation of Optimal Predictors
 
+- Calculating the predictors and the Gaussian likelihood is important.
+- We explore algorithms for efficient computation.
 
 ## Remark 10.6.1. Computational Efficiency in R
 
-## Remark 10.6.3. Predictors and Permutations
+- Speed: for time series longer than $n=1000$, direct inversion of covariance matrices becomes
+expensive, and it is important to use efficient algorithms.
+- Memory: large data sets take up space (memory), so we only want to retain those
+portions that are needed.
+- Recursive algorithms use less arithmetical operations (faster) and store fewer
+elements (less memory needed).
 
 ## Definition 10.6.4. 
 
@@ -25,12 +32,128 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
  where $\Pi_k$ is a permutation matrix that reverses a vector (top to bottom).
 - Recall $\underline{\gamma}_k = {[\gamma (1), \ldots, \gamma (k)]}^{\prime}$.
 - So $\widehat{X}_{k+1} = \underline{\varphi}_k^{\prime} \underline{X}_k$.
+- The last elements of the vector $\underline{\phi}_k$ weight the most recent data,
+and the first elements weight the old data.
  
 ## Proposition 10.6.9
 
-## Exercise 10.39
+- We can recursively compute $k$-fold predictors in terms of the PACF $\kappa (k+1)$ via
+\[
+ \underline{\varphi}_{k+1} = \Pi_{k+1} \, 
+ \left[ \begin{array}{c}  \Pi_k \, \underline{\varphi}_k - \underline{\varphi}_k  \, \kappa (k+1) \\
+  \kappa (k+1) \end{array} \right].
+\]
+
+## Exercise 10.39. Recursive Predictors
+
+- We write R code for the recursive computation of $k$-fold predictors.
+- First we load the ARMAauto function.
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymul(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+```
+
+- Our function takes the ACF as input. We also incorporate the PACF calculation in
+the same loop.
+
+```{r}
+pred.k <- function(gamma,max.lag)
+{
+	kappa.vec <- gamma[2]/gamma[1]
+	varphi.vec <- kappa.vec
+	if(max.lag > 1) {
+	for(k in 2:max.lag)
+	{
+		schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
+		kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
+		kappa.new <- kappa.new[1,1]
+		if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+		kappa.vec <- c(kappa.vec,kappa.new)
+		varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+		varphi.vec <- rev(c(varphi.vec,kappa.new))
+	} }
+	return(varphi.vec)
+}
+```
+
+- We illustrate on a cyclic AR(2) process.
+
+```{r}
+rho <- .8
+omega <- pi/6
+phi1 <- 2*rho*cos(omega)
+phi2 <- -rho^2
+gamma <- ARMAauto(c(phi1,phi2),NULL,20)
+print(pred.k(gamma,20))
+```
 
 ## Example 10.6.11. Predictors for Non-Defense Capitalization
 
- 
+- We compute the predictors for the MA(1) model fitted to the Non-Defense Capitalization data.
+- As in Exercise 10.34, we have $\theta_1 = -.466$ and $\sigma^2 = .0053$.
+
+```{r}
+theta <- -.466
+sig.var <- .0053
+max.lag <- 50
+gamma <- rep(0,max.lag+1)
+gamma[1] <- (1 +theta^2)*sig.var
+gamma[2] <- theta*sig.var
+varphi <- pred.k(gamma,max.lag)
+plot(ts(c(NA,rev(varphi)),start=0),lty=3,lwd=2,xlab="Index",ylab="")
+```
+
+
  
