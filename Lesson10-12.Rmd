@@ -1,0 +1,247 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 10-12: Imputation and Signal Extraction
+
+- We discuss missing value imputation.
+- By forecasting and backcasting, we can extend a time series and then apply filters.
+
+## Remark 10.12.4. Extending a Time Series Sample
+
+- Recall from Remark 3.1.7 that applying a moving average filter leaves out the beginning
+and end of the sample.
+- We can extend a time series via forecasts and backcasts, and then apply the filter to fix
+this problem.
+- If the symmetric filter is of length $2m+1$, we need $m$ forecasts and $m$ backcasts.
+
+## Proposition 10.12.6
+
+- Suppose a filter $\Psi (B)$ is applied to $\{ X_t \}$, yielding $\{ Y_t \}$.
+- Given the sample $\underline{X}_n$, for any time $t$
+\[
+ {\mathbb E} [ Y_t \vert \underline{X}_n ] = 
+ \sum_{j = - \infty}^{\infty} \psi_j \, {\mathbb E} [ X_{t-j }  \vert \underline{X}_n ].
+\]
+- This justifies extending a series: we filter the sample $\underline{X}_n$ extended to
+points $t > n$ and $t < 1$ via appending forecast and backcasts.
+
+## Example 10.12.8. HP Trend of West Starts Annual Rate
+
+- We consider the annual growth rate of the West Housing Starts data.
+- We apply the Hodrick-Prescott (HP) filter.
+- First, we will fit an MA(12) model.
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymul(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+
+Wstarts <- read.table("Wstarts.b1",header=TRUE,skip=2)[,2]
+Wstarts <- ts(Wstarts,start = 1964,frequency=12)
+west <- diff(log(Wstarts),lag=12)
+n <- length(west)
+gamma.hat <- acf(west,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+q <- 12
+
+gausslik.maq <- function(theta,data,fit.flag)
+{
+	n <- length(data)
+ 	gamma.maq <- ARMAauto(NULL,theta,n)
+	kappa.vec <- gamma.maq[2]/gamma.maq[1]
+	varphi.vec <- kappa.vec
+	quad.new <- 0
+	quads <- NULL
+	ldet <- 0
+	ldets <- NULL
+	eps <- NULL
+
+	for(k in 2:n)
+	{
+		schur.new <- gamma.maq[1] - t(varphi.vec) %*% rev(gamma.maq[2:k])
+		eps.new <- data[k] - t(varphi.vec) %*% data[1:(k-1)]
+		eps <- c(eps,eps.new)
+		quad.new <- quad.new + eps.new^2/schur.new
+		quads <- c(quads,quad.new)
+		ldet <- ldet + log(schur.new)
+		ldets <- c(ldets,ldet)
+		kappa.new <- (gamma.maq[k+1] - sum(varphi.vec*gamma.maq[2:k]))/schur.new
+		kappa.new <- kappa.new[1,1]
+		if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+		kappa.vec <- c(kappa.vec,kappa.new)	
+		varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+		varphi.vec <- rev(c(varphi.vec,kappa.new))
+	}
+	gauss.lik <- n*(1 + log(2*pi)) + n*log(quads[n-1]/n) + ldets[n-1]
+
+	if(fit.flag) { return(gauss.lik) } else 
+	{ 
+		return(list(quads[n-1]/n,eps)) 
+	}
+}
+```
+
+- Because the fitting takes some time, we instead input the MLE directly below (based on a prior run).
+
+```{r}
+theta.mle <- c(0.651972958905815, 0.652200820985369, 0.627422633499361, 0.646525805480097, 
+0.625424457604761, 0.644635978951906, 0.637430978594635, 0.635720014729216, 
+0.625268961947794, 0.634947219500035, 0.600750521900405, -0.367624464655481
+)
+sig2.mle <- gausslik.maq(theta.mle,west,fit.flag=FALSE)[[1]]
+resid.mle <- gausslik.maq(theta.mle,west,fit.flag=FALSE)[[2]]
+acf(resid.mle)
+```
+
+- The ACF of the residuals indicates this model fit seems adequate.
+- Next, we obtain an invertible form of the moving average polynomial by root flipping.
+
+```{r}
+theta.poly <- c(1,theta.mle)
+new.poly <- 1
+sig2.new <- sig2.mle
+ma.roots <- polyroot(theta.poly)
+for(i in 1:q)
+{
+	if(Mod(ma.roots[i]) < 1) 
+	{ 
+		ma.roots[i] <- 1/ma.roots[i]
+		sig2.new <- sig2.new*(1/ma.roots[i]^2)
+	}
+	new.poly <- polymul(new.poly,c(1,-1/ma.roots[i]))
+}
+new.poly <- Re(new.poly)
+sig2.new <- Re(sig2.new)
+theta.inv <- new.poly[-1]
+```
+
+- Then we extend the time series with forecasts and backcasts.
+- We go $100$ steps forwards and backwards.
+
+```{r}
+H <- 100
+T <- n+2*H
+gamma <- ARMAauto(NULL,theta.inv,T)*sig2.new
+x <- c(rep(NA,H),west,rep(NA,H))
+x.fore <- c(west,rep(NA,H))
+T <- n+H
+kappa.vec <- gamma[2]/gamma[1]
+varphi.vec <- kappa.vec
+for(k in 2:(T-1))
+{
+	schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
+	kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
+	kappa.new <- kappa.new[1,1]
+	if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+	kappa.vec <- c(kappa.vec,kappa.new)
+	varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+	varphi.vec <- rev(c(varphi.vec,kappa.new))
+	cast <- sum(varphi.vec * x.fore[1:k])
+	if(k >= n) x.fore[k+1] <- cast
+}
+x.aft <- rev(c(rep(NA,H),x.fore))
+T <- n+2*H
+kappa.vec <- gamma[2]/gamma[1]
+varphi.vec <- kappa.vec
+for(k in 2:(T-1))
+{
+	schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
+	kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
+	kappa.new <- kappa.new[1,1]
+	if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+	kappa.vec <- c(kappa.vec,kappa.new)
+	varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+	varphi.vec <- rev(c(varphi.vec,kappa.new))
+	cast <- sum(varphi.vec * x.aft[1:k])
+	if(k >= n+H) x.aft[k+1] <- cast
+}
+x.cast <- rev(x.aft)
+x.ext <- ts(x.cast,start=(1964-H/12),frequency=12)
+plot(x.ext,col=2,ylab="",xlab="Year")
+lines(ts(x,start=(1964-H/12),frequency=12))
+```
+
+- Then we filter the extended data.
+- We use the HP filter with parameter $1/1600$. This uses an exact formula for the
+filter (Exercise 6.29 in the book).
+
+```{r}
+q <- 1/1600
+s <- (2*q + 2*q^(1/2)*(q+16)^(1/2))^(1/2)
+r <- (q^(1/2) + (q+16)^(1/2) + s)/4
+c <- q/r^2
+phi1 <- 2*(q^(1/2)-(q+16)^(1/2))/(4*r)
+phi2 <- (q^(1/2)+(q+16)^(1/2) - s)/(4*r)
+theta <- atan(s/4)
+lags <- seq(0,H)
+psi <- 2*c*r^(4-lags)*sin(theta)*(r^2*sin(theta*(1+lags)) - sin(theta*(lags-1)))
+psi <- psi/((1-2*r^2*cos(2*theta)+r^4)*(r^2-1)*(1-cos(2*theta)))
+psi <- c(rev(psi),psi[-1])
+west.trend <- filter(x.ext,psi,method="convolution")[(H+1):(length(x.ext)-H)]
+west.trend <- ts(west.trend,start=1964,frequency=12)
+
+plot(x.ext,lwd=2,col=grey(.9),xlab="Year",ylab="Starts Annual Growth")
+lines(ts(c(rep(NA,H),west,rep(NA,H)),start=1964-H/12,frequency=12),lwd=2,col=grey(.8))
+lines(west.trend,col=1,lwd=2,lty=2)
+```
+
+
+
+
