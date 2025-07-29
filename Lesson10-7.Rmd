@@ -6,11 +6,12 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 10-7: The Gaussian Likelihood
 
+- We examine the Gaussian likelihood further, and its efficient computation.
 
 ## Paradigm 10.7.1.  The Durbin-Levinson Algorithm
 
@@ -27,11 +28,65 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
   \epsilon_{k+1} & = X_{k+1} - \underline{\varphi}_k^{\prime} \underline{X}_k \\
    d_{k+1} & = \gamma (0) - \underline{\varphi}_k^{\prime} \Gamma_k \underline{\varphi}_k.
 \end{align*}
-- In the first equation, this is $\epsilon_{k+1} = X_{k+1} - \widehat{X}_{k+1}$, the one-step-ahead forecast error. 
+- In the first equation, this is $\epsilon_{k+1} = X_{k+1} - \widehat{X}_{k+1}$, the one-step-ahead forecast error.
 - In the second equation, it can be shown this variance is always positive.
-- We get both updates if we know $\underline{\varphi}_k$. This can also be recursively computed (omitted) from previously computed predictors as well as the pacf $\kappa (k+1)$.
+- We get both updates given $\underline{\varphi}_k$.  
 
-## Example 10.7.2. Gaussian Likelihood of Non-Defense Capitalization
+## Exercise 10.41. Durbin-Levinson Algorithm
+
+- We encode the Durbin-Levinson algorithm.
+- The outputs are the likelihood, profile likelihood, the sum of squared residuals, and the residuals.
+
+```{r}
+dl.alg <- function(gamma,data)
+{
+	# assumes that n > 1
+	# assumes gamma includs lags 0 through n
+	n <- length(data)
+	kappa.vec <- gamma[2]/gamma[1]
+	varphi.vec <- kappa.vec
+	quad.new <- 0
+	quads <- NULL
+	ldet <- 0
+	ldets <- NULL
+	eps <- NULL
+
+	for(k in 2:n)
+	{
+		schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
+		eps.new <- data[k] - t(varphi.vec) %*% data[1:(k-1)]
+		eps <- c(eps,eps.new)
+		quad.new <- quad.new + eps.new^2/schur.new
+		quads <- c(quads,quad.new)
+		ldet <- ldet + log(schur.new)
+		ldets <- c(ldets,ldet)
+		kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
+		kappa.new <- kappa.new[1,1]
+		if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
+		kappa.vec <- c(kappa.vec,kappa.new)	
+		varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
+		varphi.vec <- rev(c(varphi.vec,kappa.new))
+	}
+	gauss.lik <- n*log(2*pi) + quads[n-1] + ldets[n-1]
+	gauss.likprof <- n*(1 + log(2*pi)) + n*log(quads[n-1]/n) + ldets[n-1]
+
+	return(list(gauss.lik,gauss.likprof,quads[n-1]/n,eps))
+}
+```
+
+- We test this on the Non-Defense Capitalization data, with a fitted MA(1) model.
+- As in Exercise 10.34, we have $\theta_1 = -.466$ and $\sigma^2 = .0053$.
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+ndc.diff <- diff(ndc)
+n <- length(ndc.diff)
+theta <- -.466
+sig.var <- .0053
+gamma <- c(1+theta^2,theta,rep(0,n-1))*sig.var
+print(dl.alg(gamma,ndc.diff)[[1]])
+```
 
 ## Exercise 10.47. Fitting an MA(1) Model to Non-Defense Capitalization
 
@@ -91,45 +146,6 @@ ARMAauto <- function(phi,theta,maxlag)
 		gamARMA <- c(gamARMA,acf)
 	} }
 	return(gamARMA)
-}
-```
-
-- Next we load the Durbin-Levinson algorithm.
-
-```{r}
-dl.alg <- function(gamma,data)
-{
-	# assumes that n > 1
-	# assumes gamma includs lags 0 through n
-	n <- length(data)
-	kappa.vec <- gamma[2]/gamma[1]
-	varphi.vec <- kappa.vec
-	quad.new <- 0
-	quads <- NULL
-	ldet <- 0
-	ldets <- NULL
-	eps <- NULL
-
-	for(k in 2:n)
-	{
-		schur.new <- gamma[1] - t(varphi.vec) %*% rev(gamma[2:k])
-		eps.new <- data[k] - t(varphi.vec) %*% data[1:(k-1)]
-		eps <- c(eps,eps.new)
-		quad.new <- quad.new + eps.new^2/schur.new
-		quads <- c(quads,quad.new)
-		ldet <- ldet + log(schur.new)
-		ldets <- c(ldets,ldet)
-		kappa.new <- (gamma[k+1] - sum(varphi.vec*gamma[2:k]))/schur.new
-		kappa.new <- kappa.new[1,1]
-		if(abs(kappa.new) < 10^(-15)) kappa.new <- 0
-		kappa.vec <- c(kappa.vec,kappa.new)	
-		varphi.vec <- rev(varphi.vec) - kappa.new * varphi.vec
-		varphi.vec <- rev(c(varphi.vec,kappa.new))
-	}
-	gauss.lik <- n*log(2*pi) + quads[n-1] + ldets[n-1]
-	gauss.likprof <- n*(1 + log(2*pi)) + n*log(quads[n-1]/n) + ldets[n-1]
-
-	return(list(gauss.lik,gauss.likprof,quads[n-1]/n,eps))
 }
 ```
 
