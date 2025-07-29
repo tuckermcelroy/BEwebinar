@@ -6,18 +6,34 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 10-5: Relative Entropy Minimization
 
 - We can fit AR(p) models using the sample Yule-Walker equations (Paradigm 10.4.2), or using OLS.
 - We can fit MA(q) models using a *spectral factorization*, which is akin to Yule-Walker in that it is a method-of-moments approach.
-- Here we focus on Maximum Likelihood Estimation (MLE).
+- Here we focus on the Whittle likelihood and the Gaussian likelihood. 
 
 ## Remark 10.5.1. Connection to Relative Entropy
 
-## Remark 10.5.3. The Whittle Estimator
+- Minimizing asymptotic prediction variance is a method for fitting models.
+- If the model has parameters $\underline{\omega}$, then 
+\[
+\widehat{\mathcal{V}}_{\infty} (\underline{\omega}) = { \langle g_{\underline{\omega}} \, I \rangle }_0
+\]
+can be computed for any $\underline{\omega}$, and its minimizer (when unique) is the parameter estimate
+$\widehat{\underline{\omega}}$.
+- Connection to relative entropy: let $\sigma^2 g^{-1}_{\underline{\omega}}$ be the model
+spectral density. Then 
+\[
+ \log \sigma^2 + { \langle \frac{I}{\sigma^2 g_{\underline{\omega}}^{-1} } \rangle }_0 =
+ \log \sigma^2 + \sigma^{-2} \, \widehat{\mathcal{V}}_{\infty} (\underline{\omega})
+\]
+is the Kullback-Leibler (KL) discrepancy between periodogram and model spectrum. This
+is called the *Whittle likelihood*.
+- KL is minimized with $\widehat{\underline{\omega}}$ and $\widehat{\sigma^2} = \widehat{\mathcal{V}}_{\infty} (\widehat{\underline{\omega}})$. 
+- We call $\widehat{\mathcal{V}}_{\infty} (\underline{\omega})$ the *Profile Whittle likelihood*. 
 
 ## Paradigm 10.5.9. The Gaussian Log Likelihood
 
@@ -28,9 +44,9 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
     \Gamma_n^{-1} \, {( \underline{X} - \underline{\mu})}.
 \]
 - Here $\underline{\mu}$ is the mean vector, and equals the mean $\mu$ times a vector of ones.
-- Also $\underline{\omega}$ is the parameter vector (all the parameters except the input variance $\sigma^2$).
+- And $\underline{\omega}$ is the parameter vector (all the parameters except the input variance $\sigma^2$).
 - Note that for AR, MA, and ARMA models, there is a parameter vector $\underline{\omega}$, which together with $\sigma^2$ determines $\gamma (h)$, and thereby $\Gamma_n$.
-- To fit a model, we seek to minimize the Gaussian divergence over $\underline{\omega}$ and $\sigma^2$. The resulting minimizers are the MLEs $\widehat{\underline{\omega}}$ and $\widehat{\sigma^2}$.
+- To fit a model, we seek to minimize the Gaussian divergence over $\underline{\omega}$ and $\sigma^2$. The resulting minimizers are the Maximum Likelihood Estimators (MLEs) $\widehat{\underline{\omega}}$ and $\widehat{\sigma^2}$.
 
 ## Remark 10.5.10. Profile Gaussian Log Likelihood
 
@@ -58,7 +74,124 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 
 ## Exercise 10.34. Computing the Whittle Likelihood for MA Processes
 
+- We write R code to compute the Whittle likelihood for an MA process.
+- So $\underline{\omega} = {[\theta_1, \ldots, \theta_q]}^{\prime}$, and $g(\lambda) = {| 1 + \sum_{j=1}^q \theta_j z^j  |}^{-2}$ (see Paradigm 10.4.3).
+- First we write a function to compute the periodogram at the Fourier frequencies.
+
+```{r}
+pgram.dft <- function(data)
+{
+	n <- length(data)
+	gamma.hat <- acf(data,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+	lambda <- seq(-floor(n/2)+1,floor(n/2))*2*pi/n
+	pgram <- cos(0*lambda)*gamma.hat[1]
+	for(h in 1:(n-1))
+	{
+		pgram <- pgram + 2*cos(h*lambda)*gamma.hat[h+1]
+	}
+	pgram <- ts(pgram,start=0,frequency=n)
+	return(pgram)
+}
+```
+
+- Next, we encode the Whittle likelihood for the MA($q$) model.
+
+```{r}
+whittle.ma <- function(theta,sigma,pgram)
+{
+	n <- length(pgram)
+	lambda <- seq(-floor(n/2)+1,floor(n/2))*2*pi/n
+	q <- length(theta)
+	f.spec <- rep(1,n)
+	for(k in 1:q) { f.spec <- f.spec + theta[k]*exp(-1*1i*k*lambda) }
+	f.spec <- Mod(f.spec)^2
+	lik <- mean(pgram/f.spec)/sigma^2 + log(sigma^2)
+	return(lik)	
+}
+```
+
+- Finally, we test this on the Non-Defense Capitalization data.
+- We evaluate the Whittle likelihood for the MA(1) model with $\theta_1 = -.466$ and $\sigma^2 = .0053$
+(these estimates are based on the spectral factorization method).
+
+```{r}
+ndc <- read.table("Nondefcap.dat")
+ndc <- ts(ndc[,2],start=c(1992,3),frequency=12,names= "NewOrders")
+pgram <- pgram.dft(diff(ndc)) 
+whittle.ma(-.466,sqrt(.0053),pgram) + log(2*pi)
+```
+
 ## Exercise 10.42. Profile Whittle Likelihood
+
+- We extend Exercise 10.34 to code up the profile Whittle likelihood.
+
+```{r}
+whittleprof.ma <- function(theta,pgram)
+{
+	n <- length(pgram)
+	lambda <- seq(-floor(n/2)+1,floor(n/2))*2*pi/n
+	q <- length(theta)
+	f.spec <- rep(1,n)
+	for(k in 1:q) { f.spec <- f.spec + theta[k]*exp(-1*1i*k*lambda) }
+	f.spec <- Mod(f.spec)^2
+	lik <- mean(pgram/f.spec) 
+	return(lik)	
+}
+```
+
+- We test this on a MA(1) simulation with $\theta_1 = .7$, $\sigma^2 = 1$, and $n=100$.
+
+```{r}
+armapq.sim <- function(n,burn,ar.coefs,ma.coefs,innovar)
+{
+	p <- length(ar.coefs)
+	q <- length(ma.coefs)
+	z <- rnorm(n+burn+p+q,sd=sqrt(innovar))
+	x <- filter(z,c(1,ma.coefs),method="convolution",sides=1)
+	x <- x[(q+1):(q+n+burn+p)]
+	y <- x[1:p]
+	for(t in (p+1):(p+n+burn))
+	{
+		next.y <- sum(ar.coefs*y[(t-1):(t-p)]) + x[t]
+		y <- c(y,next.y)
+	}	
+	y <- y[(p+burn+1):(p+burn+n)]
+	return(y)
+}
+
+theta <- .7
+sigma <- 1
+n <- 100
+x.sim <- armapq.sim(n,0,NULL,theta,sigma^2)
+```
+
+- We compute the Profile Whittle likelihood for a range of $\theta_1$ values, and plot.
+- We plot in log scale, for easier visualization.
+- This function is lowest at the estimate $\widehat{\theta}_1$. This can be different
+from the true value $\theta_1 = .7$, due to statistical error.
+
+```{r}
+pgram <- pgram.dft(x.sim) 
+thetas <- seq(-1000,1000)/1000
+liks <- NULL
+for(theta in thetas)
+{
+	liks <- c(liks,whittleprof.ma(theta,pgram))
+}
+plot(ts(log(liks[-c(1,2001)]),start=-1,frequency=1000))
+thetas[which.min(liks[-c(1,2001)])+1]
+```
 
 ## Exercise 10.46. Fitting via the Whittle Likelihood
 
+- We now use the Profile Whitte likelihood to fit an MA(1) model to the Non-Defense Capitalization data.
+- We wrap the objective function with an optimizer, using the BFGS method.
+
+```{r}
+pgram <- pgram.dft(diff(ndc)) 
+theta.init <- 0
+fit.ma1 <- optim(theta.init,whittleprof.ma,pgram=pgram,method="BFGS")
+theta.ope <- fit.ma1$par
+sig2.ope <- fit.ma1$value
+print(c(theta.ope,sig2.ope))
+```
