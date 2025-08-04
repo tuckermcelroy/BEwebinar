@@ -35,10 +35,8 @@ but there is no nice analytic formula.
   \vdots & \\
     X_1^{(M)}, X_2^{(M)}, \ldots, X_n^{(M)} & \sim \, \mbox{i.i.d.} G.
 \end{align*}
-
 2. For $j = 1, \ldots, M$ compute $\widehat{\theta}_n^{(j)}$ from the pseudo-data
  $X_1^{(j)}, X_2^{(j)}, \ldots, X_n^{(j)}$. 
- 
 3. Compute $\widehat{\mathbb E} [ \widehat{\theta}_n] = M^{-1} \sum_{j=1}^M \widehat{\theta}_n^{(j)}$ and
 $\widehat{\eta} = M^{-1} \sum_{j=1}^M {( \widehat{\theta}_n^{(j)} - \widehat{\mathbb E} [ \widehat{\theta}_n] )}^2$, which is our estimate of $\eta$.
 

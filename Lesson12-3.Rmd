@@ -11,10 +11,7 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 
 # Lesson 25: The Plug-in Principle and the Bootstrap
 
-- We would like to use bootstrap (or resampling techniques) to obtain the distribution of estimators.
-
- 
-
+- We describe the plug-in method of constructing estimators, which generalizes the method-of-moments.
 
 ## Definition 12.3.1.
 
@@ -22,7 +19,6 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 \[
  \widehat{G} (x)  =  \frac{1}{n} \sum_{i=1}^n  1_{ \{ X_i \leq x \} }.
 \]
-
 
 ## Paradigm 12.3.5. The Plug-In Principle
 
@@ -53,7 +49,7 @@ The plug-in estimator for the median is
 \begin{align*}
   & X_1^{*(1)}, \ldots, X_n^{*(1)} \sim \mbox{i.i.d.} \widehat{G} \\
   & X_1^{*(2)}, \ldots, X_n^{*(2)} \sim \mbox{i.i.d.} \widehat{G} \\
-  & \ldots \\
+   \vdots & \\
   & X_1^{*(M)}, \ldots, X_n^{*(M)} \sim \mbox{i.i.d.} \widehat{G}.
 \end{align*}
 2. For $1 \leq j \leq M$ compute $\widehat{\theta}_n^{*(j)}$ from the *pseudo-sample* $X_1^{*(j)}, \ldots, X_n^{*(j)}$.
@@ -62,8 +58,6 @@ The plug-in estimator for the median is
   \frac{1}{M} \sum_{j=1}^M {\left( \widehat{\theta}_n^{*(j)}
    -  M^{-1} \sum_{k=1}^M \widehat{\theta}_n^{*(k)} \right)}^2.
 \]
-
-
 
 ## Example 12.3.10.  Bootstrap for the Variance of U.S. Population Acceleration
 
