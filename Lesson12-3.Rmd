@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 25: The Plug-in Principle and the Bootstrap
@@ -14,28 +14,6 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 - In time series (and statistics in general) we want to know the uncertainty in our estimates.
 - We would like to use bootstrap (or resampling techniques) to obtain the distribution of estimators.
 
-## Remark 12.1.4. Improving on the Normal Approximation
-
-- A confidence interval for the mean requires us to know the *long-run variance*,
-\[
- \sigma^2_{\infty} =  \sum_{h = - \infty}^{\infty}  \gamma (h).
-\]
-- The $95 \%$ confidence interval based on the sample mean and the normal approximation is
-\[
-  \overline{X}_n \pm  1.96 \sqrt{\frac{ \widehat{\sigma_{\infty}^2} }{n} }.
-\]
-- There are some issues with the accuracy of this interval:
-
-1. The accuracy of the normal approximation in finite sample (non-normality of marginal distribution).
-2. Serial correlation in the time series, since
-\[
-   \mbox{Var} [ \sqrt{n} \overline{X}_n ] \rightarrow \sigma^2_{\infty},
-\]
-and the convergence can be slow.
-3. Estimation of $\sigma^2_{\infty}$ by some estimator $\widehat{\sigma^2_{\infty}}$
-(this could be constructed from sample autocovariances).
-
-- So we might consider directly approximating the distribution of $\overline{X}_n$ via *resampling* from $\{ X_t \}$. This is the idea of the *bootstrap*.
 
 # Background: i.i.d. Data
 

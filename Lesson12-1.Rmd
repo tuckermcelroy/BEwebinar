@@ -1,0 +1,68 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 12-1: Sampling Distributions
+
+- In time series (and statistics in general) we want to know the uncertainty in our estimates.
+- First we study the sampling distributions of statistics.
+
+## Remark 12.1.4. Improving on the Normal Approximation
+
+- A confidence interval for the mean requires us to know the *long-run variance*,
+\[
+ \sigma^2_{\infty} =  \sum_{h = - \infty}^{\infty}  \gamma (h).
+\]
+- The $95 \%$ confidence interval based on the sample mean and the normal approximation is
+\[
+  \overline{X}_n \pm  1.96 \sqrt{\frac{ \widehat{\sigma_{\infty}^2} }{n} }.
+\]
+- There are some issues with the accuracy of this interval:
+
+1. The accuracy of the normal approximation in finite sample (non-normality of marginal distribution).
+2. Serial correlation in the time series, since
+\[
+   \mbox{Var} [ \sqrt{n} \overline{X}_n ] \rightarrow \sigma^2_{\infty},
+\]
+and the convergence can be slow.
+3. Estimation of $\sigma^2_{\infty}$ by some estimator $\widehat{\sigma^2_{\infty}}$
+(this could be constructed from sample autocovariances).
+
+- So we might consider directly approximating the distribution of $\overline{X}_n$ via *resampling* from $\{ X_t \}$. This is the idea of the *bootstrap*.
+
+## Example 12.1.6. Mean of a Gaussian AR(1).
+
+- Suppose that $\{ X_t \}$ is a stationary Gaussian AR(1) process, with parameter $\phi_1$.
+- So the spectral density is $f(\lambda) = \sigma^2 \, {| 1 - \phi_1 e^{-i \lambda} |}^{-2}$.
+- The asymptotic variance of $\sqrt{n} \overline{X}$ is the long-run variance: $f(0) = \sigma^2 / {(1 - \phi_1)}^2$.
+- The actual variance of $\sqrt{n} \overline{X}$ is
+\[
+ \gamma (0) + 2 \sum_{h=1}^{n-1} (1 - h/n) \gamma (h)
+ = \frac{ \sigma^2 }{ 1 - \phi_1^2 } \,
+ \left( 1 + \frac{2 \phi_1}{1 - \phi_1} \,
+ \left[ (1 - \phi_1^n ) - \frac{ 1 - \phi_1^n (1 + n (1 - \phi_1) ) }{ n (1 - \phi_1) }
+ \right]  \right)
+\]
+- For $\phi_1 > 0$, this quantity is smaller than the long-run variance.
+- We illustrate for $\phi_1 = .9$ and $\sigma = 1$, so that $f(0) = 100$.
+
+```{r}
+phi <- .9
+n <- seq(10,1000,10)
+
+longrun.var <- (1-phi^2)^(-1)*(1 + 2*phi*(1-phi)^(-1)*
+	((1-phi^n) - (1-phi^n*(1+n*(1-phi)))*(n*(1-phi))^(-1)))
+longrun.var <- ts(longrun.var,start=10,frequency=.10)
+plot(longrun.var,xlab="Sample Size",ylab="",lwd=2,col=grey(.2))
+abline(h=1/(1-phi)^2,lty=3,lwd=2)
+```
+
+- Thus, using $f(0)$ instead of the true sampling variance will overestimate when $n$ is small.
+
