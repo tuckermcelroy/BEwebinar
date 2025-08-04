@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
 # Lesson 23: GARCH Processes
@@ -28,7 +28,8 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 - Let $\{ X_t \}$ be a GARCH(p,q) process, and set $\delta = \sum_{j=1}^p a_j + \sum_{k=1}^q b_k$.
 - If $\delta < 1$, then $\{ X_t \}$ is strictly stationary with finite variance and mean zero.
 - Also $\{ X_t \}$ is a white noise with variance $a_0 / (1 - \delta)$. 
-
+- If $\mathbb E [ Z_t^4] < \infty$ and $\delta < {\mathbb E [ Z_t^4]  }^{-1/2}$, then 
+$\{ X_t^2 \}$ is an ARMA($p*$,$q$) with respect to white noise inputs $\epsilon_t$, and $p* = \mbox{max} \{ p, q \}$.
 
 ## Example 11.4.4. GARCH(1,1)
 
@@ -41,6 +42,16 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
  \sigma^2_t = \frac{a_0}{1 - b_1} + a_1 \, \sum_{j=0}^{\infty} b_1^j X^2_{t-1-j}.
 \]
 - This is called the ARCH($\infty$) representation of the GARCH(1,1).
+
+## Corollary 11.4.5.
+
+- Let $\{ X_t \}$ be a GARCH(p,q) process with $\delta < 1$, such that $\mathbb E [ Z_t^4] < \infty$ and $\delta < {\mathbb E [ Z_t^4]  }^{-1/2}$.
+- Let $\theta (z) = 1 - \sum_{k=1}^q b_k z^k$ and $\phi (z)  = 1 - \sum_{j=1}^{p*} (a_j + b_j) z^j$.
+- Then the best predictor of $X_t^2$ is linear:
+\[
+ \mathbb E [ X_t^2 \vert X_{t-1 :} ] = \frac{a_0}{ \theta (1)} + \sum_{k=1}^{\infty} \pi_k X^2_{t-k},
+\]
+where $\pi (z) = \phi (z)/\theta (z) = 1 - \sum_{k=1}^{\infty} \pi_k z^k$.
 
 ## Remark 11.4.6. Fitting a GARCH Model
 
@@ -67,7 +78,9 @@ dow <- diff(log(dow[,1]))
 dow <- ts(dow,start=c(2008,164),frequency=252)
 ```
 
-- We use custom R code that enforces the stationarity restriction: https://github.com/tuckermcelroy/GARCH-param
+- Then we utilize the pseudo-likelihood based on a Gaussian marginal distribution.
+- This uses a reparameterization of the GARCH parameters, to ensure we get values in $[0,1]$ that
+satisfy the constraint that $\delta < 1$.
 
 ```{r}
 polymul <- function(a,b) 
@@ -82,14 +95,6 @@ polymul <- function(a,b)
 
 psi2arch <- function(psi)
 {
-
-	#################################
-	#	psi2arch by Tucker McElroy
-	#
-	#	gives exact parametrization of ARCH(p)
-	#	input: p+1 vector of reals
-	#	output: coefs a0, a1, ..., ap of ARCH(p)
-	###############################################
 
 	p <- length(psi)-1
 	a.0 <- exp(psi[1])
@@ -113,15 +118,7 @@ psi2arch <- function(psi)
 
 lik.garch <- function(psi,data,p.order,df,fitting=TRUE)
 {
-	#################################
-	#	lik.garch by Tucker McElroy
-	#
-	#	evaluates GARCH(p,q) lik using euclidean parametrization, 
-	#		p.order > 0
-	#	input: psi is a p+q+1 vector of reals, data is T-vector of data
-	#	output: value of -2 times log Gaussian/t lik
-	###############################################
-
+	
 	p <- p.order
 	q <- length(psi)-p-1
 	T <- length(data)
@@ -145,7 +142,11 @@ lik.garch <- function(psi,data,p.order,df,fitting=TRUE)
 	}
 	if(fitting) { return(lik) } else { return(resids) }
 }
+```
 
+- We initialize and run the optimization.
+
+```{r}
 p <- 1
 q <- 1
 psi.init <- rep(0,p+q+1)
@@ -169,20 +170,11 @@ kurt <- m*sum((z - mean(z))^4)/(sum((z - mean(z))^2))^2 - 3
 ## Example 11.4.8. Fat-Tailed GARCH(1,1) for Dow Log Returns
 
 - The above fitted model assumes a Gaussian input, but the variance was large.
-- So we should try a fat-tailed distribution.  Consider Student t.
+- So we should try a fat-tailed distribution. Consider Student t.
 
 ```{r}
 lik.tgarch <- function(psi,data,p.order)
 {
-	#################################
-	#	lik.tgarch by Tucker McElroy
-	#
-	#	evaluates t-GARCH(p,q) lik using euclidean parametrization, 
-	#		p.order > 0
-	#	input: psi is a p+q+2 vector of reals, data is T-vector of data,
-	#		last parameter corresponds to degrees of freedom
-	#	output: value of -2 times log t lik
-	###############################################
 
 	p <- p.order
 	q <- length(psi)-p-2
@@ -206,7 +198,11 @@ lik.tgarch <- function(psi,data,p.order)
 	}
 	return(lik)
 }
+```
 
+- We initialize and run the optimization.
+
+```{r}
 p <- 1
 q <- 1
 # initialize with values close to those of the Gaussian GARCH

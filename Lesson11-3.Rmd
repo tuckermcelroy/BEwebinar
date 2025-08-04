@@ -36,7 +36,7 @@ where $X_{t-1 :}$ is shorthand for $X_{t-1}, X_{t-2}, \ldots$.
 - If $\mathbb E [ Z_t^4] < \infty$ and $\delta < {\mathbb E [ Z_t^4]  }^{-1/2}$, then 
 $\{ X_t^2 \}$ is a causal AR($p$) with respect to white noise inputs $\epsilon_t$.
 - Since the innovations $\epsilon_t$ are a dependent white noise, it can be shown that
-$\{ X_t^2 \}$ is a nonlinar process.
+$\{ X_t^2 \}$ is a nonlinear process.
 
 ## Remark 11.3.8. The Market Efficiency Axiom
 
