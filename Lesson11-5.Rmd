@@ -1,0 +1,71 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 11-5: Bi-spectral Density
+
+- Any Gaussian process is linear, and the 1st and 2nd cumulants (mean and covariance) summarize it completely.
+- We can measure nonlinearity of a process through its 3rd cumulants, and the associated
+bi-spectral density.
+
+## Definition 11.5.1.
+
+- Suppose $\{ X_t }\$ is a strictly stationary time series with finite absolute third moment.
+- Then its third *cumulant function* is defined to be
+\[
+\gamma (k_1, k_2) = \mathbb E [ (X_t - \mu) (X_{t+k_1} - \mu) (X_{t + k_2} - \mu) ],
+\]
+for any integer $k_1$, $k_2$.
+
+## Remark 11.5.2. Cumulant Functions
+
+- Cumulant functions generalize cumulants for random variables.
+- The mean is the first cumulant function.
+- The ACVF is the second cumulant function.
+- The third cumulant function measures skewness across lags.
+
+## Fact 11.5.3. Symmetries of the Third Cumulant
+
+- There are symmetries:
+\[
+\gamma (k_1, k_2) = \gamma (k_2, k_1) = \gamma (k_1 - k_2, -k_2) = \gamma (-k_1, k_2 - k_1).
+\]
+
+## Definition 11.5.6.
+
+The *bi-spectral density* function of a strictly stationary time series is the Fourier transform
+of the third cumulant function:
+\[
+ f(\lambda_1, \lambda_2) = \sum_{k_1, k_2 = -\infty}^{\infty} \gamma (k_1, k_2) 
+  \exp \{ -i \lambda_1 k_1 - i \lambda_2 k_2 \},
+\]
+where $\lambda_2, \lambda_2 \in [-\pi, \pi]$.
+
+## Example 11.5.7. Bi-spectral Density of an ARCH(1) Process
+
+- Consider the ARCH(1) process $X_t = Z_t \, \sqrt{a_0 + a_1 X^2_{t-1}}$.
+- The bi-spectral density is
+\[
+ f(\lambda_1, \lambda_2) = \mu_3 \, \left( {(1 - a_1 e^{-i \lambda_1 - i \lambda_2 } )}^{-1}
+  + {(1 - a_1 e^{i \lambda_1  } )}^{-1} + {(1 - a_1 e^{i \lambda_2  } )}^{-1} - 2  \right),
+\]
+where $\mu_3 = \mathbb E [ X_t^3 ]$.
+
+## Theorem 11.5.8.
+
+- Suppose that $\{ X_t \}$ is a stationary linear time series such that $X_t = \mu + \psi (B) \epsilon_t$,
+with $\{  \epsilon_t \}$ i.i.d. $(0, \sigma^2)$ and $\psi (z) = \sum_{j = - \infty}^{\infty} \psi_j z^j$.
+- Then the bi-spectral density is
+\[
+ f(\lambda_1, \lambda_2) = \kappa_3 \, \psi (e^{-i \lambda_1}) \psi (e^{-i \lambda_2})
+  \psi (e^{i \lambda_1 + i \lambda_2}),
+\]
+ where $\kappa_3 = \mathbb E [ \epsilon_t^3]$.
+

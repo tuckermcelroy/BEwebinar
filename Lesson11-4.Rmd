@@ -9,7 +9,7 @@ output:
 knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 23: GARCH Processes
+# Lesson 11-4: GARCH Processes
 
 - We explore the GARCH process, a generalization of the ARCH process.
 
