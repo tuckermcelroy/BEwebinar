@@ -6,12 +6,13 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 26: Model-based Bootstrap
+# Lesson 12-4: Model-based Bootstrap
 
-- We don't want to assume i.i.d. data, because time series data have serial dependence.
+- We want to extend the bootstrap idea to the case of time series data.
+- We don't want to assume i.i.d. anymore, because time series data have serial dependence.
 
 ## Paradigm 12.4.2.  Bootstrapping an AR(1) Model
 
@@ -92,8 +93,6 @@ interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*
 plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
 ```
   
-
-
 ## Paradigm 12.4.7. Bootstrap and the Model-Free Principle 
  
 - Using a transformation (instead of a model) that produces i.i.d. residuals from the data process  is called the *model-free principle*.
