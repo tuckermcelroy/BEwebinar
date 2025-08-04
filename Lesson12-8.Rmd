@@ -17,7 +17,7 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ## Paradigm 12.8.2. Block Bootstrap for the Sample Mean
 
 - Suppose we have a stationary time series $\{ X_t \}$.
-- Suppose $\theta$ is the mean, and $\widehat{\theta}$ is the sample mean.  Then
+- Suppose $\theta$ is the mean, and $\widehat{\theta}$ is the sample mean. Then
 \[
   J_n (x) = {\mathbb P} [ \sqrt{n} (\widehat{\theta} - \theta) \leq x] \rightarrow J(x),
 \]
@@ -78,7 +78,6 @@ for(i in 1:Monte)
       monte.root <- mean(monte.sample) - mau.mean
 	monte.roots <- c(monte.roots,monte.root)
 }
-#hist(monte.roots)
 interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
 ```
 
@@ -92,14 +91,12 @@ plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
 
 ![Wrapping a time series around the circle](circularBoot.png)
 
-
 ## Remark 12.8.5.  Circular Block Bootstrap
  
 - In the figure, we display the idea of wrapping our sample $X_1, \ldots, X_n$ around a circle, and selecting overlapping blocks on the circle. 
 - This yields blocks $B_1, \ldots, B_n$, where the extra blocks $B_{Q+1}, \ldots, B_n$ share portions of the beginning and end of the sample.
-- Is this valid?  By stationarity, one part of a time series is as good as another!
+- Is this valid? By stationarity, one part of a time series is as good as another!
 - The resulting block bootstrap is called the *circular block bootstrap*. It correctly centers the bootstrap of the sample mean.
-
 
 ## Paradigm 12.8.6. The Generalized Block Bootstrap
 
@@ -112,13 +109,13 @@ print(r.block)
 ```
 
 - This gives us some variation in block size. The procedure is called the *generalized block bootstrap*.
-- The algorithm is like that of Paradigm 12.8.2 of previous notebook, but replace the first two steps as follows:
+- The algorithm is like that of Paradigm 12.8.2, but replace the first two steps as follows:
 
-1. For $1 \leq j \leq M$, randomly draw indices $U_1^{(j)}, U_2^{(j)}, \ldots \sim \mbox{i.i.d.} \mbox{Uniform} \{ 1, 2, \ldots, n\}$, and randomly draw block sizes $V_1^{(j)}, V_2^{(j)}, \ldots \sim \mbox{i.i.d.} R$.  Then set 
+1. For $1 \leq j \leq M$, randomly draw indices $U_1^{(j)}, U_2^{(j)}, \ldots \sim \mbox{i.i.d.} \mbox{Uniform} \{ 1, 2, \ldots, n\}$, and randomly draw block sizes $V_1^{(j)}, V_2^{(j)}, \ldots \sim \mbox{i.i.d.} R$. Then set 
 \[
   B_i^{*(j)} = \{ X_{U_i^{(j)}}, X_{U_i^{(j)}+1}, \ldots, X_{U_i^{(j)} + V_i^{(j)} -1} \},
 \]
-for $i = 1, 2, \ldots$.  We proceed until we reach $k$ such that $\sum_{i=1}^k V_i^{(j)} \geq n$.  
+for $i = 1, 2, \ldots$. We proceed until we reach $k$ such that $\sum_{i=1}^k V_i^{(j)} \geq n$.  
 2. Concatenate for each $j$ those draws, obtaining the $j$th pseudo-series $X_1^{*(j)}, \ldots, X_n^{*(j)}$ from $B_1^{*(j)}, B_2^{*(j)}, \ldots, B_k^{*(j)}$.
 
 - The $U$ random variables tell us where the block starts, and the $V$ random variables tell us the size of the block.
@@ -140,7 +137,6 @@ print(r.block)
 - With this choice, the sample paths of the pseudo-series are strictly stationary in the bootstrap world (i.e., conditional on the sample)!
 - The expected block size is $1/p_n$.
 - So we should choose $p_n \rightarrow 0$, but we also want $n p_n \rightarrow \infty$.
-
 
 ## Exercise 12.35.  Stationary Bootstrap for the Mauna Loa Mean
 
@@ -187,7 +183,6 @@ for(i in 1:Monte)
       monte.root <- mean(monte.sample) - mau.mean
 	monte.roots <- c(monte.roots,monte.root)
 }
-#hist(monte.roots)
 interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
 ```
 
@@ -197,7 +192,4 @@ interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*
 ```{r}
 plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
 ```
-
-
-
 
