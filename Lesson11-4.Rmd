@@ -13,11 +13,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 
 - For financial data, we need models that explain *fat tails* and *volatility clustering*.
 - The ARCH and GARCH models are popular nonlinear time series models for financial data.
-
-## Remark 11.3.1. Volatility Clustering
-
-- Financial time series exhibit periods of high variability followed by low variability.
-- In intra-day trading data, volatility is higher at the beginning and end of the day.
+ 
 
 ## Definition 11.4.1.
 

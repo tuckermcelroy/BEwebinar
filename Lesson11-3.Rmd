@@ -1,0 +1,52 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 11-3: ARCH Process
+
+- We explore further properties of the ARCH process.
+
+## Remark 11.3.1. Volatility Clustering
+
+- Financial time series exhibit periods of high variability followed by low variability.
+- In intra-day trading data, volatility is higher at the beginning and end of the day.
+
+## Proposition 11.3.2.
+
+- Let $\{ X_t \}$ be an ARCH($p$) process. 
+- It has mean zero, and conditional variance
+\[
+ \mbox{Var} [ X_t \vert X_{t-1 :} ] = \sigma^2_t,
+\]
+where $X_{t-1 :}$ is shorthand for $X_{t-1}, X_{t-2}, \ldots$.
+- The conditional variance $\sigma^2_t$ is called the *volatility*.
+
+## Theorem 11.3.6.
+
+- Let $\{ X_t \}$ be an ARCH($p$) process such that $\delta = \sum_{j=1}^p a_j < 1$. 
+- Then $\{ X_t \}$ is white noise with variance $a_0 / (1 - \delta)$.
+- If $\mathbb E [ Z_t^4] < \infty$ and $\delta < {\mathbb E [ Z_t^4]  }^{-1/2}$, then 
+$\{ X_t^2 \}$ is a causal AR($p$) with respect to white noise inputs $\epsilon_t$.
+- Since the innovations $\epsilon_t$ are a dependent white noise, it can be shown that
+$\{ X_t^2 \}$ is a nonlinar process.
+
+## Remark 11.3.8. The Market Efficiency Axiom
+
+- We can predict $X_t^2$ using its AR representation.
+- But $\mathbb E [ X_t \vert X_{t-1:}] = 0$.
+- So we can say something about the magnitude of future returns, but not the direction.
+- Knowing future values of log returns would permit an arbitrage opportunity.
+- The *market efficiency axiom* states that there are no arbitrage opportunities in an efficient market.
+
+## Paradigm 11.3.9. Fitting an ARCH($p$) Model
+
+## Example 11.3.10. Fitting a Gaussian ARCH($p$) to Dow Log Returns
+
+
