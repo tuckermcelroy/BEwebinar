@@ -1,0 +1,166 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 11-1: Nonlinear Processes
+
+- We discuss various types of nonlinear processes.
+
+## Paradigm 11.1.1. Linear, Causal, and Gaussian Processes
+
+- $\{ X_t \}$ is Gaussian if all its finite-dimensional marginal distributions are multivariate Gaussian.
+- The best one-step ahead predictor for a Gaussian time series is a *linear* function of the sample.
+- More broadly, a time series is *linear* if it can be written
+\[
+ X_t = \sum_{j = -\infty}^{\infty} \psi_j \epsilon_{t-j}
+\]
+for $\{ \epsilon_t \}$ i.i.d.
+- Some linear time series are *causal*, where $\psi (z)$ is a power series.
+- Some causal linear time series are *invertible*, where roots of $\psi (z)$ are outside the unit circle.
+- A stationary Gaussian time series with positive spectral density is linear, causal, and invertible.
+
+## Example 11.1.2. Linear but Non-Gaussian AR($p$)
+
+- Consider a non-Gaussian AR($p$) process:
+\[
+ X_t = \sum_{j=1}^p \pi_j X_{t-j} + \epsilon_t
+\]
+for $\{ \epsilon_t \}$ i.i.d. (but not Gaussian). 
+- The best one-step ahead predictor is still linear: supposing that $t > p$,
+\[
+ \mathbb E [ X_t \vert \underline{X}_{t-1}] 
+ = \sum_{j=1}^p \pi_j \mathbb E [ X_{t-j} \vert \underline{X}_{t-1} ] + 
+ \mathbb E [ \epsilon_t \vert \underline{X}_{t-1} ] =
+ \sum_{j=1}^p \pi_j X_{t-j}.
+\]
+
+## Example 11.1.5. Nonlinear Autoregression
+
+- We can generalize the regression in Example 11.1.2 to be a nonlinear function of past data.
+- An order one nonlinear autoregression has the form
+\[
+X_t = g( X_{t-1}) + Z_t,
+\]
+where $\{ Z_t \}$ is i.i.d. 
+- E.g., $g(x) = \exp (x)$.
+- The best one-step ahead predictor is
+\[
+  \mathbb E [ X_t \vert \underline{X}_{t-1} ] = g( X_{t-1}).
+\]
+
+## Example 11.1.6. Autoregressive Conditional Heteroscedasticity
+
+- $\{ X_t \}$ is an AutoRegressive Conditional Heteroscedastic (ARCH) process of order $p$ if
+\begin{align*}
+ X_t & = \sigma_t \, Z_t \\
+ \sigma^2_t & = a_0 + \sum_{j=1}^p a_j X_{t-j}^2,
+\end{align*}
+where $\{ Z_t \}$ is i.i.d. $(0, 1)$, and $a_j \geq 0$.
+- Then $Z_t$ is independent of past values of the process, and $\{ X_t^2 \}$ is a nonlinear process whose best predictor is linear (shown in Theorem 11.3.6 below).
+
+## Example 11.1.7. Prediction of Lognormal Time Series
+
+- The lognormal times series $\{ X_t \}$ is defined by $X_t = \exp Y_t$, where $\{ Y_t \}$ is Gaussian.
+- Say $\{ Y_t \}$ is mean zero with ACVF $\gamma_Y (h)$. Then $\mathbb E [X_t] = \exp \{ \gamma_Y (0)/2 \}$ and
+\[
+ \gamma_X (h) = \exp \{ \gamma_Y (0) \} \, ( \exp \{ \gamma_Y (h) \} - 1).
+\]
+- Suppose that $\sigma^2$ is the asymptotic prediction variance of $Y_t$, and $\widehat{Y}_{t+1}$ is the best predictor of $Y_{t+1}$. Then
+\[
+ \widehat{X}_{t+1} = \exp \{ \widehat{Y}_{t+1} + \sigma^2 /2 \},
+\]
+and the nonlinear prediction error variance is 
+\[
+ \exp \{ 2 \gamma_Y (0) \} \cdot (1 - \exp \{ - \sigma^2 \} ).
+\]
+
+## Exercise 11.3. Lognormal Time Series Prediction Error
+
+- We numerically compute the linear and nonlinear prediction error variances.
+- The spectral density of $\{ X_t \}$ is
+\[
+ f(\lambda ) = \exp \{ \gamma_Y (0) \} \, 
+ \sum_{h = - \infty}^{\infty}  ( \exp \{ \gamma_Y (h) \} - 1) \, e^{-i \lambda h}.
+\]
+- So the best linear prediction error variance is $\exp \{ { \langle \log f \rangle }_0 \}$.
+- We consider the case where $\{ Y_t \}$ is a Gaussian AR(1) of parameter $\phi = .8$ and $\sigma^2 = 1$.
+
+```{r}
+polymul <- function(a,b) 
+{
+	bb <- c(b,rep(0,length(a)-1))
+	B <- toeplitz(bb)
+	B[lower.tri(B)] <- 0
+	aa <- rev(c(a,rep(0,length(b)-1)))
+	prod <- B %*% matrix(aa,length(aa),1)
+	return(rev(prod[,1]))
+}
+
+ARMAauto <- function(phi,theta,maxlag)
+{
+	p <- length(phi)
+	q <- length(theta)
+	gamMA <- polymul(c(1,theta),rev(c(1,theta)))
+	gamMA <- gamMA[(q+1):(2*q+1)]
+	if (p > 0) 
+	{
+		Amat <- matrix(0,nrow=(p+1),ncol=(2*p+1))
+		for(i in 1:(p+1))
+		{
+			Amat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Amat <- cbind(Amat[,(p+1)],as.matrix(Amat[,(p+2):(2*p+1)]) +
+			t(matrix(apply(t(matrix(Amat[,1:p],p+1,p)),2,rev),p,p+1)))
+		Bmat <- matrix(0,nrow=(q+1),ncol=(p+q+1))
+		for(i in 1:(q+1))
+		{
+			Bmat[i,i:(i+p)] <- c(-1*rev(phi),1)
+		}
+		Bmat <- t(matrix(apply(t(Bmat),2,rev),p+q+1,q+1))
+		Bmat <- matrix(apply(Bmat,2,rev),q+1,p+q+1)
+		Bmat <- Bmat[,1:(q+1)]
+		Binv <- solve(Bmat)
+		gamMix <- Binv %*% gamMA
+		if (p <= q) { gamMix <- matrix(gamMix[1:(p+1),],p+1,1) 
+			} else gamMix <- matrix(c(gamMix,rep(0,(p-q))),p+1,1)
+		gamARMA <- solve(Amat) %*% gamMix 
+	} else gamARMA <- gamMA[1]
+
+	gamMA <- as.vector(gamMA)
+	if (maxlag <= q) gamMA <- gamMA[1:(maxlag+1)] else gamMA <- c(gamMA,rep(0,(maxlag-q)))
+	gamARMA <- as.vector(gamARMA)
+	if (maxlag <= p) gamARMA <- gamARMA[1:(maxlag+1)] else {
+	for(k in 1:(maxlag-p))
+	{
+		len <- length(gamARMA)
+		acf <- gamMA[p+1+k]
+		if (p > 0) acf <- acf + sum(phi*rev(gamARMA[(len-p+1):len]))
+		gamARMA <- c(gamARMA,acf)
+	} }
+	return(gamARMA)
+}
+
+phi <- .8
+sigma <- 1
+gamma <- ARMAauto(phi,NULL,100)*sigma^2
+mesh <- 1000
+lambda <- pi*seq(0,mesh)/mesh
+f.spec <- (exp(gamma[1])-1)*cos(0*lambda)
+for(h in 1:100)
+{
+	f.spec <- f.spec + 2*(exp(gamma[h+1])-1)*cos(h*lambda)
+}
+f.spec <- exp( gamma[1] ) * f.spec
+lin.pred.mse <- exp( mean(log(f.spec)) )
+nonlin.pred.mse <- exp(2*gamma[1])*(1- exp(-sigma^2))
+print(c(lin.pred.mse,nonlin.pred.mse))
+```
+
+- Notice that the nonlinear predictor has lower MSE than the linear predictor.
