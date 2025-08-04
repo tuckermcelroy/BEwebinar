@@ -1,0 +1,88 @@
+---
+title: 'Time Series: A First Course with Bootstrap Starter'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
+```
+
+# Lesson 12-2: Monte Carlo
+
+- For this lesson, we suppose that $X_1, X_2, \ldots, X_n$ are i.i.d. with common distribution $G$.
+
+## Fact 12.2.2. Parameters are Functionals of the Distribution
+
+- Any parameter $\theta$ of a distribution can be expressed in terms of that distribution.
+- Let $G$ be the cumulative distribution function (cdf).  Then we write $\theta$ as $\theta (G)$.
+
+## Example 12.2.5. Median Parameter
+
+The median $\theta$ can be written as $G^{-1} (1/2)$, where $G^{-1}$ denotes the quantile inverse.  ($G^{-1}(p) = \inf \{x: G(x) \geq p \}$.)
+
+## Example 12.2.12. Monte Carlo Approximation to the Variance of a Statistic
+
+- Suppose we want to know the variance of a statistic, $\eta = \mbox{Var} [ \widehat{\theta}_n ]$,
+but there is no nice analytic formula.
+- Monte Carlo approach: generate multiple independent copies of $\widehat{\theta}_n$, and take the sample variance of these:
+
+1. For a large integer $M$ simulate:
+\begin{align*}
+  X_1^{(1)}, X_2^{(1)}, \ldots, X_n^{(1)} & \sim \, \mbox{i.i.d.} G \\
+  X_1^{(2)}, X_2^{(2)}, \ldots, X_n^{(2)} & \sim \, \mbox{i.i.d.} G \\
+  \vdots & \\
+    X_1^{(M)}, X_2^{(M)}, \ldots, X_n^{(M)} & \sim \, \mbox{i.i.d.} G.
+\end{align*}
+
+2. For $j = 1, \ldots, M$ compute $\widehat{\theta}_n^{(j)}$ from the pseudo-data
+ $X_1^{(j)}, X_2^{(j)}, \ldots, X_n^{(j)}$. 
+ 
+3. Compute $\widehat{\mathbb E} [ \widehat{\theta}_n] = M^{-1} \sum_{j=1}^M \widehat{\theta}_n^{(j)}$ and
+$\widehat{\eta} = M^{-1} \sum_{j=1}^M {( \widehat{\theta}_n^{(j)} - \widehat{\mathbb E} [ \widehat{\theta}_n] )}^2$, which is our estimate of $\eta$.
+
+## Exercise 12.6. Monte Carlo Approximation to the Variance of the Median
+
+- We use Monte Carlo to approximate the variance of the sample median.
+- Consider a sample of size $n = 100$ from an AR(1) process with mean $2$, AR parameter
+$\phi_1 = .8$, and Student t inputs with $4$ degrees of freedom. 
+- First we load the function to simulate an ARMA with Student t inputs.
+
+```{r}
+armapq.simht <- function(n,burn,ar.coefs,ma.coefs,innovar,df,seed)
+{
+	p <- length(ar.coefs)
+	q <- length(ma.coefs)
+	set.seed(seed)
+	if(df == Inf)
+	{
+		z <- rnorm(n+burn+p+q,sd=sqrt(innovar))
+	} else 
+	{
+		z <- sqrt(innovar)*rt(n+burn+p+q,df=df)
+	}
+	x <- filter(z,c(1,ma.coefs),method="convolution",sides=1)
+	x <- x[(q+1):(q+n+burn+p)]
+	y <- x[1:p]
+	for(t in (p+1):(p+n+burn))
+	{
+		next.y <- sum(ar.coefs*y[(t-1):(t-p)]) + x[t]
+		y <- c(y,next.y)
+	}	
+	y <- y[(p+burn+1):(p+burn+n)]
+	return(y)
+}
+
+n <- 100
+phi1 <- .8
+theta <- 2
+monte <- 10000
+med.mcs <- NULL
+for(i in 1:monte)
+{
+	x.sim <- theta + armapq.simht(n,500,phi1,NULL,1,4,set.seed(i))
+	med.mcs <- c(med.mcs,median(x.sim))
+}
+print(mean(med.mcs^2)-(mean(med.mcs))^2)
+```

@@ -11,20 +11,10 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 
 # Lesson 25: The Plug-in Principle and the Bootstrap
 
-- In time series (and statistics in general) we want to know the uncertainty in our estimates.
 - We would like to use bootstrap (or resampling techniques) to obtain the distribution of estimators.
 
+ 
 
-# Background: i.i.d. Data
-
-## Fact 12.2.2. Parameters are Functionals of the Distribution
-
-- Any parameter $\theta$ of a distribution can be expressed in terms of that distribution.
-- Let $G$ be the cumulative distribution function (cdf).  Then we write $\theta$ as $\theta (G)$.
-
-## Example 12.2.5. Median Parameter
-
-The median $\theta$ can be written as $G^{-1} (1/2)$, where $G^{-1}$ denotes the quantile inverse.  ($G^{-1}(p) = \inf \{x: G(x) \geq p \}$.)
 
 ## Definition 12.3.1.
 
