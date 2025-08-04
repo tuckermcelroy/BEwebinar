@@ -6,10 +6,10 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 24: Volatility Filtering
+# Lesson 11-6: Volatility Filtering
 
 - ARCH and GARCH models do not *fully* capture volatility clustering and *fat tails* (i.e., extreme observations).
 - We can use a model-free approach to describe $\sigma_t$, the volatility.
@@ -31,7 +31,6 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
  \widehat{\sigma}_t^2 = \Pi (B) X_t^2.
 \]
 - The same bias-variance trade-off applies as with mean estimation.
- 
  
 ## Example 11.6.4. Volatility Filtering of Dow Jones Log Returns
 
@@ -68,7 +67,7 @@ plot(dow.vol,xlab="Year",ylab="",lwd=1)
 
 ## Example 11.6.7. Simple NoVaS Applied to Dow Log Returns
 
-- Test out Simple NoVaS on dow time series.
+- Test out Simple NoVaS on the Dow log returns time series.
 
 ```{r}
 p <- 9
@@ -81,20 +80,11 @@ plot(ts(z))
 ```
 
 - It turns out, the serial correlation is low and the kurtosis is close to three (the Gaussian case)!
+- We print out the excess kurtosis and a standardized excess kurtosis.
 
 ```{r}
 kurt <- m*sum((z - mean(z))^4)/(sum((z - mean(z))^2))^2 - 3
 kurt.std <- sqrt(m)*kurt/sqrt(mean(z^8)-mean(z^4)^2)
-z.acf <- acf(z,plot=TRUE,lag.max=m-1,type="covariance")$acf
-lambda <- seq(-m/2+1,m/2)*2*pi/m
-pgram <- cos(0*lambda)*z.acf[1]
-for(h in 1:(m-1))
-{
-	pgram <- pgram + 2*cos(h*lambda)*z.acf[h+1]
-}
-pgram <- ts(pgram,start=0,frequency=m)
-tot.var <- .5*mean(pgram^2) - z.acf[1]^2
-tot.std <- sqrt(m)*tot.var/sqrt(2*z.acf[1]^4)
+z.acf <- acf(z,plot=TRUE,lag.max=m-1,type="correlation")$acf
 print(c(kurt,kurt.std))
-print(c(tot.var,tot.std))
 ```
