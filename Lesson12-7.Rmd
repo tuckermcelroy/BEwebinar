@@ -6,10 +6,11 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 28: Subsampling
+
+# Lesson 12-7: Subsampling
 
 - An alternative to the bootstrap is to replicate properties of the sample by examining *subsamples*.
 

@@ -6,12 +6,100 @@ output:
 ---
 
 ```{r, setup, include=FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data')
+knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 30: Stationary Bootstrap
+# Lesson 12-8: Block Bootstrap
 
-- We consider some generalizations of the block bootstrap.
+- We now look at *block bootstrap methods*, which is similar in spirit to subsampling.
+- We take sub-spans of the time series, and then patch them together to generate a synthetic time series that functions as our pseudo-sample.
+
+## Paradigm 12.8.2. Block Bootstrap for the Sample Mean
+
+- Suppose we have a stationary time series $\{ X_t \}$.
+- Suppose $\theta$ is the mean, and $\widehat{\theta}$ is the sample mean.  Then
+\[
+  J_n (x) = {\mathbb P} [ \sqrt{n} (\widehat{\theta} - \theta) \leq x] \rightarrow J(x),
+\]
+ where $J(x) = \Phi (x/\sigma_{\infty})$.
+- Let $b$ be small relative to $n$, as in the subsampling method.
+- Divide the sample into $Q = n-b+1$ overlapping blocks.
+- We want to construct a length $n$ pseudo-sample from length $b$ blocks, so we require $k = n/b$ such blocks.
+- Idea: randomly draw from the $Q$ blocks, and then paste them together!
+- Denote those $Q$ blocks of random variables as $B_1, \ldots, B_Q$.
+
+1. For $1 \leq j \leq M$, draw $B_1^{*(j)}, \ldots, B_k^{*(j)}$ randomly (with replacement) from the set of available blocks $B_1, \ldots, B_Q$.
+2. Concatenate for each $j$ those draws, obtaining the $j$th pseudo-series $X_1^{*(j)}, \ldots, X_n^{*(j)}$.
+3. Compute the statistic on each pseudo-series, denoted $\widehat{\theta}_n^{*(j)}$.
+4. We estimate $J_n (x)$ with
+\[
+  \frac{1}{M} \sum_{j=1}^M 1_{ \{ \sqrt{n} (\widehat{\theta}_n^{*(j)} - \widehat{\theta}_n ) \leq x \} }.
+\]
+
+- Just like subsampling, we insert $\widehat{\theta}_n$ for $\theta$.
+- There is a variant called the *tapered block bootstrap*, where observations at the edge of a block $B_k$ get down-weighted.
+
+## Exercise 12.33.  Block Bootstrap for the Mauna Loa Mean
+
+- Consider annual differences of the logged Mauna Loa CO2 time series.
+- We want to estimate the mean using block bootstrap. So we apply the above method to obtain the cdf of the centered statistic.
+
+```{r}
+mau <- read.table("mauna.dat",header=TRUE,sep="")
+mau <- ts(mau,start=1958,frequency=12)
+mau.gr <- 1000*diff(log(mau),lag=12)
+n <- length(mau.gr)
+mau.mean <- mean(mau.gr)
+```
+
+- The sample mean (after rescaling) is `r mau.mean`.
+- First try $b = \sqrt{n}$ and $M = 10^5$.
+- We can also try $b = n^{1/3}$ and $b = n^{2/3}$ by rerunning the code chunk.
+
+```{r}
+# Make choice of b, and then run 
+b <- ceiling(sqrt(n))
+#b <- ceiling(n^(1/3))
+#b <- ceiling(n^(2/3))
+
+k <- ceiling(n/b)
+Q.big <- n - b + 1
+monte.roots <- NULL
+Monte <- 100000
+for(i in 1:Monte)
+{
+	monte.sample <- NULL
+	for(j in 1:k)
+	{
+		boot.index <- sample(Q.big,size=1)
+		monte.sample <- c(monte.sample,mau.gr[seq(boot.index,boot.index+b-1)])
+	}
+	monte.sample <- monte.sample[1:n]
+      monte.root <- mean(monte.sample) - mau.mean
+	monte.roots <- c(monte.roots,monte.root)
+}
+#hist(monte.roots)
+interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
+```
+
+- The $95 \%$ confidence interval based on the bootstrap is [`r mau.mean - interval[2]`,`r mau.mean - interval[1]`].
+- We plot the bootstrap edf.
+
+```{r}
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
+```
+
+
+![Wrapping a time series around the circle](circularBoot.png)
+
+
+## Remark 12.8.5.  Circular Block Bootstrap
+ 
+- In the figure, we display the idea of wrapping our sample $X_1, \ldots, X_n$ around a circle, and selecting overlapping blocks on the circle. 
+- This yields blocks $B_1, \ldots, B_n$, where the extra blocks $B_{Q+1}, \ldots, B_n$ share portions of the beginning and end of the sample.
+- Is this valid?  By stationarity, one part of a time series is as good as another!
+- The resulting block bootstrap is called the *circular block bootstrap*. It correctly centers the bootstrap of the sample mean.
+
 
 ## Paradigm 12.8.6. The Generalized Block Bootstrap
 
@@ -109,6 +197,7 @@ interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*
 ```{r}
 plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2)
 ```
+
 
 
 
