@@ -1628,7 +1628,10 @@ Starter</h1>
 <div id="lesson-11-3-arch-process" class="section level1">
 <h1>Lesson 11-3: ARCH Process</h1>
 <ul>
-<li>We explore further properties of the ARCH process.</li>
+<li>For financial data, we need models that explain <em>fat tails</em>
+and <em>volatility clustering</em>.</li>
+<li>The ARCH model is a popular nonlinear time series model for
+financial data.</li>
 </ul>
 <div id="remark-11.3.1.-volatility-clustering" class="section level2">
 <h2>Remark 11.3.1. Volatility Clustering</h2>
@@ -1686,9 +1689,115 @@ arbitrage opportunities in an efficient market.</li>
 </div>
 <div id="paradigm-11.3.9.-fitting-an-archp-model" class="section level2">
 <h2>Paradigm 11.3.9. Fitting an ARCH(<span class="math inline">\(p\)</span>) Model</h2>
+<ul>
+<li>We construct the likelihood of the ARCH model, based on the marginal
+distribution of <span class="math inline">\(Z_t\)</span>.</li>
+<li>Given the past data <span class="math inline">\(x_{t-1}, x_{t-2},
+\ldots\)</span>, we compute <span class="math display">\[
+s_t = \sqrt{ a_0 + \sum_{j=1}^p a_j x^2_{t-j} }.
+\]</span></li>
+<li>Hence <span class="math inline">\(p_Z (x_t/s_t) / s_t\)</span> is
+the density for <span class="math inline">\(X_t\)</span> given <span class="math inline">\(X_{t-1:}\)</span>.</li>
+<li>The <em>pseudo-likelihood</em> is obtained by omitting some initial
+values. Its log is <span class="math display">\[
+\sum_{t= p+1}^n \left[ \log p_Z (x_t/s_t) - \log s_t \right].
+\]</span></li>
+<li>This is a function of the parameters <span class="math inline">\(a_0, a_1, \ldots, a_p\)</span>, so we can
+numerically optimize.</li>
+</ul>
 </div>
 <div id="example-11.3.10.-fitting-a-gaussian-archp-to-dow-log-returns" class="section level2">
 <h2>Example 11.3.10. Fitting a Gaussian ARCH(<span class="math inline">\(p\)</span>) to Dow Log Returns</h2>
+<ul>
+<li>We illustrate the fitting of an ARCH model to the Dow log returns
+data.</li>
+<li>We first load the data and fit an AR(<span class="math inline">\(p\)</span>) to the squares via Ordinary Least
+Squares, using AIC to select model order <span class="math inline">\(p\)</span>.</li>
+</ul>
+<pre class="r"><code>dow &lt;- read.table(&quot;dow.dat&quot;)
+dow &lt;- diff(log(dow[,1]))
+dow &lt;- ts(dow,start=c(2008,164),frequency=260)
+dow.ols &lt;- ar.ols(dow^2)
+p &lt;- dow.ols$order
+print(p)</code></pre>
+<pre><code>## [1] 33</code></pre>
+<ul>
+<li>Then we utilize the pseudo-likelihood based on a Gaussian marginal
+distribution.</li>
+<li>This uses a reparameterization of the ARCH parameters, to ensure we
+get values in <span class="math inline">\([0,1]\)</span> that satisfy
+the constraint that <span class="math inline">\(\delta &lt;
+1\)</span>.</li>
+</ul>
+<pre class="r"><code>psi2arch &lt;- function(psi)
+{
+    p &lt;- length(psi)-1
+    a.0 &lt;- exp(psi[1])
+    if(p &gt; 0)
+    {
+        r &lt;- (1 + exp(-psi[2]))^(-1)
+        if(p &gt; 1)
+        {
+            a.1 &lt;- (1 + sum(exp(-psi[3:(p+1)])))^(-1)
+            a.j &lt;- a.1
+            for(j in 2:p)
+            {
+                a.j &lt;- c(a.j,exp(-psi[j+1])*a.1)
+            }
+            a.j &lt;- r*a.j
+        } else { a.j &lt;- r }
+        a.0 &lt;- c(a.0,a.j)
+    }
+    return(a.0)
+}
+
+lik.arch &lt;- function(psi,data,df)
+{
+    p &lt;- length(psi)-1
+    T &lt;- length(data)
+    arch &lt;- psi2arch(psi)
+
+    lik &lt;- 0
+    for(t in (p+1):T)
+    {
+        arch.sd &lt;- sqrt(arch[1] + sum(arch[-1]*data[(t-1):(t-p)]^2))
+        if(df==Inf) { lik &lt;- lik + (-2)*log(dnorm(data[t],sd=arch.sd)) } else {
+            lik &lt;- lik + (-2)*log(dt(data[t]/arch.sd,df=df)/arch.sd) }
+    }
+    return(lik)
+}</code></pre>
+<ul>
+<li>We initialize and run the optimization.</li>
+</ul>
+<pre class="r"><code>psi.init &lt;- rep(0,p+1)
+arch.fit &lt;- optim(psi.init,lik.arch,data=dow,df=Inf,method=&quot;BFGS&quot;)
+print(arch.fit)</code></pre>
+<pre><code>## $par
+##  [1] -2033.2920748    63.3655115    -1.0359249    -0.9982538    -0.6378828
+##  [6]    -0.8151558    -0.8403050    -0.4084173    -0.3525441    -0.1679611
+## [11]    -0.2513546     2.2654453     9.8936148     2.6956666     0.8310226
+## [16]    10.4504480     6.3195116     2.5990459     1.7512666     9.4248029
+## [21]    10.7429154     3.0778102     0.1038050     0.4003738    11.7615334
+## [26]    11.8914743     2.1830535     9.0795334     0.3500034     0.2858918
+## [31]     0.4896009    11.3107064    10.6979264    -0.2668675
+## 
+## $value
+## [1] -12517.6
+## 
+## $counts
+## function gradient 
+##       79       47 
+## 
+## $convergence
+## [1] 0
+## 
+## $message
+## NULL</code></pre>
+<pre class="r"><code>arch.par &lt;- psi2arch(arch.fit$par)
+print(round(arch.par,digits=3))</code></pre>
+<pre><code>##  [1] 0.000 0.041 0.116 0.111 0.078 0.093 0.095 0.062 0.058 0.049 0.053 0.004
+## [13] 0.000 0.003 0.018 0.000 0.000 0.003 0.007 0.000 0.000 0.002 0.037 0.028
+## [25] 0.000 0.000 0.005 0.000 0.029 0.031 0.025 0.000 0.000 0.054</code></pre>
 </div>
 </div>
 

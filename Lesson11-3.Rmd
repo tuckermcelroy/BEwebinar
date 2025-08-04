@@ -11,8 +11,9 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 
 # Lesson 11-3: ARCH Process
 
-- We explore further properties of the ARCH process.
-
+- For financial data, we need models that explain *fat tails* and *volatility clustering*.
+- The ARCH model is a popular nonlinear time series model for financial data.
+ 
 ## Remark 11.3.1. Volatility Clustering
 
 - Financial time series exhibit periods of high variability followed by low variability.
@@ -47,6 +48,86 @@ $\{ X_t^2 \}$ is a nonlinar process.
 
 ## Paradigm 11.3.9. Fitting an ARCH($p$) Model
 
+- We construct the likelihood of the ARCH model, based on the marginal distribution of $Z_t$.
+- Given the past data $x_{t-1}, x_{t-2}, \ldots$, we compute
+\[
+ s_t = \sqrt{ a_0 + \sum_{j=1}^p a_j x^2_{t-j} }.
+\]
+- Hence $p_Z (x_t/s_t) / s_t$ is the density for $X_t$ given $X_{t-1:}$.
+- The *pseudo-likelihood* is obtained by omitting some initial values. Its log is
+\[
+  \sum_{t= p+1}^n \left[ \log p_Z (x_t/s_t) - \log s_t \right].
+\]
+- This is a function of the parameters $a_0, a_1, \ldots, a_p$, so we can numerically optimize.
+
 ## Example 11.3.10. Fitting a Gaussian ARCH($p$) to Dow Log Returns
+
+- We illustrate the fitting of an ARCH model to the Dow log returns data.
+- We first load the data and fit an AR($p$) to the squares via Ordinary Least Squares, using AIC
+to select model order $p$.
+
+```{r}
+dow <- read.table("dow.dat")
+dow <- diff(log(dow[,1]))
+dow <- ts(dow,start=c(2008,164),frequency=260)
+dow.ols <- ar.ols(dow^2)
+p <- dow.ols$order
+print(p)
+```
+
+- Then we utilize the pseudo-likelihood based on a Gaussian marginal distribution.
+- This uses a reparameterization of the ARCH parameters, to ensure we get values in $[0,1]$ that
+satisfy the constraint that $\delta < 1$.
+
+```{r}
+psi2arch <- function(psi)
+{
+	p <- length(psi)-1
+	a.0 <- exp(psi[1])
+	if(p > 0)
+	{
+		r <- (1 + exp(-psi[2]))^(-1)
+		if(p > 1)
+		{
+			a.1 <- (1 + sum(exp(-psi[3:(p+1)])))^(-1)
+			a.j <- a.1
+			for(j in 2:p)
+			{
+				a.j <- c(a.j,exp(-psi[j+1])*a.1)
+			}
+			a.j <- r*a.j
+		} else { a.j <- r }
+		a.0 <- c(a.0,a.j)
+	}
+	return(a.0)
+}
+
+lik.arch <- function(psi,data,df)
+{
+	p <- length(psi)-1
+	T <- length(data)
+	arch <- psi2arch(psi)
+
+	lik <- 0
+	for(t in (p+1):T)
+	{
+		arch.sd <- sqrt(arch[1] + sum(arch[-1]*data[(t-1):(t-p)]^2))
+		if(df==Inf) { lik <- lik + (-2)*log(dnorm(data[t],sd=arch.sd)) } else {
+			lik <- lik + (-2)*log(dt(data[t]/arch.sd,df=df)/arch.sd) }
+	}
+	return(lik)
+}
+```
+
+- We initialize and run the optimization.
+
+```{r}
+psi.init <- rep(0,p+1)
+arch.fit <- optim(psi.init,lik.arch,data=dow,df=Inf,method="BFGS")
+print(arch.fit)
+arch.par <- psi2arch(arch.fit$par)
+print(round(arch.par,digits=3))
+```
+
 
 

@@ -11,9 +11,7 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 
 # Lesson 23: GARCH Processes
 
-- For financial data, we need models that explain *fat tails* and *volatility clustering*.
-- The ARCH and GARCH models are popular nonlinear time series models for financial data.
- 
+- We explore the GARCH process, a generalization of the ARCH process.
 
 ## Definition 11.4.1.
 
@@ -24,7 +22,13 @@ knitr::opts_knit$set(root.dir = 'C:/Users/neide/Documents/GitHub/BEwebinar/Data'
 \end{align*}
 - The $\{ Z_t \}$ inputs are i.i.d. mean zero, variance 1. 
 - The parameters satisfy $a_j \geq 0$, $b_k \geq 0$.
-- The *stationarity restriction* is that $\sum_{j=1}^p a_j + \sum_{k=1}^q b_k < 1$. 
+
+## Theorem 11.4.3.
+
+- Let $\{ X_t \}$ be a GARCH(p,q) process, and set $\delta = \sum_{j=1}^p a_j + \sum_{k=1}^q b_k$.
+- If $\delta < 1$, then $\{ X_t \}$ is strictly stationary with finite variance and mean zero.
+- Also $\{ X_t \}$ is a white noise with variance $a_0 / (1 - \delta)$. 
+
 
 ## Example 11.4.4. GARCH(1,1)
 
