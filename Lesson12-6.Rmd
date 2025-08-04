@@ -9,4 +9,137 @@ output:
 knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
+# Lesson 12-6: Time Frequency Toggle Bootstrap
+
+- We study a frequency domain sieve.
+
+## Paradigm 12.6.1. Spectral Sieve
+
+- The DFT $\widetilde{\underline{X}}$ is obtained from the sample $\underline{X}$ via
+multiplication by $Q$: 
+\[
+\widetilde{\underline{X}} = Q \, \underline{X}.
+\]
+- The DFT has asymptotic covariance given by diagonal matrix $\Lambda$; the diagonal entries
+are the spectral density evaluated at Fourier frequencies.
+- So $\Lambda^{-1/2} \widetilde{\underline{X}}$ is asymptotically uncorrelated with common variance 1.
+- Then 
+\[
+ \underline{\epsilon} = Q \, \Lambda^{-1/2} \, Q^* \, \underline{X}
+\]
+is an entropy-increasing transformation of the sample, and is an asymptotically uncorrelated sequence.
+- We can base a bootstrap on $\underline{\epsilon}$; this is called a *spectral sieve*, because it
+involves an approximation to the true spectral density, which improves as the grid of Fourier frequencies
+becomes finer.
+- To implement, we need an estimate of the spectral density.
+
+## Example 12.6.3. Wolfer Sunspot Spectral Sieve
+
+- Consider the Wolfer sunspot time series. 
+- We estimate the DFT.
+
+```{r}
+wolfer <- read.table("wolfer.dat")
+wolfer <- ts(wolfer,start=1749,frequency=12)
+n <- length(wolfer)
+gamma.hat <- acf(wolfer,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+
+lambda <- seq(-floor(n/2)+1,floor(n/2))*2*pi/n
+Q.mat <- exp(1i*seq(-floor(n/2)+1,floor(n/2)) %x% t(lambda))/sqrt(n)
+wolfer.dft <- Conj(Q.mat) %*% (wolfer-mean(wolfer))
+```
+
+- We apply a tapered spectral estimator with Bartlett taper to estimate $f$.
+
+```{r}
+d <- 3*floor(n^{1/3})
+wolfer.spec <- cos(0*lambda)*gamma.hat[1]
+for(h in 1:(n-1))
+{
+	wolfer.spec <- wolfer.spec + 2*(max(1-h/d,0))*cos(h*lambda)*gamma.hat[h+1]
+}
+wolfer.spec <- ts(wolfer.spec,start=0,frequency=n)
+```
+
+- Then we construct the residuals, and check that they are a white noise.
+- The decorrelation is imperfect, but is sufficiently low statistically.
+
+```{r}
+wolfer.sieved <- wolfer.dft/sqrt(wolfer.spec)
+wolfer.resids <- Re(Q.mat %*% wolfer.sieved)
+gamma.resids <- acf(wolfer.resids,lag=n-1,type="correlation")$acf[,,1]
+```
+
+## Paradigm 12.6.8. Time Frequency Toggle Bootstrap
+
+- We construct a bootstrap based on the spectral sieve.
+- Let $\widehat{f}$ be a spectral density estimate, and $\widehat{\Lambda}$ is diagonal with entries
+given by evaluating at the Fourier frequencies.
+- The *frequency domain residuals* are defined as $\widehat{\Lambda}^{-1/2} \widetilde{\underline{X}}$;
+these are asymptotically i.i.d. and Gaussian, by theory from Chapter 9.
+- So we can generate bootstrap copies of the frequency domain residuals, transform to time domain by applying $Q$, and evaluate our statistic.
+- This is called the *time frequency toggle* (TFT) bootstrap.
+
+## Example 12.6.11. Lag 12 Autocorrelation of Gasoline Sales via TFT
+
+- Consider the Gasoline sales time series data.
+- We want to estimate the lag 12 autocorrelation, and measure the uncertainty using the TFT bootstrap.
+
+```{r}
+gassa <- read.table("GasSA_2-11-13.dat")
+gassa <- ts(log(gassa),start=1992,frequency=12)
+gas.diff <- diff(gassa)
+n <- length(gas.diff)
+gamma.hat <- acf(gas.diff,lag=n-1,type="covariance",plot=FALSE)$acf[,,1]
+rho.hat <- acf(gas.diff,lag=n-1,type="correlation",plot=FALSE)$acf[,,1]
+gas.acf12 <- rho.hat[13]
+print(gas.acf12)
+```
+
+- We compute the DFT, and construct a spectral estimator based on a fitted AR(12).
+
+```{r}
+lambda <- seq(-floor(n/2),floor(n/2))*2*pi/n
+Q.mat <- exp(1i*seq(-floor(n/2),floor(n/2)) %x% t(lambda))/sqrt(n)
+gas.dft <- Conj(Q.mat) %*% (gas.diff-mean(gas.diff))
+
+p.order <- 12
+phi.ar <- solve(toeplitz(gamma.hat[1:p.order])) %*% gamma.hat[2:(p.order+1)]
+sig2.ar <- gamma.hat[1] - sum(phi.ar*gamma.hat[2:(p.order+1)])
+gas.spec <- rep(1,n)
+for(j in 1:p.order) { gas.spec <- gas.spec - phi.ar[j]*exp(-1i*j*lambda) }
+gas.spec <- sig2.ar*Mod(gas.spec)^{-2}
+gas.sieved <- gas.dft/sqrt(gas.spec)
+#plot(ts(Re(gas.sieved)))
+#ceps.sieve <- Q.mat %*% Lambda.mat %*% Conj(Q.mat)
+gas.resids <- Re(Q.mat %*% gas.sieved)
+gas.tft <- gas.sieved[1:(floor(n/2)+1)]
+gamma.resids <- acf(gas.resids,lag=n-1,type="correlation")$acf[,,1]
+```
+
+- Next, we do the bootstrapping on the frequency domain residuals.
+
+```{r}
+gas.tft <- gas.tft - mean(gas.tft)
+gas.edf.re <- sort(Re(gas.tft))
+gas.edf.im <- sort(Im(gas.tft))
+
+monte.roots <- NULL
+Monte <- 100000
+for(i in 1:Monte)
+{
+	monte.resids <- sample(gas.edf.re,size=(floor(n/2)+1),replace=TRUE) + 
+				1i*sample(gas.edf.im,size=(floor(n/2)+1),replace=TRUE)
+	monte.resids[(floor(n/2)+1)] <- Re(monte.resids[(floor(n/2)+1)])
+	monte.resids <- c(monte.resids,Conj(rev(monte.resids)[-1]))
+	monte.sample <- Q.mat %*% monte.resids*sqrt(gas.spec)
+	monte.sample <- Re(monte.sample)
+	monte.root <- acf(monte.sample,lag=n-1,plot=FALSE,type="correlation")$acf[,,1][13] - gas.acf12
+	monte.roots <- c(monte.roots,monte.root)
+}
+print(c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)]))
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2,col=grey(.2))
+```
+
+
 
