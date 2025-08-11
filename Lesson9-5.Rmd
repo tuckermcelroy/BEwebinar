@@ -25,7 +25,7 @@ of a taper.
 
 - An autocovariance *taper* is a bounded, even real-valued function $\Lambda$ on $[-1,1]$,
 such that $\Lambda (0) = 1$ and $\Lambda (x) \leq 1$. 
-- We multiply the ACVF estimator at lag $h$ by $\Lambda (h/n)$.
+- We multiply the ACVF estimator at lag $h$ by $\Lambda (h/n)$, where $\Lambda (x) = 1 - |x|$.
 
 ## Example 9.5.4. Bartlett Taper
 

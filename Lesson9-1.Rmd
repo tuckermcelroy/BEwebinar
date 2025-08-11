@@ -43,7 +43,7 @@ for(i in 1:length(lags))
   gamma.new <- gamma.lm[i] * (i-1+d)/(i-d)
   gamma.lm <- c(gamma.lm,gamma.new)
 }
-plot(ts(gamma.lm,start=0),type="h",xlab="Lag",ylab="")
+plot(ts(gamma.lm,start=0),type="h",xlab="Lag",ylab="",ylim=c(0,2.5))
 ```
 
 ## Example 9.1.3. Geometric Decay

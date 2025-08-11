@@ -32,7 +32,7 @@ representation. If $\mu = 0$ then
   \chi^2_1 \quad \mbox{if} \; |\lambda| = 0, \pi \\  .5 \chi^2_2 \quad \mbox{if} \; |\lambda| \in (0, \pi).
   \end{cases}
 \]
-If $\mu \neq 0$, we use the uncentered DFT and $I(\lambda)/f(\lambda)$ has the same limit if
+If $\mu \neq 0$, we use the centered DFT and $I(\lambda)/f(\lambda)$ has the same limit if
 $\lambda \neq 0$.
 
 ## Remark 9.7.6. The Periodogram is Inconsistent
