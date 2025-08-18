@@ -1639,7 +1639,8 @@ time series with spectral density <span class="math inline">\(f\)</span>.</li>
 <li>Consider the <span class="math inline">\(1\)</span>-step ahead
 forecast based on moving average representation <span class="math inline">\(\psi (z) = \sum_{k \geq 0} \psi_k z^k\)</span>.
 The predictor (by Paradigm 7.4.3) is <span class="math display">\[
-\widehat{X}_{n+1} = \sum_{k \geq 0} \psi_{k+1} { \psi (B)}^{-1} X_{n-k}.
+\widehat{X}_{n+1} = \sum_{k \geq 0} \psi_{k+1} B^k \, { \psi (B)}^{-1}
+X_{n}.
 \]</span></li>
 <li>Letting <span class="math inline">\(g(\lambda) = {| \psi (e^{-i
 \lambda}) |}^{-2}\)</span>, the <em>prediction error variance</em> is
@@ -1652,7 +1653,7 @@ f(\lambda) \, d\lambda =
 \widehat{\mathcal{V}_{\infty}} = { \langle g \, I \rangle }_0.
 \]</span></li>
 <li>Note that we need not have <span class="math inline">\(f(\lambda) =
-g (\lambda) \, \sigma^2\)</span>, because the model (<span class="math inline">\(\psi (z)\)</span>) might differ from the true
+\sigma^2/ g (\lambda)\)</span>, because the model (<span class="math inline">\(\psi (z)\)</span>) might differ from the true
 process (<span class="math inline">\(f\)</span>).</li>
 <li>We can fit models by finding <span class="math inline">\(\psi
 (z)\)</span> so as to minimize <span class="math inline">\(\widehat{\mathcal{V}_{\infty}}\)</span>.</li>

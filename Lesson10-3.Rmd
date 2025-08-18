@@ -75,7 +75,7 @@ plot(ts(c(NA,kappa.hat[1:20]),start=0),xlab="",ylab="Pacf",type="h")
 - From visual inspection, we might guess that $p=0$, thought there seems to be non-trivial
 correlation at lags 11 and 13.
 - Then we apply the Empirical Rule, where $n = 65$ implies $K_n = 5$.
-- We print $K_n$ values of the sample autocorrelations, and $\widehat{q}$.
+- We print $K_n$ values of the sample autocorrelations, and $\widehat{p}$.
 
 ```{r}
 alpha <- .05
