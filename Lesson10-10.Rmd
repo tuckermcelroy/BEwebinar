@@ -18,8 +18,8 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 
 - Suppose $\{ X_t \}$ is a linear time series with i.i.d. inputs.
 - Suppose two models are fitted, which are nested.
-- The nested model parameter vector is denote $\underline{\omega}^0$ (with dimension $r$).
-- The nesting model parameter vector is denote $\underline{\omega}$ (with dimension $s$).
+- The nested model parameter vector is denote $\underline{\omega}^0$ (with dimension $s$).
+- The nesting model parameter vector is denote $\underline{\omega}$ (with dimension $r$).
 - We assume some other technical conditions. 
 - If the nested model is correct (it is the model of the process), then the likelihood ratio statistic
 \[

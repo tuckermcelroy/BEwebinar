@@ -30,6 +30,7 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 \[
  \widehat{\sigma}_t^2 = \Pi (B) X_t^2.
 \]
+- The mean is $\Pi (B) \sigma^2_t$, which can be compared to the target $\sigma^2_t$; if it differs, there is bias.
 - The same bias-variance trade-off applies as with mean estimation.
  
 ## Example 11.6.4. Volatility Filtering of Dow Jones Log Returns

@@ -17,7 +17,7 @@ bi-spectral density.
 
 ## Definition 11.5.1.
 
-- Suppose $\{ X_t }\$ is a strictly stationary time series with finite absolute third moment.
+- Suppose $\{ X_t \}$ is a strictly stationary time series with finite absolute third moment.
 - Then its third *cumulant function* is defined to be
 \[
 \gamma (k_1, k_2) = \mathbb E [ (X_t - \mu) (X_{t+k_1} - \mu) (X_{t + k_2} - \mu) ],

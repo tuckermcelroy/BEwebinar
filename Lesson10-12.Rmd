@@ -11,7 +11,6 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 
 # Lesson 10-12: Imputation and Signal Extraction
 
-- We discuss missing value imputation.
 - By forecasting and backcasting, we can extend a time series and then apply filters.
 
 ## Remark 10.12.4. Extending a Time Series Sample
