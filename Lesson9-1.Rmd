@@ -30,8 +30,8 @@ high association, across large time lags. This is called *long-range dependence*
 \]
 for $d \in (0,1/2)$, where $\Gamma$ denotes the gamma function, and 
 $\gamma (0) = \Gamma (1-2d)/{\Gamma (1-d)}^2$. 
-- This corresponds to $\gamma (h) = O({|h|}^{1-2d})$, or the case of long memory 
-with decay rate $a = 2d-1$.
+- This corresponds to $\gamma (h) = O({|h|}^{2d-1})$, or the case of long memory 
+with decay rate $a = 1-2d$.
 - We plot with $d = .4$.
 
 ```{r}
