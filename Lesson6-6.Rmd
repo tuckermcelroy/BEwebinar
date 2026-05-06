@@ -120,7 +120,7 @@ zeta <- xi/xi[1]
 kappa <- armapq.pacf(NULL,ma.coefs,10)
 ```
 
-- The ACF plot. We start at lag 1, since the lag 0 value is always zero.
+- The ACF plot. We start at lag 1, since the lag 0 value is always one.
 
 ```{r}
 plot(ts(rho[-1],start=1),xlab="Lag",ylab="Autocorrelation",
@@ -128,7 +128,7 @@ plot(ts(rho[-1],start=1),xlab="Lag",ylab="Autocorrelation",
 abline(h=0,col=2)
 ```
 
-- The IACF plot. We start at lag 1, since the lag 0 value is always zero.
+- The IACF plot. We start at lag 1, since the lag 0 value is always one.
 
 ```{r}
 plot(ts(zeta[-1],start=1),xlab="Lag",ylab="Inverse Autocorrelation",
@@ -158,7 +158,7 @@ zeta <- xi/xi[1]
 kappa <- armapq.pacf(ar.coefs,NULL,10)
 ```
 
-- The ACF plot. We start at lag 1, since the lag 0 value is always zero.
+- The ACF plot. We start at lag 1, since the lag 0 value is always one.
 
 ```{r}
 plot(ts(rho[-1],start=1),xlab="Lag",ylab="Autocorrelation",
@@ -166,7 +166,7 @@ plot(ts(rho[-1],start=1),xlab="Lag",ylab="Autocorrelation",
 abline(h=0,col=2)
 ```
 
-- The IACF plot. We start at lag 1, since the lag 0 value is always zero.
+- The IACF plot. We start at lag 1, since the lag 0 value is always one.
 
 ```{r}
 plot(ts(zeta[-1],start=1),xlab="Lag",ylab="Inverse Autocorrelation",
