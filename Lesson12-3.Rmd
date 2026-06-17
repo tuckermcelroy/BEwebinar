@@ -9,7 +9,7 @@ output:
 knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 ```
 
-# Lesson 25: The Plug-in Principle and the Bootstrap
+# Lesson 12-3: The Plug-in Principle and the Bootstrap
 
 - We describe the plug-in method of constructing estimators, which generalizes the method-of-moments.
 

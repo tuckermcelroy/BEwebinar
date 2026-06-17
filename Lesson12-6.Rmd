@@ -18,7 +18,7 @@ knitr::opts_knit$set(root.dir = '/home/tucker/Documents/GitHub/BEwebinar/Data')
 - The DFT $\widetilde{\underline{X}}$ is obtained from the sample $\underline{X}$ via
 multiplication by $Q$: 
 \[
-\widetilde{\underline{X}} = Q \, \underline{X}.
+\widetilde{\underline{X}} = Q^* \, \underline{X}.
 \]
 - The DFT has asymptotic covariance given by diagonal matrix $\Lambda$; the diagonal entries
 are the spectral density evaluated at Fourier frequencies.
@@ -137,9 +137,13 @@ for(i in 1:Monte)
 	monte.root <- acf(monte.sample,lag=n-1,plot=FALSE,type="correlation")$acf[,,1][13] - gas.acf12
 	monte.roots <- c(monte.roots,monte.root)
 }
-print(c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)]))
-plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2,col=grey(.2))
+interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
 ```
 
+- The lag 12 autocorrelation is estimated to be `r gas.acf12`.
+- The $95 \%$ confidence interval based on the bootstrap is [`r gas.acf12 - interval[2]`,`r gas.acf12 - interval[1]`].
+- We plot the bootstrap edf.
 
-
+```{r}
+plot(sort(monte.roots),seq(1,Monte)/Monte,type="l",xlab="x",ylab="",lwd=2,col=grey(.2))
+```

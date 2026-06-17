@@ -70,7 +70,7 @@ Note the rate is $\tau_b$, not $\tau_n$.
 ## Example 12.7.13. Subsampling Inference for Lag 1 Autocovariance of Non-Defense Capitalization
 
 - Consider the Non-Defense Capitalization time series.
-- After differencing, we wish to estimate $\gamma (1)$ and compute the cdf $\zeta = {\mathbb P} [ \widehat{\gamma} (1) - \gamma (1) \leq x]$.
+- After differencing, we wish to estimate $\gamma (1)$ and compute the cdf $\zeta = {\mathbb P} [ \sqrt{n} (\widehat{\gamma} (1) - \gamma (1)) \leq x]$.
 
 ```{r}
 ndc <- read.table("Nondefcap.dat")
@@ -99,7 +99,7 @@ sub.edf <- sort(sub.edf)
 interval <- c(sub.edf[floor(.025*q.sub)],sub.edf[floor(.975*q.sub)])
 ```
 
-- The $95 \%$ confidence interval based on subsampling is [`r ndc.acf1 - interval[2]`,`r ndc.acf1 - interval[1]`].
+- The $95 \%$ confidence interval based on subsampling is [`r ndc.acf1 - interval[2]/sqrt(n)`,`r ndc.acf1 - interval[1]/sqrt(n)`].
 - We plot the subsampling edf.
 
 ```{r}
@@ -122,7 +122,7 @@ sub.edf <- sort(sub.edf)
 interval <- c(sub.edf[floor(.025*q.sub)],sub.edf[floor(.975*q.sub)])
 ```
 
-- The $95 \%$ confidence interval based on subsampling is [`r ndc.acf1 - interval[2]`,`r ndc.acf1 - interval[1]`].
+- The $95 \%$ confidence interval based on subsampling is [`r ndc.acf1 - interval[2]/sqrt(n)`,`r ndc.acf1 - interval[1]/sqrt(n)`].
 - We plot the subsampling edf.
 
 ```{r}

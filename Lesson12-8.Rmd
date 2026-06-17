@@ -75,13 +75,13 @@ for(i in 1:Monte)
 		monte.sample <- c(monte.sample,mau.gr[seq(boot.index,boot.index+b-1)])
 	}
 	monte.sample <- monte.sample[1:n]
-      monte.root <- mean(monte.sample) - mau.mean
+  monte.root <- sqrt(n)*(mean(monte.sample) - mau.mean)
 	monte.roots <- c(monte.roots,monte.root)
 }
 interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
 ```
 
-- The $95 \%$ confidence interval based on the bootstrap is [`r mau.mean - interval[2]`,`r mau.mean - interval[1]`].
+- The $95 \%$ confidence interval based on the bootstrap is [`r mau.mean - interval[2]/sqrt(n)`,`r mau.mean - interval[1]/sqrt(n)`].
 - We plot the bootstrap edf.
 
 ```{r}
@@ -180,13 +180,13 @@ for(i in 1:Monte)
 		}
 		tot.len <- tot.len + boot.size
 	}
-      monte.root <- mean(monte.sample) - mau.mean
+  monte.root <- sqrt(n)*(mean(monte.sample) - mau.mean)
 	monte.roots <- c(monte.roots,monte.root)
 }
 interval <- c(sort(monte.roots)[floor(.025*Monte)],sort(monte.roots)[floor(.975*Monte)])
 ```
 
-- The $95 \%$ confidence interval based on the bootstrap is [`r mau.mean - interval[2]`,`r mau.mean - interval[1]`].
+- The $95 \%$ confidence interval based on the bootstrap is [`r mau.mean - interval[2]/sqrt(n)`,`r mau.mean - interval[1]/sqrt(n)`].
 - We plot the bootstrap edf.
 
 ```{r}
