@@ -1718,8 +1718,8 @@ probability.</li>
 Non-Defense Capitalization</h2>
 <ul>
 <li>Consider the Non-Defense Capitalization time series.</li>
-<li>After differencing, we wish to estimate <span class="math inline">\(\gamma (1)\)</span> and compute the cdf <span class="math inline">\(\zeta = {\mathbb P} [ \widehat{\gamma} (1) -
-\gamma (1) \leq x]\)</span>.</li>
+<li>After differencing, we wish to estimate <span class="math inline">\(\gamma (1)\)</span> and compute the cdf <span class="math inline">\(\zeta = {\mathbb P} [ \sqrt{n} (\widehat{\gamma}
+(1) - \gamma (1)) \leq x]\)</span>.</li>
 </ul>
 <pre class="r"><code>ndc &lt;- read.table(&quot;Nondefcap.dat&quot;)
 ndc &lt;- ts(ndc[,2],start=c(1992,3),frequency=12,names= &quot;NewOrders&quot;)
@@ -1745,7 +1745,7 @@ sub.edf &lt;- sort(sub.edf)
 interval &lt;- c(sub.edf[floor(.025*q.sub)],sub.edf[floor(.975*q.sub)])</code></pre>
 <ul>
 <li>The <span class="math inline">\(95 \%\)</span> confidence interval
-based on subsampling is [-0.0089642,0.0133861].</li>
+based on subsampling is [-0.0028679,-0.0015599].</li>
 <li>We plot the subsampling edf.</li>
 </ul>
 <pre class="r"><code>plot(sub.edf,seq(1,q.sub)/q.sub,type=&quot;l&quot;,xlab=&quot;x&quot;,ylab=&quot;&quot;,lwd=2)</code></pre>
@@ -1766,7 +1766,7 @@ sub.edf &lt;- sort(sub.edf)
 interval &lt;- c(sub.edf[floor(.025*q.sub)],sub.edf[floor(.975*q.sub)])</code></pre>
 <ul>
 <li>The <span class="math inline">\(95 \%\)</span> confidence interval
-based on subsampling is [-0.0111949,0.0567725].</li>
+based on subsampling is [-0.0029984,9.7906314^{-4}].</li>
 <li>We plot the subsampling edf.</li>
 </ul>
 <pre class="r"><code>plot(sub.edf,seq(1,q.sub)/q.sub,type=&quot;l&quot;,xlab=&quot;x&quot;,ylab=&quot;&quot;,lwd=2)</code></pre>
